@@ -1,0 +1,1 @@
+document.querySelector('.actions button:first-child')?.addEventListener('click',()=>window.print());document.querySelector('.actions button:nth-child(2)')?.addEventListener('click',()=>alert('Bank analysis filters opened.'));document.querySelector('.actions label')?.addEventListener('click',()=>alert('Statement period selector opened.'));
