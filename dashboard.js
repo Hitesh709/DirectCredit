@@ -26,4 +26,5 @@
     <div class="dc-panel dc-summary"><div class="dc-panel-head"><h3>Summary</h3><input type="date" value="2026-08-08"/></div><div class="dc-row"><span>New Applications</span><b>223</b></div><div class="dc-row"><span>Pending Approvals</span><b>165</b></div><div class="dc-row"><span>Due Repayments</span><b>0</b></div><div class="dc-row danger"><span>Overdue Loans</span><b>1610</b></div><div class="dc-row success"><span>Completed Loans</span><b>72</b></div></div>
     <div class="dc-panel dc-notify"><div class="dc-panel-head"><h3>Recent Notifications</h3><span class="dc-new">50 new</span><span class="dc-trash">♧</span></div><div class="dc-notice"><div class="dc-avatar">♙</div><div><b>User Activity</b><small>New user registered - Rajesh Kumar</small></div><time>2m ago</time><span>›</span></div></div>
   </div></div>`;
+  if(!location.hash && typeof showPage==='function') showPage('dashboard');
 })();
