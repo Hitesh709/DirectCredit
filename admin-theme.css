@@ -1,0 +1,29 @@
+/* DirectCredit Admin visual system — aligned to the uploaded Admin dashboard references */
+:root{--dc-navy:#082b63;--dc-blue:#1768ed;--dc-purple:#6730dd;--dc-green:#0aa052;--dc-orange:#f58200;--dc-red:#ec1025;--dc-teal:#129a87;--dc-border:#e1e6ee;--dc-text:#17223a}
+/* Admin pages use the same visual language as the reference dashboard. */
+#reports,#pipeline,#disbursementMatrix,#slab,#repayment,#calendar,#accounting,#settlement{color:var(--dc-text)}
+#reports .fr-tab.selected,#pipeline .lp-panel,#disbursementMatrix .dm-table-wrap,#slab .slab-table-wrap,#repayment .rm-panel,#calendar .dc-panel,#accounting .dc-panel,#settlement .dc-panel{box-shadow:0 2px 8px rgba(20,45,90,.06)}
+/* Strong, unmistakable KPI colours */
+#reports .fr-tab.selected .fr-tab-icon,#pipeline .lp-kpi.blue,#disbursementMatrix .dm-kpi.blue,#slab .slab-kpi.blue{background:linear-gradient(135deg,#1768ed,#0b53dc)!important;color:#fff}
+#pipeline .lp-kpi.purple,#reports .fr-tab:nth-child(1) .fr-tab-icon{background:linear-gradient(135deg,#713be7,#5427d6)!important;color:#fff}
+#pipeline .lp-kpi.green,#disbursementMatrix .dm-kpi.green,#slab .slab-kpi.green{background:linear-gradient(135deg,#0ca35a,#078d4d)!important;color:#fff}
+#pipeline .lp-kpi.red,#slab .slab-kpi.red{background:linear-gradient(135deg,#f30d2d,#e70827)!important;color:#fff}
+#pipeline .lp-kpi.orange{background:linear-gradient(135deg,#ff8500,#ef7000)!important;color:#fff}
+#disbursementMatrix .dm-kpi.purple{background:linear-gradient(135deg,#713be7,#5427d6)!important;color:#fff}
+#disbursementMatrix .dm-kpi.dark,#slab .slab-kpi.dark,#repayment .rm-kpi.dark{background:linear-gradient(135deg,#14233d,#07152c)!important;color:#fff}
+#repayment .rm-kpi.green{background:linear-gradient(135deg,#0ca35a,#078d4d)!important;color:#fff}
+#repayment .rm-kpi.orange{background:linear-gradient(135deg,#ff8500,#ef7000)!important;color:#fff}
+#repayment .rm-kpi.red{background:linear-gradient(135deg,#f30d2d,#e70827)!important;color:#fff}
+/* Table hierarchy */
+#disbursementMatrix .dm-table th.new,#disbursementMatrix .dm-table .newv{color:#175bd0}
+#disbursementMatrix .dm-table th.repeat,#disbursementMatrix .dm-table .repeatv{color:#6230c9}
+#slab .slab-table th.active,#slab .slab-table .activev{color:#175bd0}
+#slab .slab-table th.overdue,#slab .slab-table .overduev{color:#df1729}
+#slab .slab-table th.repaid,#slab .slab-table .repaidv{color:#16864f}
+#repayment .rm-table .paid{color:#16864f!important}
+#repayment .rm-table .unpaid,#repayment .rm-table .overdue{color:#df1729!important}
+/* Admin filter bars */
+#disbursementMatrix .dm-filters,#calendar .calendar-filters{background:#f2f7ff;border-color:#dbe8fb}
+/* Keep the customer application visually separate from Admin reporting pages. */
+#application{--admin-accent:initial}
+@media(max-width:1000px){#reports,#pipeline,#disbursementMatrix,#slab,#repayment,#calendar,#accounting,#settlement{overflow-x:auto}}
