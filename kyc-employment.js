@@ -1,0 +1,2 @@
+document.querySelectorAll('.actions button').forEach((button,i)=>button.addEventListener('click',()=>{if(i===0)alert('KYC & Employment report download initiated.');if(i===1)window.print();if(i===2)alert('KYC filters opened.')}));
+document.querySelectorAll('.sidebar a').forEach(a=>a.addEventListener('click',()=>{document.querySelectorAll('.sidebar a').forEach(x=>x.classList.remove('active'));a.classList.add('active')}));
