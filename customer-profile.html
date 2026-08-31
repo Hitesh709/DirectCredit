@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Customer Profile</title>
+<link rel="stylesheet" href="customer-profile.css">
+</head>
+<body>
+<div class="profile-page">
+  <header class="page-head">
+    <div class="title-wrap"><span class="number-box">10</span><div><h1>CUSTOMER PROFILE</h1><p>View and manage customer information, KYC, loans and history.</p></div></div>
+    <div class="head-actions"><button>✎ &nbsp;Edit Profile</button><button>⇩ &nbsp;Download</button><button>••• &nbsp;More</button></div>
+  </header>
+
+  <nav class="profile-tabs">
+    <button class="active">♙ &nbsp; Customer Profile</button><button>☎ &nbsp; Number &amp; Contact Details</button><button>▣ &nbsp; Bank Statement Analysis</button><button>▤ &nbsp; KYC &amp; Employment Summary</button><button>♙ &nbsp; Risk &amp; Score Breakdown</button>
+  </nav>
+
+  <section class="top-grid">
+    <aside class="customer-card panel">
+      <div class="customer-main"><div class="avatar">YK</div><div><h2>Rajesh Kumar <span class="status active">Active</span></h2><p>Customer ID</p><strong>CUST00012345</strong></div></div>
+      <div class="mini-info"><div><span>▣</span><small>Customer Since</small><b>15 Jan 2024</b></div><div><span>♙</span><small>Customer Type</small><b>Individual</b></div></div>
+      <h3>CONTACT INFORMATION</h3>
+      <div class="contact-list">
+        <div><span>⌕</span><label>Mobile Number</label><b>+91 98765 43210</b><i>✓</i></div>
+        <div><span>✉</span><label>Email Address</label><b>rajeshkumar@gmail.com</b><i>✓</i></div>
+        <div><span>⌖</span><label>Address</label><b>23, Patel Street, Gandhinagar,<br>Ahmedabad, Gujarat - 380001</b></div>
+        <div><span>⌖</span><label>Current City</label><b>Ahmedabad, Gujarat</b></div>
+        <div><span>▣</span><label>Business Name</label><b>Kumar Traders</b></div>
+        <div><span>♙</span><label>Business Type</label><b>Wholesale Trading</b></div>
+        <div><span>▣</span><label>Date of Birth</label><b>10 Mar 1988 (36 yrs)</b></div>
+        <div><span>▤</span><label>PAN Number</label><b>ABCDE1234F</b></div>
+        <div><span>▣</span><label>Aadhaar Number</label><b>XXXX XXXX 1234</b></div>
+        <div><span>♙</span><label>Marital Status</label><b>Married</b></div>
+      </div>
+    </aside>
+
+    <main class="right-area">
+      <div class="metric-row">
+        <div class="metric blue"><small>TOTAL LOANS</small><strong>3</strong><span>Active Loans</span><em>▣</em></div>
+        <div class="metric green"><small>TOTAL LOAN AMOUNT</small><strong>₹12,75,000</strong><span>Sanctioned</span><em>₹</em></div>
+        <div class="metric purple"><small>OUTSTANDING AMOUNT</small><strong>₹4,35,680</strong><span>Outstanding</span><em>◷</em></div>
+        <div class="metric orange"><small>AMOUNT PAID</small><strong>₹8,39,320</strong><span>Total Repaid</span><em>▣</em></div>
+        <div class="metric cyan"><small>CREDIT SCORE</small><strong>782</strong><span>Good (High)</span><em>◔</em></div>
+      </div>
+
+      <div class="sub-tabs"><button class="active">Overview</button><button>Loans</button><button>Repayment History</button><button>Documents</button><button>Communication</button><button>Notes &amp; Alerts</button><button>Activity Log</button></div>
+
+      <div class="overview-grid">
+        <section class="panel summary"><h3>CUSTOMER SUMMARY</h3><div class="two-col">
+          <label>Occupation <b>Business</b></label><label>Monthly Income <b>₹1,35,000</b></label><label>Work Experience <b>12 Years</b></label><label>Years in Business <b>8 Years</b></label><label>Average Bank Balance <b>₹1,35,000</b></label><label>Primary Bank <b>HDFC Bank (1234)</b></label><label>CIBIL Score <b>782 / 900 <mark>Good</mark></b></label><label>FOIR <b>34.50%</b></label><label>Existing EMI <b>₹28,450</b></label><label>Dependents <b>2</b></label>
+        </div></section>
+        <section class="panel score-panel"><h3>CREDIT SCORE GAUGE</h3><div class="gauge"><div class="gauge-inner"><strong>782</strong><span>Good</span></div></div><small>as on 16 May 2026</small><h3 class="history-title">CREDIT SCORE HISTORY</h3><div class="spark"><span>712</span><span>735</span><span>748</span><span>768</span><span>782</span></div><div class="months"><span>Jan '26</span><span>Feb '26</span><span>Mar '26</span><span>Apr '26</span><span>May '26</span></div></section>
+        <section class="panel latest"><h3>LATEST LOAN OVERVIEW <a>View All Loans</a></h3><div class="loan-details"><label>Loan Account No. <b>LN230600054</b></label><label>Loan Product <b>Business Term Loan</b></label><label>Sanctioned Amount <b>₹5,00,000</b></label><label>Disbursed Amount <b>₹5,00,000</b></label><label>Disbursement Date <b>10 Mar 2026</b></label><label>Tenure <b>24 Months</b></label><label>Interest Rate <b>16.00% P.A.</b></label><label>EMI Amount <b>₹24,548</b></label><label>Outstanding Amount <b>₹1,78,290</b></label><label>Next EMI Due Date <b>10 Jun 2026</b></label><label>Loan Status <b class="green-text">Active</b></label></div></section>
+      </div>
+
+      <div class="bottom-grid">
+        <section class="panel table-panel"><h3>ACTIVE LOANS <a>View All Loans</a></h3><table><thead><tr><th>Loan Account No.</th><th>Product</th><th>Sanctioned Amount</th><th>Outstanding Amount</th><th>EMI</th><th>Maturity Date</th><th>Status</th></tr></thead><tbody><tr><td>LN2026008456</td><td>Business Term Loan</td><td>₹5,00,000</td><td>₹1,78,290</td><td>₹24,548</td><td>10 Jun 2026</td><td><mark>Active</mark></td></tr><tr><td>LN2026000321</td><td>Working Capital Loan</td><td>₹3,50,000</td><td>₹1,52,430</td><td>₹18,462</td><td>10 Jan 2027</td><td><mark>Active</mark></td></tr><tr><td>LN2026000107</td><td>Overdraft Facility</td><td>₹4,25,000</td><td>₹1,04,960</td><td>-</td><td>-</td><td><mark>Active</mark></td></tr></tbody></table></section>
+        <section class="panel table-panel small-table"><h3>LAST 5 EMIs</h3><table><thead><tr><th>Date</th><th>Loan Ref. No.</th><th>EMI Amount</th><th>Status</th></tr></thead><tbody><tr><td>10 May 2026</td><td>LN2026008456</td><td>₹24,548</td><td><mark>Paid</mark></td></tr><tr><td>10 Apr 2026</td><td>LN2026008456</td><td>₹24,548</td><td><mark>Paid</mark></td></tr><tr><td>10 Mar 2026</td><td>LN2026000321</td><td>₹18,462</td><td><mark>Paid</mark></td></tr><tr><td>10 Feb 2026</td><td>LN2026000321</td><td>₹18,462</td><td><mark>Paid</mark></td></tr><tr><td>10 May 2026</td><td>LN2026000107</td><td>₹18,547</td><td><mark>Paid</mark></td></tr></tbody></table><a class="view-link">View All Repayments →</a></section>
+        <section class="panel table-panel docs"><h3>DOCUMENTS <a>View All Documents</a></h3><table><tbody><tr><td>▧ &nbsp; PAN Card</td><td><mark>Verified</mark></td><td>16 Jan 2024</td></tr><tr><td>▧ &nbsp; Aadhaar Card</td><td><mark>Verified</mark></td><td>16 Jan 2024</td></tr><tr><td>▧ &nbsp; Address Proof</td><td><mark>Verified</mark></td><td>16 Jan 2024</td></tr><tr><td>▣ &nbsp; Bank Statement</td><td><mark>Verified</mark></td><td>16 Jan 2024</td></tr><tr><td>▧ &nbsp; ITR (FY 2024-25)</td><td><mark>Verified</mark></td><td>16 Jan 2024</td></tr></tbody></table></section>
+      </div>
+      <footer class="audit"><span>♙ &nbsp; Created By: Admin</span><span>Created On: 15 Jan 2024 11:30 AM</span><span>Last Updated: 16 May 2026 10:15 AM</span></footer>
+    </main>
+  </section>
+</div>
+<script src="customer-profile.js"></script>
+</body>
+</html>
