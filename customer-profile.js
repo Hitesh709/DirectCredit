@@ -1,4 +1,4 @@
 document.querySelectorAll('.profile-tabs button,.sub-tabs button').forEach(button=>button.addEventListener('click',()=>{const group=button.parentElement;group.querySelectorAll('button').forEach(b=>b.classList.remove('active'));button.classList.add('active')}));
-document.querySelectorAll('.profile-tabs button').forEach((button,i)=>button.addEventListener('click',()=>{if(i===1)window.location.href='number-contact.html';if(i===2)window.location.href='bank-analysis.html'}));
+document.querySelectorAll('.profile-tabs button').forEach((button,i)=>button.addEventListener('click',()=>{if(i===1)window.location.href='number-contact.html';if(i===2)window.location.href='bank-analysis.html';if(i===3)window.location.href='kyc-employment.html'}));
 document.querySelectorAll('.head-actions button').forEach((button,i)=>button.addEventListener('click',()=>{if(i===0)alert('Edit Profile mode opened.');if(i===1)window.print();if(i===2)alert('More customer profile actions.')}));
 document.querySelectorAll('.table-panel h3 a,.view-link').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();alert('Detailed view opened.')}));
