@@ -1,28 +1,23 @@
 import os
 from typing import Generator
 
-DATABASE_URL = os.getenv("DATABASE_URL", "")
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-try:
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import declarative_base, sessionmaker
-except ImportError:
-    create_engine = None
-    declarative_base = None
-    sessionmaker = None
+# Render PostgreSQL is used when DATABASE_URL is supplied.
+# SQLite keeps the MVP runnable locally before a Render database is attached.
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./directcredit.db")
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
-if create_engine and DATABASE_URL:
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base = declarative_base()
-else:
-    engine = None
-    SessionLocal = None
-    Base = None
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(DATABASE_URL, pool_pre_ping=True, connect_args=connect_args)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
 def get_db() -> Generator:
-    if SessionLocal is None:
-        raise RuntimeError("DATABASE_URL is not configured")
     db = SessionLocal()
     try:
         yield db
