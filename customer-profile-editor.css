@@ -1,0 +1,14 @@
+/* Editable customer profile styling */
+.editable-profile-panel{margin-top:16px}
+.profile-edit-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:1px solid #e3ebf7;padding-bottom:16px;margin-bottom:18px}
+.profile-edit-head h3{margin:4px 0 6px;color:#102f67;font-size:20px}
+.profile-edit-head p{margin:0;color:#617391;font-size:13px}
+.profile-save-state{padding:7px 12px;border-radius:999px;background:#eaf8ef;color:#128448;font-weight:700;font-size:12px;white-space:nowrap}
+.profile-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.profile-edit-field{display:flex;flex-direction:column;gap:7px;color:#334d73;font-size:13px;font-weight:700}
+.profile-edit-field input,.profile-edit-field select,.profile-edit-field textarea{width:100%;box-sizing:border-box;border:1px solid #cfdced;border-radius:8px;background:#fff;color:#102b57;padding:11px 12px;font:inherit;font-weight:500;outline:none}
+.profile-edit-field input:focus,.profile-edit-field select:focus,.profile-edit-field textarea:focus{border-color:#2167df;box-shadow:0 0 0 3px rgba(33,103,223,.10)}
+.profile-edit-field textarea{min-height:82px;resize:vertical}
+.profile-edit-field:nth-child(7),.profile-edit-field:nth-child(8){grid-column:span 1}
+.profile-edit-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid #e3ebf7}
+@media(max-width:800px){.profile-edit-grid{grid-template-columns:1fr}.profile-edit-field:nth-child(7),.profile-edit-field:nth-child(8){grid-column:auto}.profile-edit-head{flex-direction:column}}
