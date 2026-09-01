@@ -1,53 +1,43 @@
 from datetime import datetime, timedelta, timezone
-import hashlib
-import hmac
-import os
+import base64, hashlib, hmac, json, os
 from typing import Optional
 from fastapi import Header, HTTPException
 
 SECRET = os.getenv("DIRECTCREDIT_SECRET", "change-this-in-render")
-TOKEN_TTL_HOURS = int(os.getenv("TOKEN_TTL_HOURS", "24"))
 
 def hash_password(password: str) -> str:
-    salt = os.urandom(16).hex()
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 120000).hex()
-    return f"{salt}${digest}"
+    salt = os.urandom(16).hex(); digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 120000).hex(); return f"{salt}${digest}"
 
 def verify_password(password: str, stored: str) -> bool:
     try:
-        salt, digest = stored.split("$", 1)
-        candidate = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 120000).hex()
-        return hmac.compare_digest(candidate, digest)
-    except ValueError:
-        return False
+        salt, digest = stored.split("$", 1); candidate = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 120000).hex(); return hmac.compare_digest(candidate, digest)
+    except ValueError: return False
 
-def issue_demo_token(user_id: int, role: str) -> str:
-    expires = int((datetime.now(timezone.utc) + timedelta(hours=TOKEN_TTL_HOURS)).timestamp())
-    payload = f"{user_id}:{role}:{expires}"
-    signature = hmac.new(SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
-    return f"demo.{payload}.{signature}"
+def _b64(data: bytes) -> str: return base64.urlsafe_b64encode(data).decode().rstrip("=")
+def _unb64(value: str) -> bytes: return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
 
-def decode_demo_token(token: str) -> Optional[dict]:
+def issue_token(user_id: int, role: str, token_type: str, hours: int) -> str:
+    header = _b64(b'{"alg":"HS256","typ":"JWT"}')
+    exp = int((datetime.now(timezone.utc) + timedelta(hours=hours)).timestamp())
+    payload = _b64(json.dumps({"sub":str(user_id),"user_id":user_id,"role":role,"type":token_type,"exp":exp}, separators=(",",":")).encode())
+    sig = _b64(hmac.new(SECRET.encode(), f"{header}.{payload}".encode(), hashlib.sha256).digest())
+    return f"{header}.{payload}.{sig}"
+
+def decode_token(token: str, expected_type: Optional[str] = None) -> Optional[dict]:
     try:
-        prefix, payload, signature = token.split(".", 2)
-        if prefix != "demo":
-            return None
-        expected = hmac.new(SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(signature, expected):
-            return None
-        user_id, role, expires = payload.split(":", 2)
-        if int(expires) < int(datetime.now(timezone.utc).timestamp()):
-            return None
-        return {"user_id": int(user_id), "role": role}
-    except (ValueError, TypeError):
-        return None
+        header,payload,signature=token.split(".",2); expected=_b64(hmac.new(SECRET.encode(),f"{header}.{payload}".encode(),hashlib.sha256).digest())
+        if not hmac.compare_digest(signature,expected): return None
+        claims=json.loads(_unb64(payload))
+        if int(claims["exp"]) < int(datetime.now(timezone.utc).timestamp()): return None
+        if expected_type and claims.get("type") != expected_type: return None
+        return claims
+    except Exception: return None
+
+def issue_demo_token(user_id: int, role: str) -> str: return issue_token(user_id, role, "access", 24)
+def revoke_token(token: str) -> None: return None
 
 def get_current_customer(authorization: Optional[str] = Header(default=None)) -> dict:
-    """Resolve the customer identity from the signed bearer session token."""
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status_code=401, detail="Customer authentication required")
-    token = authorization.split(" ", 1)[1].strip()
-    claims = decode_demo_token(token)
-    if not claims or claims.get("role") != "customer":
-        raise HTTPException(status_code=401, detail="Invalid or expired customer session")
+    if not authorization or not authorization.lower().startswith("bearer "): raise HTTPException(401,"Customer authentication required")
+    claims=decode_token(authorization.split(" ",1)[1].strip(), expected_type="access")
+    if not claims or claims.get("role") != "customer": raise HTTPException(401,"Invalid or expired customer session")
     return claims
