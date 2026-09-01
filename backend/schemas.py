@@ -27,7 +27,7 @@ class CustomerCreate(BaseModel):
 
 class CustomerOut(CustomerCreate):
     id: int
-    status: str
+    status: str = "active"
 
 class LoanApplicationCreate(BaseModel):
     customer_id: int
