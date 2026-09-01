@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DirectCredit — Customer Portal</title>
+<link rel="stylesheet" href="customer-login.css">
+</head>
+<body>
+<div id="loginView" class="login-shell">
+  <div class="login-card">
+    <div class="brand">Y</div>
+    <div class="eyebrow">DIRECTCREDIT</div>
+    <h1>Customer Login</h1>
+    <p>Access your loan application, approval status, documents and repayments.</p>
+    <label>Customer ID / Mobile Number<input id="loginId" placeholder="CUST00012345 or mobile number"></label>
+    <label>Password / OTP<input id="loginPassword" type="password" placeholder="Enter password or demo OTP"></label>
+    <button class="primary" id="loginBtn">Login to Customer Portal</button>
+    <div class="demo-note">Demo login: use any non-empty Customer ID and password.</div>
+  </div>
+</div>
+
+<div id="portalView" class="portal-shell hidden">
+  <aside class="customer-sidebar">
+    <div class="side-brand"><span class="brand">Y</span><div><b>DirectCredit</b><small>Customer Portal</small></div></div>
+    <button class="side-nav active" data-section="home">⌂ <span>Dashboard</span></button>
+    <button class="side-nav" data-section="application">▣ <span>Loan Application</span></button>
+    <button class="side-nav" data-section="profile">♙ <span>My Profile</span></button>
+    <button class="side-nav" data-section="loans">▤ <span>My Loans</span></button>
+    <button class="side-nav" data-section="repayment">₹ <span>Repayments</span></button>
+    <button class="side-nav" data-section="documents">▧ <span>Documents</span></button>
+    <button class="side-nav" data-section="support">?</button>
+    <div class="side-bottom"><div class="customer-mini"><div class="avatar">RK</div><div><b>Rajesh Kumar</b><small>CUST00012345</small></div></div><button id="logoutBtn">↪ Logout</button></div>
+  </aside>
+
+  <main class="customer-main">
+    <header class="topbar">
+      <div><span class="eyebrow">CUSTOMER PORTAL</span><h1 id="pageTitle">Dashboard</h1></div>
+      <div class="top-actions"><span class="status-pill">● Account Active</span><button class="outline" onclick="window.print()">⇩ Download</button></div>
+    </header>
+
+    <section id="home" class="customer-section active-section">
+      <div class="welcome"><div><span class="eyebrow">WELCOME BACK</span><h2>Rajesh Kumar</h2><p>Track your loan application and manage your active loans from one place.</p></div><div class="welcome-score"><small>DirectCredit Score</small><strong>92.65</strong><span>Excellent · Low Risk</span></div></div>
+      <div class="metrics"><div class="metric blue"><small>ACTIVE LOANS</small><strong>3</strong><span>Current loans</span></div><div class="metric green"><small>TOTAL SANCTIONED</small><strong>₹12,75,000</strong><span>Across loans</span></div><div class="metric purple"><small>OUTSTANDING</small><strong>₹4,35,680</strong><span>Balance remaining</span></div><div class="metric orange"><small>NEXT EMI</small><strong>₹24,548</strong><span>Due 10 Jun 2026</span></div></div>
+      <div class="panel"><div class="panel-head"><div><h2>Loan Application Progress</h2><p>Complete the steps below to receive your loan.</p></div><button class="primary small" onclick="openSection('application')">Continue Application</button></div><div id="homeProgress" class="progress-card"></div></div>
+      <div class="two-panels"><div class="panel"><h3>Latest Loan</h3><div class="detail-list"><div><span>Loan Account</span><b>LN230600054</b></div><div><span>Product</span><b>Business Term Loan</b></div><div><span>Sanctioned</span><b>₹5,00,000</b></div><div><span>Outstanding</span><b>₹1,78,290</b></div><div><span>Status</span><b class="green-text">Active</b></div></div></div><div class="panel"><h3>Upcoming Repayment</h3><div class="due-box"><strong>₹24,548</strong><span>Next EMI due on 10 Jun 2026</span><button class="outline" onclick="openSection('repayment')">View Repayment</button></div></div></div>
+    </section>
+
+    <section id="application" class="customer-section">
+      <div class="section-title"><div><span class="eyebrow">LOAN APPLICATION</span><h2>Application Journey</h2><p>Complete each step in sequence. Your progress is saved on this device.</p></div><span class="demo-badge">Demo / Test Mode</span></div>
+      <div class="journey-layout"><div class="journey-rail" id="journeyRail"></div><div class="step-content"><div class="panel" id="stepPanel"></div></div></div>
+    </section>
+
+    <section id="profile" class="customer-section"><div class="section-title"><div><span class="eyebrow">MY PROFILE</span><h2>Customer Profile</h2><p>Review your registered personal and business information.</p></div><button class="outline">✎ Edit Profile</button></div><div class="profile-grid"><div class="panel profile-card"><div class="profile-head"><div class="avatar large">RK</div><div><h2>Rajesh Kumar</h2><span class="status-pill">● Active</span><p>Customer ID: CUST00012345</p></div></div><h3>CONTACT INFORMATION</h3><div class="detail-list"><div><span>Mobile Number</span><b>+91 98765 43210 ✓</b></div><div><span>Email</span><b>rajeshkumar@gmail.com ✓</b></div><div><span>Address</span><b>23, Patel Street, Gandhinagar, Ahmedabad, Gujarat - 380001</b></div><div><span>Business Name</span><b>Kumar Traders</b></div><div><span>Business Type</span><b>Wholesale Trading</b></div></div></div><div class="panel"><h3>Financial Profile</h3><div class="detail-list"><div><span>Monthly Income</span><b>₹1,35,000</b></div><div><span>Primary Bank</span><b>HDFC Bank (1234)</b></div><div><span>Average Bank Balance</span><b>₹1,35,000</b></div><div><span>CIBIL Score</span><b>782 / 900 · Good</b></div><div><span>FOIR</span><b>34.50%</b></div><div><span>Existing EMI</span><b>₹28,450</b></div></div></div></div></section>
+
+    <section id="loans" class="customer-section"><div class="section-title"><div><span class="eyebrow">MY LOANS</span><h2>Active & Previous Loans</h2></div></div><div class="panel table-wrap"><table><thead><tr><th>Loan Account</th><th>Product</th><th>Sanctioned</th><th>Outstanding</th><th>EMI</th><th>Status</th></tr></thead><tbody><tr><td>LN2026008456</td><td>Business Term Loan</td><td>₹5,00,000</td><td>₹1,78,290</td><td>₹24,548</td><td><mark>Active</mark></td></tr><tr><td>LN2026000321</td><td>Working Capital Loan</td><td>₹3,50,000</td><td>₹1,52,430</td><td>₹18,462</td><td><mark>Active</mark></td></tr><tr><td>LN2026000107</td><td>Overdraft Facility</td><td>₹4,25,000</td><td>₹1,04,960</td><td>—</td><td><mark>Active</mark></td></tr></tbody></table></div></section>
+
+    <section id="repayment" class="customer-section"><div class="section-title"><div><span class="eyebrow">REPAYMENTS</span><h2>Repayment History</h2><p>View paid, upcoming and overdue instalments.</p></div></div><div class="metrics"><div class="metric green"><small>PAID SO FAR</small><strong>₹8,39,320</strong><span>Total repaid</span></div><div class="metric orange"><small>OUTSTANDING</small><strong>₹4,35,680</strong><span>Remaining</span></div><div class="metric blue"><small>NEXT EMI</small><strong>₹24,548</strong><span>10 Jun 2026</span></div></div><div class="panel table-wrap"><table><thead><tr><th>Date</th><th>Loan</th><th>Amount</th><th>Mode</th><th>Status</th></tr></thead><tbody><tr><td>10 May 2026</td><td>LN2026008456</td><td>₹24,548</td><td>UPI</td><td><mark>Paid</mark></td></tr><tr><td>10 Apr 2026</td><td>LN2026008456</td><td>₹24,548</td><td>UPI</td><td><mark>Paid</mark></td></tr><tr><td>10 Mar 2026</td><td>LN2026000321</td><td>₹18,462</td><td>NEFT</td><td><mark>Paid</mark></td></tr><tr><td>10 Jun 2026</td><td>LN2026008456</td><td>₹24,548</td><td>—</td><td><span class="due">Upcoming</span></td></tr></tbody></table></div></section>
+
+    <section id="documents" class="customer-section"><div class="section-title"><div><span class="eyebrow">DOCUMENTS</span><h2>My Documents</h2><p>Documents submitted for your loan application.</p></div><button class="primary small">+ Upload Document</button></div><div class="doc-grid"><div class="panel doc"><b>PAN Card</b><span>ABCDE1234F</span><mark>Verified</mark><button class="outline small">View</button></div><div class="panel doc"><b>Aadhaar Card</b><span>XXXX XXXX 1234</span><mark>Verified</mark><button class="outline small">View</button></div><div class="panel doc"><b>Bank Statement</b><span>Last 6 Months</span><mark>Verified</mark><button class="outline small">View</button></div><div class="panel doc"><b>Business Proof</b><span>Kumar Traders</span><mark>Verified</mark><button class="outline small">View</button></div></div></section>
+
+    <section id="support" class="customer-section"><div class="section-title"><div><span class="eyebrow">SUPPORT</span><h2>Help & Support</h2></div></div><div class="panel support"><h3>Need help with your loan?</h3><p>Contact DirectCredit support for application, repayment or document assistance.</p><button class="primary">Call Support</button><button class="outline">Send Message</button></div></section>
+  </main>
+</div>
+<script src="customer-login.js"></script>
+</body>
+</html>
