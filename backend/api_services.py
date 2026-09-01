@@ -10,8 +10,14 @@ from .loan_lifecycle import (
     LOAN_STATUSES, LOAN_STAGES, STATUS_TO_STAGE,
     normalize_status, normalize_stage, transition_error, lifecycle_payload,
 )
+from .document_service import router as document_router, migrate_document_columns
+
+# Task 4: document schema migration runs before the API starts serving requests.
+migrate_document_columns()
 
 router = APIRouter(prefix="/api/services", tags=["verification-services"])
+# Expose the canonical document master under the same application router.
+router.include_router(document_router)
 
 @router.get("/status")
 def services_status():
