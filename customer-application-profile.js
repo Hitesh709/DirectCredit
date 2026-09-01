@@ -2,143 +2,28 @@
 (function () {
   const STORE = 'dcCustomerProfiles';
   const API_BASE = (localStorage.getItem('directcredit_api_url') || window.DIRECTCREDIT_API_URL || '/api').replace(/\/$/, '');
-
   function current() { return window.currentCustomer || null; }
   function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;'); }
-  function localSave(p) {
-    if (!p || !p.customerId) return;
-    try {
-      const all = JSON.parse(localStorage.getItem(STORE) || '{}');
-      all[String(p.customerId)] = p;
-      localStorage.setItem(STORE, JSON.stringify(all));
-    } catch (_) {}
-  }
+  function localSave(p) { if (!p || !p.customerId) return; try { const all=JSON.parse(localStorage.getItem(STORE)||'{}'); all[String(p.customerId)]=p; localStorage.setItem(STORE,JSON.stringify(all)); } catch (_) {} }
   async function apiSave(p) {
     if (!p) return false;
-    const payload = {
-      name: String(p.name || 'New Customer').trim() || 'New Customer',
-      date_of_birth: p.dateOfBirth || null,
-      gender: p.gender || null,
-      occupation: String(p.occupation || '').trim(),
-      business_name: String(p.businessName || '').trim() || null,
-      monthly_income: Number(p.monthlyIncome || 0),
-      address: p.address || null,
-      permanent_address: p.permanentAddress || null,
-      business_type: p.businessType || null,
-      mobile: p.mobile || null,
-      email: p.email || null,
-      pan: p.pan || null,
-      cibil_score: Number(p.cibil || 0),
-      foir: Number(p.foir || 0),
-      existing_emi: Number(p.existingEmi || 0),
-      average_bank_balance: Number(p.averageBalance || 0),
-      primary_bank: p.bank || null,
-      customer_type: 'Individual',
-      residence_ownership: p.residenceOwnership || null,
-      ownership_proof_name: p.ownershipProofName || null
-    };
-    try {
-      const id = String(p.serverCustomerId || p.customerId || '');
-      const numericId = /^\d+$/.test(id) ? Number(id) : null;
-      const r = numericId
-        ? await fetch(`${API_BASE}/customers/${numericId}/profile`, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-        : await fetch(`${API_BASE}/customers`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      if (!r.ok) throw new Error(String(r.status));
-      const saved = await r.json().catch(() => ({}));
-      if (saved && saved.id != null) { p.serverCustomerId = saved.id; p.customerId = String(saved.id); }
-      localSave(p); return true;
-    } catch (e) { console.warn('Profile step API sync:', e.message); localSave(p); return false; }
+    const payload={name:String(p.name||'New Customer').trim()||'New Customer',date_of_birth:p.dateOfBirth||null,gender:p.gender||null,occupation:String(p.occupation||'').trim(),business_name:String(p.businessName||'').trim()||null,monthly_income:Number(p.monthlyIncome||0),address:p.address||null,permanent_address:p.permanentAddress||null,business_type:p.businessType||null,mobile:p.mobile||null,email:p.email||null,pan:p.pan||null,aadhaar_masked:p.aadhaarMasked||null,cibil_score:Number(p.cibil||0),foir:Number(p.foir||0),existing_emi:Number(p.existingEmi||0),average_bank_balance:Number(p.averageBalance||0),primary_bank:p.bank||null,customer_type:'Individual',residence_ownership:p.residenceOwnership||null,residence_since:p.residenceSince||null,ownership_proof_name:p.ownershipProofName||null,ownership_proof_status:p.ownershipProofStatus||null,work_experience_years:Number(p.workExperienceYears||0),years_in_business:Number(p.yearsInBusiness||0)};
+    try { const id=String(p.serverCustomerId||p.customerId||''); const numericId=/^\d+$/.test(id)?Number(id):null; const r=numericId?await fetch(`${API_BASE}/customers/${numericId}/profile`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}):await fetch(`${API_BASE}/customers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); if(!r.ok)throw new Error(String(r.status)); const saved=await r.json().catch(()=>({})); if(saved&&saved.id!=null){p.serverCustomerId=saved.id;p.customerId=String(saved.id);} localSave(p); return true; } catch(e){console.warn('Profile step API sync:',e.message);localSave(p);return false;}
   }
-
-  function input(key, label, type, value, placeholder, extra) {
-    return `<label class="application-profile-field"><span>${label}</span><input data-app-profile="${key}" type="${type}" value="${esc(value)}" placeholder="${esc(placeholder || '')}" ${extra || ''}></label>`;
-  }
-  function select(key, label, value, options) {
-    return `<label class="application-profile-field"><span>${label}</span><select data-app-profile="${key}"><option value="">Select</option>${options.map(x=>`<option value="${esc(x)}" ${value===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`;
-  }
-  function area(key, label, value, placeholder) {
-    return `<label class="application-profile-field wide"><span>${label}</span><textarea data-app-profile="${key}" placeholder="${esc(placeholder || '')}">${esc(value)}</textarea></label>`;
-  }
-
-  function renderProfileStep() {
-    const panel = document.getElementById('stepPanel');
-    const p = current();
-    if (!panel || !p) return false;
-    const title = panel.querySelector('h2');
-    if (!title || title.textContent.trim() !== 'Profile Details') return false;
-
-    panel.innerHTML = `<div class="step-body application-profile-step">
-      <span class="eyebrow">STEP 5 OF 13</span>
-      <h2>Profile Details</h2>
-      <p>Enter and confirm all personal, employment, business, income and residential details. This information is linked to your customer record and shown to Admin.</p>
-      <div class="application-profile-section"><h3>PERSONAL DETAILS</h3><div class="application-profile-grid">
-        ${input('name','Full Name','text',p.name,'Enter full name','required')}
-        ${input('dateOfBirth','Date of Birth','date',p.dateOfBirth || '','')}
-        ${select('gender','Gender',p.gender || '', ['Male','Female','Other','Prefer not to say'])}
-        ${input('occupation','Occupation','text',p.occupation,'e.g. Business Owner')}
-        ${input('mobile','Mobile Number','tel',p.mobile,'10-digit mobile number','inputmode="numeric"')}
-        ${input('email','Email Address','email',p.email,'name@example.com')}
-      </div></div>
-      <div class="application-profile-section"><h3>BUSINESS / EMPLOYMENT DETAILS</h3><div class="application-profile-grid">
-        ${input('businessName','Company / Business Name','text',p.businessName,'Enter company or business name')}
-        ${input('businessType','Business Type','text',p.businessType,'e.g. Trading / Manufacturing / Services')}
-        ${input('monthlyIncome','Monthly Income','number',p.monthlyIncome || '','Enter monthly income','min="0" step="1"')}
-        ${input('workExperienceYears','Work Experience (Years)','number',p.workExperienceYears || '','Years','min="0" step="1"')}
-        ${input('yearsInBusiness','Years in Business','number',p.yearsInBusiness || '','Years','min="0" step="1"')}
-        ${input('existingEmi','Existing EMI','number',p.existingEmi || '','Monthly EMI','min="0" step="1"')}
-      </div></div>
-      <div class="application-profile-section"><h3>RESIDENTIAL DETAILS</h3><div class="application-profile-grid">
-        ${select('residenceOwnership','Residence Ownership',p.residenceOwnership || '', ['Own','Rented','Family Owned','Company Provided','Other'])}
-        ${input('residenceSince','Living Since','text',p.residenceSince || '','e.g. 2019')}
-        ${area('address','Current Address',p.address || '','Enter complete current residential address')}
-        ${area('permanentAddress','Permanent Address',p.permanentAddress || '','Enter complete permanent address')}
-        <label class="application-profile-field wide"><span>Ownership / Residence Proof</span><input id="cOwnershipProof" type="file" accept=".pdf,image/*"><small id="ownershipProofStatus">${p.ownershipProofName ? 'Selected: ' + esc(p.ownershipProofName) : 'Upload rent agreement, utility bill, property document or other valid proof.'}</small></label>
-      </div></div>
-      <div class="application-profile-section"><h3>IDENTITY & FINANCIAL DETAILS</h3><div class="application-profile-grid">
-        ${input('pan','PAN Number','text',p.pan || '','ABCDE1234F','maxlength="10"')}
-        ${input('aadhaarMasked','Aadhaar Number','text',p.aadhaarMasked || '','XXXX XXXX 1234','maxlength="14"')}
-        ${input('bank','Primary Bank','text',p.bank || '','Bank name / masked account')}
-        ${input('averageBalance','Average Bank Balance','number',p.averageBalance || '','Average balance','min="0" step="1"')}
-      </div></div>
-      <div class="application-profile-actions"><span id="applicationProfileSaveState">Changes are saved when you continue.</span></div>
-      <div class="step-actions"><button class="outline" id="applicationProfileBack">← Back</button><button class="primary" id="customerNext">Complete & Continue →</button></div><div id="customerSuccess"></div>
-    </div>`;
-
-    const fields = panel.querySelectorAll('[data-app-profile]');
-    fields.forEach(el => {
-      const update = () => {
-        const k = el.dataset.appProfile;
-        p[k] = el.type === 'number' ? Number(el.value || 0) : el.value;
-        if (k === 'pan') p.pan = String(el.value || '').toUpperCase();
-        localSave(p);
-        const s = document.getElementById('applicationProfileSaveState'); if (s) s.textContent = 'Unsaved changes';
-      };
-      el.addEventListener('input', update); el.addEventListener('change', update);
-    });
-    const pan = panel.querySelector('[data-app-profile="pan"]'); if (pan) pan.addEventListener('input', () => pan.value = pan.value.toUpperCase());
-    const proof = document.getElementById('cOwnershipProof');
-    if (proof) proof.onchange = () => { const f=proof.files && proof.files[0]; if(f){p.ownershipProofName=f.name;p.ownershipProofStatus='Uploaded';localSave(p);const s=document.getElementById('ownershipProofStatus');if(s)s.textContent='Selected: '+f.name+' (ready for upload)';} };
-    const back = document.getElementById('applicationProfileBack'); if (back) back.onclick = () => { if (typeof window.goCustomerStep === 'function') window.goCustomerStep(3); };
-    const next = document.getElementById('customerNext');
-    if (next) next.onclick = async () => {
-      if (!String(p.name || '').trim()) { alert('Please enter the customer name.'); return; }
-      if (!p.dateOfBirth) { alert('Please enter date of birth.'); return; }
-      if (!p.gender) { alert('Please select gender.'); return; }
-      if (!p.residenceOwnership) { alert('Please select residence ownership: Own or Rented.'); return; }
-      const state=document.getElementById('applicationProfileSaveState'); if(state)state.textContent='Saving profile…';
-      const synced=await apiSave(p);
-      localSave(p);
-      if(state)state.textContent=synced?'Saved & synced to Admin':'Saved on this device';
-      if(typeof window.completeCustomerStep==='function') window.completeCustomerStep();
-    };
+  function input(key,label,type,value,placeholder,extra){return `<label class="application-profile-field"><span>${label}</span><input data-app-profile="${key}" type="${type}" value="${esc(value)}" placeholder="${esc(placeholder||'')}" ${extra||''}></label>`;}
+  function select(key,label,value,options){return `<label class="application-profile-field"><span>${label}</span><select data-app-profile="${key}"><option value="">Select</option>${options.map(x=>`<option value="${esc(x)}" ${value===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label>`;}
+  function area(key,label,value,placeholder){return `<label class="application-profile-field wide"><span>${label}</span><textarea data-app-profile="${key}" placeholder="${esc(placeholder||'')}">${esc(value)}</textarea></label>`;}
+  function renderProfileStep(){
+    const panel=document.getElementById('stepPanel'),p=current(); if(!panel||!p||panel.querySelector('.application-profile-step'))return false;
+    const title=panel.querySelector('h2'); if(!title||title.textContent.trim()!=='Profile Details')return false;
+    panel.innerHTML=`<div class="step-body application-profile-step"><span class="eyebrow">STEP 5 OF 13</span><h2>Profile Details</h2><p>Enter and confirm all personal, employment, business, income and residential details. This information is linked to your customer record and shown to Admin.</p><div class="application-profile-section"><h3>PERSONAL DETAILS</h3><div class="application-profile-grid">${input('name','Full Name','text',p.name,'Enter full name','required')}${input('dateOfBirth','Date of Birth','date',p.dateOfBirth||'','')}${select('gender','Gender',p.gender||'', ['Male','Female','Other','Prefer not to say'])}${input('occupation','Occupation','text',p.occupation,'e.g. Business Owner')}${input('mobile','Mobile Number','tel',p.mobile,'10-digit mobile number','inputmode="numeric"')}${input('email','Email Address','email',p.email,'name@example.com')}</div></div><div class="application-profile-section"><h3>BUSINESS / EMPLOYMENT DETAILS</h3><div class="application-profile-grid">${input('businessName','Company / Business Name','text',p.businessName,'Enter company or business name')}${input('businessType','Business Type','text',p.businessType,'e.g. Trading / Manufacturing / Services')}${input('monthlyIncome','Monthly Income','number',p.monthlyIncome||'','Enter monthly income','min="0" step="1"')}${input('workExperienceYears','Work Experience (Years)','number',p.workExperienceYears||'','Years','min="0" step="1"')}${input('yearsInBusiness','Years in Business','number',p.yearsInBusiness||'','Years','min="0" step="1"')}${input('existingEmi','Existing EMI','number',p.existingEmi||'','Monthly EMI','min="0" step="1"')}</div></div><div class="application-profile-section"><h3>RESIDENTIAL DETAILS</h3><div class="application-profile-grid">${select('residenceOwnership','Residence Ownership',p.residenceOwnership||'', ['Own','Rented','Family Owned','Company Provided','Other'])}${input('residenceSince','Living Since','text',p.residenceSince||'','e.g. 2019')}${area('address','Current Address',p.address||'','Enter complete current residential address')}${area('permanentAddress','Permanent Address',p.permanentAddress||'','Enter complete permanent address')}<label class="application-profile-field wide"><span>Ownership / Residence Proof</span><input id="cOwnershipProof" type="file" accept=".pdf,image/*"><small id="ownershipProofStatus">${p.ownershipProofName?'Selected: '+esc(p.ownershipProofName):'Upload rent agreement, utility bill, property document or other valid proof.'}</small></label></div></div><div class="application-profile-section"><h3>IDENTITY & FINANCIAL DETAILS</h3><div class="application-profile-grid">${input('pan','PAN Number','text',p.pan||'','ABCDE1234F','maxlength="10"')}${input('aadhaarMasked','Aadhaar Number','text',p.aadhaarMasked||'','XXXX XXXX 1234','maxlength="14"')}${input('bank','Primary Bank','text',p.bank||'','Bank name / masked account')}${input('averageBalance','Average Bank Balance','number',p.averageBalance||'','Average balance','min="0" step="1"')}</div></div><div class="application-profile-actions"><span id="applicationProfileSaveState">Changes are saved when you continue.</span></div><div class="step-actions"><button class="outline" id="applicationProfileBack">← Back</button><button class="primary" id="customerNext">Complete & Continue →</button></div><div id="customerSuccess"></div></div>`;
+    panel.querySelectorAll('[data-app-profile]').forEach(el=>{const update=()=>{const k=el.dataset.appProfile;p[k]=el.type==='number'?Number(el.value||0):el.value;if(k==='pan')p.pan=String(el.value||'').toUpperCase();localSave(p);const s=document.getElementById('applicationProfileSaveState');if(s)s.textContent='Unsaved changes';};el.addEventListener('input',update);el.addEventListener('change',update);});
+    const pan=panel.querySelector('[data-app-profile="pan"]');if(pan)pan.addEventListener('input',()=>pan.value=pan.value.toUpperCase());
+    const proof=document.getElementById('cOwnershipProof');if(proof)proof.onchange=()=>{const f=proof.files&&proof.files[0];if(f){p.ownershipProofName=f.name;p.ownershipProofStatus='Uploaded';localSave(p);const s=document.getElementById('ownershipProofStatus');if(s)s.textContent='Selected: '+f.name+' (ready for upload)';}};
+    const back=document.getElementById('applicationProfileBack');if(back)back.onclick=()=>{if(typeof window.goCustomerStep==='function')window.goCustomerStep(3);};
+    const next=document.getElementById('customerNext');if(next)next.onclick=async()=>{if(!String(p.name||'').trim()){alert('Please enter the customer name.');return;}if(!p.dateOfBirth){alert('Please enter date of birth.');return;}if(!p.gender){alert('Please select gender.');return;}if(!p.residenceOwnership){alert('Please select residence ownership: Own or Rented.');return;}const state=document.getElementById('applicationProfileSaveState');if(state)state.textContent='Saving profile…';const synced=await apiSave(p);localSave(p);if(state)state.textContent=synced?'Saved & synced to Admin':'Saved on this device';if(typeof window.completeCustomerStep==='function')window.completeCustomerStep();};
     return true;
   }
-
-  function watch() {
-    const panel=document.getElementById('stepPanel'); if(!panel) return;
-    const observer=new MutationObserver(() => { renderProfileStep(); });
-    observer.observe(panel,{childList:true,subtree:true});
-    setInterval(renderProfileStep,700);
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',watch); else watch();
+  function watch(){const panel=document.getElementById('stepPanel');if(!panel)return;const observer=new MutationObserver(()=>renderProfileStep());observer.observe(panel,{childList:true,subtree:true});setInterval(renderProfileStep,700);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watch);else watch();
 })();
