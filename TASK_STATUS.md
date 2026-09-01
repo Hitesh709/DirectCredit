@@ -47,11 +47,29 @@ Implemented:
 - Customer journey synchronization now normalizes loan status and stage into the canonical contract.
 - Lifecycle response includes allowed next statuses and the financial amounts attached to the same loan record.
 
+## Task 4 — Document metadata, ownership and verification contract
+**Status: COMPLETE (code implemented; deployment smoke test still required)**
+
+Implemented:
+- Expanded the document master record so every document can be linked to both `customer_id` and `loan_id`.
+- Added document role, MIME type, file size, checksum, source, required flag and storage provider/key metadata.
+- Added verification audit fields: `verification_status`, `verified_by`, `verified_at` and `rejection_reason`.
+- Added controlled document types for PAN, Aadhaar, Selfie, Bank Statement, Business Proof, Ownership Proof, Rent Agreement, Address Proof, Income Proof and Other.
+- Added controlled verification statuses: pending, under_review, verified and rejected.
+- Added `/api/services/documents/register` as the canonical customer document registration/upsert endpoint.
+- Added `/api/services/documents/customer/{customer_id}` for the authenticated customer's document master.
+- Added `/api/services/documents/loan/{loan_id}` for documents belonging to one authenticated loan.
+- Added `/api/services/documents/admin/master` so Admin can read the same document records rather than a separate static dataset.
+- Added `/api/services/documents/admin/{document_id}/verification` for verification status updates and verification timestamps.
+- Added a non-destructive database migration for the new document fields; existing documents are preserved.
+- Document registration rejects a loan that does not belong to the authenticated customer.
+- Document metadata is now part of the same customer/loan source of truth used by the project.
+
 Done when:
 - Code is committed to `main`: yes.
-- Deployed API smoke test: pending.
-- Existing demo portfolio compatibility test: pending.
+- Database migration compatibility: implemented; deployment smoke test pending.
+- Real file/object-storage upload: not yet implemented; current contract stores metadata/storage references only.
 - Customer Portal/Admin browser verification: pending.
 
 Next task:
-**Task 4 — Define document metadata, ownership and verification contract.**
+**Task 5 — Build the real document upload/storage pipeline and connect uploaded files to the Customer Portal and Admin Documents screens.**
