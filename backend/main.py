@@ -9,6 +9,7 @@ from .schemas import CustomerCreate, CustomerOut, LoanApplicationCreate, LoanApp
 from .workflow import assess_amount, build_repayment_schedule
 from .profile_service import profile_payload
 from .api_services import router as service_router
+from .reporting import router as reporting_router
 
 app = FastAPI(title="DirectCredit API", version="0.5.0")
 origins = [x.strip() for x in os.getenv("CORS_ORIGINS", "*").split(",") if x.strip()]
@@ -19,6 +20,7 @@ def startup():
     Base.metadata.create_all(bind=engine)
 
 app.include_router(service_router)
+app.include_router(reporting_router)
 
 @app.get("/")
 def root():
