@@ -5,25 +5,83 @@ from sqlalchemy import func, inspect, text
 import os
 from .database import Base, engine, get_db
 from .db_models import CustomerRecord, LoanRecord, DocumentRecord, RepaymentRecord
-from .schemas import CustomerCreate, CustomerOut, LoanApplicationCreate, LoanApplicationOut, StatusUpdate, DocumentCreate
+from .schemas import CustomerCreate, CustomerOut, CustomerLogin, LoanApplicationCreate, LoanApplicationOut, StatusUpdate, DocumentCreate
 from .workflow import assess_amount, build_repayment_schedule
 from .profile_service import profile_payload
 from .api_services import router as service_router
 from .reporting import router as reporting_router
 from .seed_demo import seed_demo_data
+from .auth import hash_password, verify_password, issue_demo_token
 
-app = FastAPI(title="DirectCredit API", version="0.5.0")
+app = FastAPI(title="DirectCredit API", version="0.6.0")
 origins = [x.strip() for x in os.getenv("CORS_ORIGINS", "*").split(",") if x.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 def migrate_customer_profile_columns():
-    additions = {"permanent_address": ("customers", "TEXT"), "gender": ("customers", "VARCHAR(40)"), "disbursement_details": ("loan_applications", "TEXT")}
+    additions = {
+        "permanent_address": ("customers", "TEXT"),
+        "gender": ("customers", "VARCHAR(40)"),
+        "disbursement_details": ("loan_applications", "TEXT"),
+        "customer_code": ("customers", "VARCHAR(80)"),
+        "login_id": ("customers", "VARCHAR(120)"),
+        "password_hash": ("customers", "TEXT"),
+    }
     with engine.begin() as conn:
         for name, (table, sql_type) in additions.items():
             try:
                 columns = {c["name"] for c in inspect(conn).get_columns(table)}
-                if name not in columns: conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {sql_type}"))
-            except Exception: pass
+                if name not in columns:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {sql_type}"))
+            except Exception:
+                pass
+        # Unique indexes are used instead of UNIQUE ALTER TABLE so this also works with SQLite.
+        for index_name, table, column in (
+            ("uq_customers_customer_code", "customers", "customer_code"),
+            ("uq_customers_login_id", "customers", "login_id"),
+        ):
+            try:
+                conn.execute(text(f"CREATE UNIQUE INDEX IF NOT EXISTS {index_name} ON {table} ({column})"))
+            except Exception:
+                pass
+
+def customer_public_payload(c: CustomerRecord) -> dict:
+    """Return customer data safe for the customer/admin UI; never return password_hash."""
+    return {
+        "id": c.id,
+        "customer_code": c.customer_code or f"CUST{c.id:08d}",
+        "login_id": c.login_id,
+        "name": c.name,
+        "pan": c.pan,
+        "mobile": c.mobile,
+        "email": c.email,
+        "address": c.address,
+        "permanent_address": c.permanent_address,
+        "current_city": c.current_city,
+        "gender": c.gender,
+        "business_name": c.business_name,
+        "business_type": c.business_type,
+        "date_of_birth": c.date_of_birth,
+        "aadhaar_masked": c.aadhaar_masked,
+        "marital_status": c.marital_status,
+        "customer_type": c.customer_type,
+        "occupation": c.occupation,
+        "monthly_income": c.monthly_income,
+        "work_experience_years": c.work_experience_years,
+        "years_in_business": c.years_in_business,
+        "average_bank_balance": c.average_bank_balance,
+        "primary_bank": c.primary_bank,
+        "cibil_score": c.cibil_score,
+        "foir": c.foir,
+        "existing_emi": c.existing_emi,
+        "dependents": c.dependents,
+        "residence_ownership": c.residence_ownership,
+        "residence_since": c.residence_since,
+        "ownership_proof_name": c.ownership_proof_name,
+        "ownership_proof_status": c.ownership_proof_status,
+        "kyc_status": c.kyc_status,
+        "email_verified": c.email_verified,
+        "selfie_status": c.selfie_status,
+    }
 
 @app.on_event("startup")
 def startup():
@@ -36,18 +94,58 @@ def startup():
 app.include_router(service_router); app.include_router(reporting_router)
 
 @app.get("/")
-def root(): return {"application":"DirectCredit","status":"online","mode":"MVP","api_version":"0.5.0"}
+def root(): return {"application":"DirectCredit","status":"online","mode":"MVP","api_version":"0.6.0"}
 
 @app.get("/health")
 def health(db: Session = Depends(get_db)):
     db.execute(func.count(CustomerRecord.id)); return {"status":"healthy","database":"connected"}
 
 @app.get("/api/version")
-def version(): return {"name":"DirectCredit API","version":"0.5.0"}
+def version(): return {"name":"DirectCredit API","version":"0.6.0"}
+
+@app.post("/api/customer/login")
+def customer_login(payload: CustomerLogin, db: Session = Depends(get_db)):
+    """Authenticate an existing customer or create a new customer profile for a new demo login.
+
+    The creation behaviour preserves the current demo workflow while making identity persistent
+    in the database instead of generating a random persona in browser localStorage.
+    """
+    login_id = payload.login_id.strip()
+    customer = db.query(CustomerRecord).filter(CustomerRecord.login_id == login_id).first()
+
+    if customer:
+        if not customer.password_hash:
+            # Existing seed/demo records may not have credentials yet; claim them once in demo mode.
+            if os.getenv("ALLOW_DEMO_CREDENTIAL_CLAIM", "true").lower() not in {"1", "true", "yes"}:
+                raise HTTPException(401, "Customer credentials are not configured")
+            customer.password_hash = hash_password(payload.password)
+            db.commit(); db.refresh(customer)
+        elif not verify_password(payload.password, customer.password_hash):
+            raise HTTPException(401, "Invalid customer ID or password")
+    else:
+        customer = CustomerRecord(
+            login_id=login_id,
+            password_hash=hash_password(payload.password),
+            name="New Customer",
+            customer_type="Individual",
+            occupation="Business",
+            monthly_income=0,
+            residence_ownership="",
+            ownership_proof_status="pending",
+            kyc_status="pending",
+        )
+        db.add(customer); db.commit(); db.refresh(customer)
+        customer.customer_code = f"CUST{customer.id:08d}"
+        db.commit(); db.refresh(customer)
+
+    token = issue_demo_token(customer.id, "customer")
+    return {"access_token": token, "token_type": "bearer", "customer": customer_public_payload(customer)}
 
 @app.post("/api/customers", response_model=CustomerOut)
 def create_customer(payload: CustomerCreate, db: Session = Depends(get_db)):
-    c = CustomerRecord(**payload.model_dump()); db.add(c); db.commit(); db.refresh(c); return c
+    c = CustomerRecord(**payload.model_dump()); db.add(c); db.commit(); db.refresh(c)
+    if not c.customer_code: c.customer_code = f"CUST{c.id:08d}"; db.commit(); db.refresh(c)
+    return c
 
 @app.get("/api/customers", response_model=list[CustomerOut])
 def list_customers(db: Session = Depends(get_db)): return db.query(CustomerRecord).order_by(CustomerRecord.id.desc()).all()
@@ -63,7 +161,6 @@ def update_customer_profile(customer_id: int, payload: CustomerCreate, db: Sessi
     c=db.get(CustomerRecord,customer_id)
     if not c: raise HTTPException(404,"Customer not found")
     for key,value in payload.model_dump(exclude_unset=True).items():
-        # Do not erase a verified PAN just because a later profile form does not carry it.
         if key == "pan" and value is None: continue
         if key != "name" or str(value or "").strip(): setattr(c,key,value)
     db.commit(); db.refresh(c); return c
