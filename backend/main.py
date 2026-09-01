@@ -10,6 +10,7 @@ from .workflow import assess_amount, build_repayment_schedule
 from .profile_service import profile_payload
 from .api_services import router as service_router
 from .reporting import router as reporting_router
+from .seed_demo import seed_demo_data
 
 app = FastAPI(title="DirectCredit API", version="0.5.0")
 origins = [x.strip() for x in os.getenv("CORS_ORIGINS", "*").split(",") if x.strip()]
@@ -18,6 +19,12 @@ app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True
 @app.on_event("startup")
 def startup():
     Base.metadata.create_all(bind=engine)
+    if os.getenv("SEED_DEMO_DATA", "true").lower() in {"1", "true", "yes"}:
+        db = next(get_db())
+        try:
+            seed_demo_data(db)
+        finally:
+            db.close()
 
 app.include_router(service_router)
 app.include_router(reporting_router)
