@@ -12,7 +12,17 @@ function slab(){return table('Loan Slab Performance',[['LOAN SLAB','TOTAL LOANS'
 function repayment(){return table('Repayment Matrix',[['METRIC','TODAY','THIS WEEK','THIS MONTH','TOTAL'],['Due Loans','113','584','2,079','25,919'],['Collected','₹0.68 Cr','₹2.41 Cr','₹3.85 Cr','₹58.72 Cr'],['Overdue','₹0.06 Cr','₹0.18 Cr','₹0.63 Cr','₹4.01 Cr'],['Paid on Time','89.7%','91.2%','96.4%','92.8%'],['Partial Paid','199','418','1,026','3,814'],['EMI Payments','37','126','482','4,892']])}
 function calendar(){let cells='';for(let d=1;d<=30;d++)cells+='<button type="button" class="fr-cal-day '+(d%7===0?'high':d%5===0?'mid':'')+'"><b>'+d+'</b><small>'+(d%7===0?'12 due':d%5===0?'6 due':'2 due')+'</small></button>';return '<div class="fr-calendar"><div class="fr-calendar-head"><h3>Due Calendar — September 2026</h3><button type="button" class="fr-small-btn">Today</button></div><div class="fr-calendar-grid">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>'<b>'+x+'</b>').join('')+cells+'</div></div>'}
 const views={users,pipeline,disbursement,slab,repayment,calendar};
+const reportPageMap={users:'reports',pipeline:'pipeline',disbursement:'disbursementMatrix',slab:'slab',repayment:'repayment',calendar:'calendar'};
 el.innerHTML='<div class="fr-head"><div><h2>Funnel & Matrix Reports</h2><p>Registered users, MoM matrix, and onboarding stage conversion</p><small>Updated 08/May/2026, 12:25:57 PM</small></div><div class="fr-admin"><div class="fr-admin-avatar">●</div><div><b>Service Matrimony</b><span>Super Admin</span></div><button type="button" class="fr-refresh">⟳ &nbsp;Refresh</button></div></div><div class="fr-tabs">'+tabs.map((t,i)=>'<button type="button" class="fr-tab '+(i===0?'selected':'')+'" data-report-tab="'+t[2]+'"><span class="fr-tab-icon">'+['♙','▤','$','▦','%','□'][i]+'</span><div><b>'+t[0]+'</b><small>'+t[1]+'</small></div></button>').join('')+'</div><div class="fr-filter"><div class="fr-filter-label">▣ <b>Registration date & time</b><small>All registration dates</small></div><input placeholder="dd/mm/yyyy, --:-- --"><span>to</span><input placeholder="dd/mm/yyyy, --:-- --"><button type="button" class="fr-apply">Apply</button></div><div id="reportView"></div>';
-const view=document.getElementById('reportView');function activate(key){document.querySelectorAll('.fr-tab').forEach(b=>b.classList.toggle('selected',b.dataset.reportTab===key));view.innerHTML=views[key]();}
-document.querySelectorAll('.fr-tab').forEach(b=>b.addEventListener('click',function(){activate(this.dataset.reportTab)}));document.querySelector('.fr-refresh').addEventListener('click',function(){activate(document.querySelector('.fr-tab.selected').dataset.reportTab)});activate('users');
+const view=document.getElementById('reportView');
+function activate(key){document.querySelectorAll('.fr-tab').forEach(b=>b.classList.toggle('selected',b.dataset.reportTab===key));view.innerHTML=views[key]();}
+function openReportTab(key){
+  const page=reportPageMap[key]||'reports';
+  showPage(page);
+  if(key==='users')activate('users');
+}
+document.querySelectorAll('.fr-tab').forEach(b=>b.addEventListener('click',function(){openReportTab(this.dataset.reportTab)}));
+document.querySelector('.fr-refresh').addEventListener('click',function(){activate(document.querySelector('.fr-tab.selected').dataset.reportTab)});
+const reportsNav=document.querySelector('.nav[data-page="reports"]');if(reportsNav)reportsNav.addEventListener('click',function(){setTimeout(()=>activate('users'),0)});
+activate('users');
 })();
