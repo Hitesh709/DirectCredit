@@ -7,7 +7,9 @@ class CustomerCreate(BaseModel):
     mobile: Optional[str] = None
     email: Optional[str] = None
     address: Optional[str] = None
+    permanent_address: Optional[str] = None
     current_city: Optional[str] = None
+    gender: Optional[str] = None
     business_name: Optional[str] = None
     business_type: Optional[str] = None
     date_of_birth: Optional[str] = None
