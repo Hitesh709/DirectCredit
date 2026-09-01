@@ -6,6 +6,10 @@ from .database import get_db
 from .db_models import CustomerRecord, LoanRecord, DocumentRecord, RepaymentRecord, CustomerJourneyRecord
 from .provider_gateway import provider_status, result
 from .verification import validate_pan, validate_aadhaar
+from .loan_lifecycle import (
+    LOAN_STATUSES, LOAN_STAGES, STATUS_TO_STAGE,
+    normalize_status, normalize_stage, transition_error, lifecycle_payload,
+)
 
 router = APIRouter(prefix="/api/services", tags=["verification-services"])
 
@@ -21,13 +25,52 @@ def pan_validate(pan: str):
 def aadhaar_validate(aadhaar: str):
     return result("aadhaar", validate_aadhaar(aadhaar))
 
+@router.get("/loan-lifecycle/contract")
+def loan_lifecycle_contract():
+    """Single canonical vocabulary shared by Customer Portal and Admin."""
+    return {
+        "statuses": list(LOAN_STATUSES),
+        "stages": list(LOAN_STAGES),
+        "status_to_stage": STATUS_TO_STAGE,
+    }
+
+@router.get("/loans/{loan_id}/lifecycle")
+def get_loan_lifecycle(loan_id: int, db: Session = Depends(get_db)):
+    loan = db.get(LoanRecord, loan_id)
+    if not loan:
+        raise HTTPException(404, "Loan application not found")
+    return lifecycle_payload(loan)
+
+@router.post("/loans/{loan_id}/lifecycle")
+def transition_loan_lifecycle(loan_id: int, payload: dict, db: Session = Depends(get_db)):
+    """Move a loan through the canonical lifecycle; rejects invalid jumps."""
+    loan = db.get(LoanRecord, loan_id)
+    if not loan:
+        raise HTTPException(404, "Loan application not found")
+
+    try:
+        current = normalize_status(loan.status)
+        target = normalize_status(payload.get("status"))
+        stage = normalize_stage(payload.get("current_stage"), target)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+
+    error = transition_error(current, target)
+    if error:
+        raise HTTPException(409, error)
+
+    loan.status = target
+    loan.current_stage = stage
+    db.commit()
+    db.refresh(loan)
+    return lifecycle_payload(loan)
+
 @router.post("/customers/{customer_id}/journey")
 def sync_customer_journey(customer_id: int, payload: dict, db: Session = Depends(get_db)):
     customer = db.get(CustomerRecord, customer_id)
     if not customer:
         raise HTTPException(404, "Customer not found")
 
-    # Keep the master customer record synchronized with the customer portal.
     c = payload.get("customer") or {}
     customer_fields = {
         "name": c.get("name"), "pan": c.get("pan"), "mobile": c.get("mobile"),
@@ -50,7 +93,6 @@ def sync_customer_journey(customer_id: int, payload: dict, db: Session = Depends
         if value is not None and hasattr(customer, key):
             setattr(customer, key, value)
 
-    # Persist the loan/application side as well as the stage-by-stage journey.
     loan_payload = payload.get("loan") or {}
     loan = db.query(LoanRecord).filter(LoanRecord.customer_id == customer_id).order_by(LoanRecord.id.desc()).first()
     requested = float(loan_payload.get("requested_amount") or loan_payload.get("sanctioned_amount") or 1)
@@ -58,9 +100,21 @@ def sync_customer_journey(customer_id: int, payload: dict, db: Session = Depends
         loan = LoanRecord(customer_id=customer_id, requested_amount=requested)
         db.add(loan)
         db.flush()
-    for key in ["requested_amount", "eligible_amount", "monthly_emi", "sanctioned_amount", "disbursed_amount", "outstanding_amount", "interest_rate", "tenure_months", "status", "current_stage", "product"]:
+    for key in ["requested_amount", "eligible_amount", "monthly_emi", "sanctioned_amount", "disbursed_amount", "outstanding_amount", "interest_rate", "tenure_months", "product"]:
         if key in loan_payload and loan_payload[key] is not None and hasattr(loan, key):
             setattr(loan, key, loan_payload[key])
+    if "status" in loan_payload and loan_payload["status"] is not None:
+        try:
+            loan.status = normalize_status(loan_payload["status"])
+        except ValueError as exc:
+            raise HTTPException(422, str(exc))
+    if "current_stage" in loan_payload and loan_payload["current_stage"] is not None:
+        try:
+            loan.current_stage = normalize_stage(loan_payload["current_stage"], loan.status)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc))
+    elif loan.status:
+        loan.current_stage = STATUS_TO_STAGE[normalize_status(loan.status)]
     if "disbursement_details" in loan_payload:
         loan.disbursement_details = json.dumps(loan_payload["disbursement_details"], ensure_ascii=False)
 
@@ -80,7 +134,6 @@ def sync_customer_journey(customer_id: int, payload: dict, db: Session = Depends
         record.status = step.get("status") or "pending"
         record.details = json.dumps(step.get("details") or {}, ensure_ascii=False)
 
-    # Keep document metadata linked to the same customer/loan.
     for doc in payload.get("documents") or []:
         file_name = str(doc.get("file_name") or doc.get("name") or "document")
         document_type = str(doc.get("document_type") or doc.get("type") or "Other Document")
@@ -96,7 +149,6 @@ def sync_customer_journey(customer_id: int, payload: dict, db: Session = Depends
         existing.verification_status = doc.get("verification_status") or doc.get("status") or existing.verification_status
         existing.storage_key = doc.get("storage_key") or existing.storage_key
 
-    # Upsert the repayment snapshot so the Admin repayment/collection screens have the same source.
     for item in payload.get("repayments") or []:
         installment = int(item.get("installment") or 0)
         if not installment:
@@ -118,6 +170,8 @@ def sync_customer_journey(customer_id: int, payload: dict, db: Session = Depends
         "status": "synced",
         "customer_id": customer_id,
         "loan_id": loan.id,
+        "canonical_status": normalize_status(loan.status),
+        "canonical_stage": normalize_stage(loan.current_stage, loan.status),
         "journey_steps": len(steps),
         "documents": len(payload.get("documents") or []),
         "repayments": len(payload.get("repayments") or [])
