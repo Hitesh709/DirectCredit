@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Float, Integer, String, Text
+from sqlalchemy import Column, DateTime, Float, Integer, String, Text, Boolean
 from sqlalchemy.sql import func
 from .database import Base
 
@@ -65,8 +65,18 @@ class DocumentRecord(Base):
     customer_id = Column(Integer, index=True, nullable=False)
     loan_id = Column(Integer, index=True)
     document_type = Column(String(80), nullable=False)
+    document_role = Column(String(80), default="supporting")
     file_name = Column(String(255), nullable=False)
-    verification_status = Column(String(40), default="pending")
+    mime_type = Column(String(120))
+    file_size = Column(Integer, default=0)
+    checksum = Column(String(128), index=True)
+    source = Column(String(40), default="customer_portal")
+    required = Column(Boolean, default=False)
+    verification_status = Column(String(40), default="pending", index=True)
+    verified_by = Column(String(120))
+    verified_at = Column(DateTime(timezone=True))
+    rejection_reason = Column(Text)
+    storage_provider = Column(String(50))
     storage_key = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
