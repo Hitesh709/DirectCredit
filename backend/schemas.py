@@ -26,6 +26,10 @@ class CustomerCreate(BaseModel):
     foir: float = 0
     existing_emi: float = 0
     dependents: int = 0
+    residence_ownership: Optional[str] = None
+    residence_since: Optional[str] = None
+    ownership_proof_name: Optional[str] = None
+    ownership_proof_status: Optional[str] = None
 
 class CustomerOut(CustomerCreate):
     id: int
