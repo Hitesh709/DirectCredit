@@ -5,6 +5,9 @@ from .database import Base
 class CustomerRecord(Base):
     __tablename__ = "customers"
     id = Column(Integer, primary_key=True, index=True)
+    customer_code = Column(String(80), unique=True, index=True)
+    login_id = Column(String(120), unique=True, index=True)
+    password_hash = Column(Text)
     name = Column(String(200), nullable=False)
     pan = Column(String(20), unique=True, index=True)
     mobile = Column(String(30), index=True)
