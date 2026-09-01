@@ -1,11 +1,26 @@
 const pages=[...document.querySelectorAll('.page')];
 const navs=[...document.querySelectorAll('.nav')];
 const titles={
-  dashboard:'Dashboard',reports:'Funnel & Matrix Reports',pipeline:'Loan Pipeline',profile:'Customer Profile',
-  kyc:'KYC & Employment Summary',contact:'Number & Contact Details',bank:'Bank Statement Analysis',risk:'Risk & Score Breakdown',
-  trend:'Loan Trend & Summary',loanRequest:'Loan Request & Eligibility',slab:'Loan Slab Performance Matrix',
-  disbursementMatrix:'Disbursement Matrix',accounting:'Loan Accounting & Repayment',repayment:'Repayment Matrix',
-  calendar:'Due Calendar',settlement:'Loan Settlement / Closure',collection:'Collection & Agent Performance'
+  dashboard:'Dashboard',
+  reports:'Reports',
+  loanRequest:'Loan Request & Eligibility',
+  pipeline:'Loans',
+  profile:'Customers',
+  bank:'Bank Analysis',
+  risk:'Risk & Score',
+  trend:'Loan Trend & Summary',
+  slab:'Loan Slab Performance Matrix',
+  disbursementMatrix:'Disbursement',
+  accounting:'Accounting',
+  repayment:'Repayment',
+  calendar:'Due Calendar',
+  settlement:'Loan Settlement / Closure',
+  collection:'Collection & Agent Performance',
+  alerts:'Alerts',
+  documents:'Documents',
+  settings:'Settings',
+  support:'Support',
+  logout:'Logout'
 };
 function showPage(id){
   pages.forEach(p=>p.classList.toggle('activePage',p.id===id));
