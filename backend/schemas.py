@@ -35,6 +35,10 @@ class CustomerOut(CustomerCreate):
     id: int
     status: str = "active"
 
+class CustomerLogin(BaseModel):
+    login_id: str = Field(min_length=1, max_length=120)
+    password: str = Field(min_length=1, max_length=200)
+
 class LoanApplicationCreate(BaseModel):
     customer_id: int
     requested_amount: float = Field(gt=0, le=15000)
