@@ -7,7 +7,8 @@ from .db_models import CustomerRecord, LoanRecord, DocumentRecord
 from .schemas import DocumentCreate
 from .auth import get_current_customer
 
-router = APIRouter(prefix="/api/documents", tags=["documents"])
+# This router is mounted by api_services, so its final paths are /api/services/documents/...
+router = APIRouter(prefix="/documents", tags=["documents"])
 
 DOCUMENT_TYPES = {
     "PAN", "AADHAAR", "SELFIE", "BANK_STATEMENT", "BUSINESS_PROOF",
@@ -31,9 +32,13 @@ def migrate_document_columns():
         "storage_provider": ("documents", "VARCHAR(50)"),
     }
     with engine.begin() as conn:
+        try:
+            existing_columns = {c["name"] for c in inspect(conn).get_columns("documents")}
+        except Exception:
+            # On a fresh database Base.metadata.create_all() will create the complete table.
+            return
         for name, (table, sql_type) in additions.items():
-            columns = {c["name"] for c in inspect(conn).get_columns(table)}
-            if name not in columns:
+            if name not in existing_columns:
                 try:
                     conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {sql_type}"))
                 except Exception:
