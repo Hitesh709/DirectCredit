@@ -3,6 +3,8 @@ import hashlib
 import hmac
 import os
 from typing import Optional
+from fastapi import Depends, Header, HTTPException
+from sqlalchemy.orm import Session
 
 SECRET = os.getenv("DIRECTCREDIT_SECRET", "change-this-in-render")
 TOKEN_TTL_HOURS = int(os.getenv("TOKEN_TTL_HOURS", "24"))
@@ -21,7 +23,6 @@ def verify_password(password: str, stored: str) -> bool:
         return False
 
 def issue_demo_token(user_id: int, role: str) -> str:
-    # Temporary signed token for the MVP. Replace with persistent auth/JWT before production.
     expires = int((datetime.now(timezone.utc) + timedelta(hours=TOKEN_TTL_HOURS)).timestamp())
     payload = f"{user_id}:{role}:{expires}"
     signature = hmac.new(SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
@@ -41,3 +42,20 @@ def decode_demo_token(token: str) -> Optional[dict]:
         return {"user_id": int(user_id), "role": role}
     except (ValueError, TypeError):
         return None
+
+def get_current_customer(
+    authorization: Optional[str] = Header(default=None),
+    db: Session = Depends(lambda: None),
+):
+    """Resolve the authenticated customer from the signed bearer token.
+
+    This is intentionally a small dependency for the MVP. It prevents a customer
+    session from selecting another customer's numeric ID in the browser.
+    """
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=401, detail="Customer authentication required")
+    token = authorization.split(" ", 1)[1].strip()
+    claims = decode_demo_token(token)
+    if not claims or claims.get("role") != "customer":
+        raise HTTPException(status_code=401, detail="Invalid or expired customer session")
+    return claims
