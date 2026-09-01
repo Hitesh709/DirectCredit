@@ -49,6 +49,7 @@ class LoanRecord(Base):
     status = Column(String(50), default="draft", index=True)
     current_stage = Column(String(50), default="PAN", index=True)
     product = Column(String(120), default="Micro Business Loan")
+    disbursement_details = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class DocumentRecord(Base):
@@ -71,3 +72,15 @@ class RepaymentRecord(Base):
     due_amount = Column(Float, nullable=False)
     paid_amount = Column(Float, default=0)
     status = Column(String(30), default="upcoming", index=True)
+
+class CustomerJourneyRecord(Base):
+    __tablename__ = "customer_journey"
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, index=True, nullable=False)
+    loan_id = Column(Integer, index=True)
+    step_key = Column(String(80), index=True, nullable=False)
+    step_number = Column(Integer, default=0)
+    step_label = Column(String(160))
+    status = Column(String(40), default="pending")
+    details = Column(Text)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
