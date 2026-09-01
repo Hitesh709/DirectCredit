@@ -1,0 +1,21 @@
+/* Admin customer profile: render the same 13-step data persisted by the customer portal. */
+(function(){
+  const API_BASE=(localStorage.getItem('directcredit_api_url')||window.DIRECTCREDIT_API_URL||'/api').replace(/\/$/,'');
+  const id=()=>Number(localStorage.getItem('directcredit_customer_id')||new URLSearchParams(location.search).get('customer_id')||1);
+  const money=v=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Number(v||0));
+  const esc=v=>String(v==null?'—':v).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function detail(d){
+    const keys=['pan','name','dob','gender','occupation','business_name','monthly_income','current_address','permanent_address','bank','average_balance','cibil','foir','existing_emi','assessment_score','risk','sanction_amount','customer_approval','esign_status'];
+    return keys.filter(k=>d&&d[k]!==undefined&&d[k]!==null&&d[k]!=='').map(k=>`<span><b>${esc(k.replace(/_/g,' '))}</b>: ${esc(typeof d[k]==='object'?JSON.stringify(d[k]):d[k])}</span>`).join('');
+  }
+  async function render(){
+    try{
+      const r=await fetch(`${API_BASE}/customers/${id()}/profile`);if(!r.ok)return;
+      const data=await r.json(),steps=data.journey||[],loans=data.loans||[];
+      let host=document.getElementById('adminCustomerJourney');
+      if(!host){host=document.createElement('section');host.id='adminCustomerJourney';host.className='panel admin-customer-journey';const anchor=document.querySelector('.overview-grid');if(anchor)anchor.insertAdjacentElement('afterend',host);else document.querySelector('.right-area')?.appendChild(host)}
+      host.innerHTML=`<h3>LOAN APPLICATION JOURNEY — LIVE CUSTOMER DATA</h3><p>Every customer step is linked to the same database record used by Admin. PAN → Aadhaar → Selfie → Bureau → Profile → Bank Analysis → Documents → Assessment → Sanction → Customer Approval → E-Sign → Disbursement → Repayment.</p><div class="admin-journey-grid">${steps.map(s=>`<article><div class="aj-head"><strong>${esc(s.step_number)}. ${esc(s.step_label)}</strong><mark>${esc(s.status)}</mark></div><div class="aj-details">${detail(s.details)}</div></article>`).join('')||'<div>No customer journey data has been synchronized yet.</div>'}</div>${loans.map(l=>`<div class="admin-disbursement"><b>Loan #${esc(l.id)} — ${esc(l.product)}</b><span>Requested ${money(l.requested_amount)}</span><span>Eligible ${money(l.eligible_amount)}</span><span>Sanctioned ${money(l.sanctioned_amount)}</span><span>Disbursed ${money(l.disbursed_amount)}</span><span>Outstanding ${money(l.outstanding_amount)}</span><span>Stage ${esc(l.current_stage)}</span><span>Status ${esc(l.status)}</span><span>Disbursement ${esc(l.disbursement_details?JSON.stringify(l.disbursement_details):'Not recorded')}</span></div>`).join('')}`;
+    }catch(e){console.warn('Admin journey panel:',e.message)}
+  }
+  render();setInterval(render,3000);
+})();
