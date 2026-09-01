@@ -30,6 +30,7 @@ class CustomerRecord(Base):
     kyc_status = Column(String(40), default="pending")
     email_verified = Column(String(20), default="pending")
     selfie_status = Column(String(40), default="pending")
+    status = Column(String(40), default="active", index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class LoanRecord(Base):
