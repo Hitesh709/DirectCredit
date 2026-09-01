@@ -18,15 +18,19 @@ app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True
 
 def migrate_customer_profile_columns():
     inspector = inspect(engine)
-    columns = {c["name"] for c in inspector.get_columns("customers")}
     additions = {
-        "permanent_address": "TEXT",
-        "gender": "VARCHAR(40)",
+        "permanent_address": ("customers", "TEXT"),
+        "gender": ("customers", "VARCHAR(40)"),
+        "disbursement_details": ("loan_applications", "TEXT"),
     }
     with engine.begin() as conn:
-        for name, sql_type in additions.items():
-            if name not in columns:
-                conn.execute(text(f"ALTER TABLE customers ADD COLUMN {name} {sql_type}"))
+        for name, (table, sql_type) in additions.items():
+            try:
+                columns = {c["name"] for c in inspect(conn).get_columns(table)}
+                if name not in columns:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {sql_type}"))
+            except Exception:
+                pass
 
 @app.on_event("startup")
 def startup():
@@ -74,10 +78,8 @@ def update_customer_profile(customer_id: int, payload: CustomerCreate, db: Sessi
     if not c: raise HTTPException(404, "Customer not found")
     values = payload.model_dump(exclude_unset=True)
     for key, value in values.items():
-        if key != "name" or str(value or "").strip():
-            setattr(c, key, value)
-    db.commit(); db.refresh(c)
-    return c
+        if key != "name" or str(value or "").strip(): setattr(c, key, value)
+    db.commit(); db.refresh(c); return c
 
 @app.get("/api/customers/{customer_id}/profile")
 def customer_profile(customer_id: int, db: Session = Depends(get_db)):
