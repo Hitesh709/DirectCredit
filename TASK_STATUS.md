@@ -32,11 +32,26 @@ Implemented:
 - Customer login/session continues to use the Task 1 database-backed identity.
 - Admin endpoints remain separate so Admin can aggregate all customers/loans.
 
+## Task 3 — Canonical loan lifecycle/status/stage contract
+**Status: COMPLETE (code implemented; deployment smoke test still required)**
+
+Implemented:
+- Added `backend/loan_lifecycle.py` as the single canonical loan lifecycle contract.
+- Defined canonical statuses from `draft` through `assessment`, `sanctioned`, customer approval, E-Sign, E-Mandate, disbursement, repayment, overdue, repaid and closed.
+- Defined canonical application stages including PAN, Aadhaar, Selfie, Bureau, Profile, Bank Analysis, Documents, Assessment, Sanction, Customer Approval, E-Sign, E-Mandate, Disbursement and Repayment.
+- Added legacy status/stage normalization so older demo records do not create a second vocabulary.
+- Added an explicit allowed-transition map to prevent invalid lifecycle jumps.
+- Added `/api/services/loan-lifecycle/contract` for Customer Portal/Admin integration.
+- Added `/api/services/loans/{loan_id}/lifecycle` to read the canonical lifecycle for a loan.
+- Added `/api/services/loans/{loan_id}/lifecycle` transition API with validation and HTTP 409 for invalid transitions.
+- Customer journey synchronization now normalizes loan status and stage into the canonical contract.
+- Lifecycle response includes allowed next statuses and the financial amounts attached to the same loan record.
+
 Done when:
 - Code is committed to `main`: yes.
 - Deployed API smoke test: pending.
-- Browser test with two different customer IDs: pending.
-- Cross-customer access test: pending.
+- Existing demo portfolio compatibility test: pending.
+- Customer Portal/Admin browser verification: pending.
 
 Next task:
-**Task 3 — Make the Customer Profile a complete editable master record and synchronize every profile field into Admin.**
+**Task 4 — Define document metadata, ownership and verification contract.**
