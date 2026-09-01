@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    { "source": "/customer", "destination": "/customer-login.html" },
+    { "source": "/customer-login", "destination": "/customer-login.html" }
+  ],
+  "headers": [
+    {
+      "source": "/customer-login.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/customer-login.css",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    }
+  ]
+}
