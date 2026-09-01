@@ -1,45 +1,8 @@
-const API_BASE = localStorage.getItem('directcredit_api_url') || (window.DIRECTCREDIT_API_URL || '');
-const customerId = Number(new URLSearchParams(window.location.search).get('customer_id') || localStorage.getItem('directcredit_customer_id') || 1);
-
-async function loadCustomerProfile(){
-  if(!API_BASE) return; // Static reference view remains available until the API URL is configured.
-  try{
-    const res=await fetch(`${API_BASE}/api/customers/${customerId}/profile`);
-    if(!res.ok) throw new Error('Profile unavailable');
-    const data=await res.json();
-    localStorage.setItem('directcredit_customer_id', String(customerId));
-    renderProfile(data);
-  }catch(err){ console.warn('DirectCredit profile API:',err.message); }
-}
-
+const API_BASE=(localStorage.getItem('directcredit_api_url')||window.DIRECTCREDIT_API_URL||'/api').replace(/\/$/,'');
+const customerId=Number(new URLSearchParams(location.search).get('customer_id')||localStorage.getItem('directcredit_customer_id')||1);
 const money=v=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Number(v||0));
-const setText=(el,v)=>{if(el) el.textContent=v ?? '—';};
-
-function renderProfile(data){
-  const c=data.customer||{}, m=data.metrics||{};
-  const nameEl=document.querySelector('.customer-main h2');
-  if(nameEl){ nameEl.childNodes[0].textContent=(c.name||'Customer')+' '; }
-  const strong=document.querySelector('.customer-main strong'); setText(strong,`CUST${String(c.id||customerId).padStart(8,'0')}`);
-  const avatar=document.querySelector('.avatar'); if(avatar) avatar.textContent=(c.name||'C').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
-  const metrics=document.querySelectorAll('.metric');
-  [[m.total_loans||0],[money(m.total_loan_amount)],[money(m.outstanding_amount)],[money(m.amount_paid)],[m.credit_score||0]].forEach((v,i)=>setText(metrics[i]?.querySelector('strong'),v[0]));
-
-  // Replace the reference profile values with the single backend customer record.
-  const labels=[...document.querySelectorAll('.contact-list label')];
-  const values={"Mobile Number":c.mobile,"Email Address":c.email,"Address":c.address,"Current City":c.current_city,"Business Name":c.business_name,"Business Type":c.business_type,"Date of Birth":c.date_of_birth,"PAN Number":c.pan,"Aadhaar Number":c.aadhaar_masked,"Marital Status":c.marital_status};
-  labels.forEach(label=>{const row=label.parentElement; const b=row?.querySelector('b'); if(b && Object.prototype.hasOwnProperty.call(values,label.textContent.trim())) setText(b,values[label.textContent.trim()]||'—');});
-
-  const summary={"Occupation":c.occupation,"Monthly Income":money(c.monthly_income),"Work Experience":`${c.work_experience_years||0} Years`,"Years in Business":`${c.years_in_business||0} Years`,"Average Bank Balance":money(c.average_bank_balance),"Primary Bank":c.primary_bank,"CIBIL Score":`${c.cibil_score||0} / 900`,`FOIR`: `${Number(c.foir||0).toFixed(2)}%`,"Existing EMI":money(c.existing_emi),"Dependents":c.dependents};
-  document.querySelectorAll('.two-col label').forEach(label=>{const key=label.childNodes[0]?.textContent?.trim(); if(summary[key]!==undefined) setText(label.querySelector('b'),summary[key]);});
-
-  const loanRows=document.querySelectorAll('.bottom-grid .table-panel:first-child tbody tr');
-  (data.loans||[]).slice(0,loanRows.length).forEach((l,i)=>{const cells=loanRows[i].children; [l.id,l.product,money(l.sanctioned_amount),money(l.outstanding_amount),money(l.monthly_emi),l.tenure_months+' Months',l.status].forEach((v,j)=>setText(cells[j],v));});
-  const docRows=document.querySelectorAll('.docs tbody tr');
-  (data.documents||[]).slice(0,docRows.length).forEach((d,i)=>{setText(docRows[i].children[0],`▧  ${d.document_type}`);setText(docRows[i].children[1],d.verification_status);});
-}
-
-document.querySelectorAll('.profile-tabs button,.sub-tabs button').forEach(button=>button.addEventListener('click',()=>{const group=button.parentElement;group.querySelectorAll('button').forEach(b=>b.classList.remove('active'));button.classList.add('active')}));
-document.querySelectorAll('.profile-tabs button').forEach((button,i)=>button.addEventListener('click',()=>{if(i===1)window.location.href=`number-contact.html?customer_id=${customerId}`;if(i===2)window.location.href=`bank-analysis.html?customer_id=${customerId}`;if(i===3)window.location.href=`kyc-employment.html?customer_id=${customerId}`;if(i===4)window.location.href=`risk-score.html?customer_id=${customerId}`}));
-document.querySelectorAll('.head-actions button').forEach((button,i)=>button.addEventListener('click',()=>{if(i===0)alert('Edit Profile mode opened. Changes should be saved through the DirectCredit API.');if(i===1)window.print();if(i===2)alert('More customer profile actions.')}));
-document.querySelectorAll('.table-panel h3 a,.view-link').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const href=a.closest('section')?.classList.contains('docs')?'documents.html':a.closest('section')?.classList.contains('small-table')?'repayment.html':'loans.html';window.location.href=`${href}?customer_id=${customerId}`;}));
-loadCustomerProfile();
+const setText=(e,v)=>{if(e)e.textContent=v??'—'};
+async function loadCustomerProfile(){try{const r=await fetch(`${API_BASE}/customers/${customerId}/profile`);if(!r.ok)throw Error(r.status);const data=await r.json();localStorage.setItem('directcredit_customer_id',String(customerId));renderProfile(data)}catch(e){console.warn('DirectCredit profile API unavailable:',e.message);clearStaticData()}}
+function clearStaticData(){document.querySelectorAll('.customer-page strong,.metric strong,.two-col b,.loan-details b,.bottom-grid tbody').forEach(e=>{if(e.tagName==='TBODY')e.innerHTML='<tr><td colspan="7">Live data unavailable.</td></tr>';else if(!e.closest('.profile-tabs'))e.textContent='—'});}
+function renderProfile(data){const c=data.customer||{},m=data.metrics||{},loans=data.loans||[],reps=data.repayments||[],docs=data.documents||[];const nameEl=document.querySelector('.customer-main h2');if(nameEl){nameEl.childNodes[0].textContent=(c.name||'Customer')+' ';}setText(document.querySelector('.customer-main strong'),`CUST${String(c.id||customerId).padStart(8,'0')}`);const av=document.querySelector('.avatar');if(av)av.textContent=(c.name||'C').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();const metrics=document.querySelectorAll('.metric strong');[m.total_loans,m.total_loan_amount,m.outstanding_amount,m.amount_paid,m.credit_score].forEach((v,i)=>setText(metrics[i],i===1||i===2||i===3?money(v):v));const labels=[...document.querySelectorAll('.contact-list label')];const values={'Mobile Number':c.mobile,'Email Address':c.email,'Address':c.address,'Current City':c.current_city,'Business Name':c.business_name,'Business Type':c.business_type,'Date of Birth':c.date_of_birth,'PAN Number':c.pan,'Aadhaar Number':c.aadhaar_masked,'Marital Status':c.marital_status};labels.forEach(l=>setText(l.parentElement?.querySelector('b'),values[l.textContent.trim()]||'—'));const summary={'Occupation':c.occupation,'Monthly Income':money(c.monthly_income),'Work Experience':`${c.work_experience_years||0} Years`,'Years in Business':`${c.years_in_business||0} Years`,'Average Bank Balance':money(c.average_bank_balance),'Primary Bank':c.primary_bank,'CIBIL Score':`${c.cibil_score||0} / 900`,'FOIR':`${Number(c.foir||0).toFixed(2)}%`,'Existing EMI':money(c.existing_emi),'Dependents':c.dependents};document.querySelectorAll('.two-col label').forEach(l=>{const key=l.childNodes[0]?.textContent?.trim();if(summary[key]!==undefined)setText(l.querySelector('b'),summary[key])});const activeBody=document.querySelector('.bottom-grid .table-panel:first-child tbody');if(activeBody)activeBody.innerHTML=loans.length?loans.map(l=>`<tr><td>${l.id}</td><td>${l.product||'—'}</td><td>${money(l.sanctioned_amount)}</td><td>${money(l.outstanding_amount)}</td><td>${money(l.monthly_emi)}</td><td>${l.tenure_months?l.tenure_months+' Months':'—'}</td><td><mark>${l.status||'—'}</mark></td></tr>`).join(''):'<tr><td colspan="7">No live loans available.</td></tr>';const repBody=document.querySelector('.small-table tbody');if(repBody)repBody.innerHTML=reps.slice(0,10).map(r=>`<tr><td>${r.due_date}</td><td>LN${r.loan_id}</td><td>${money(r.paid_amount||r.due_amount)}</td><td><mark>${r.status}</mark></td></tr>`).join('')||'<tr><td colspan="4">No live repayments available.</td></tr>';const docBody=document.querySelector('.docs tbody');if(docBody)docBody.innerHTML=docs.map(x=>`<tr><td>▧ &nbsp; ${x.document_type}</td><td><mark>${x.verification_status}</mark></td><td>${x.created_at?new Date(x.created_at).toLocaleDateString('en-IN'):'—'}</td></tr>`).join('')||'<tr><td colspan="3">No live documents available.</td></tr>';const latest=loans[0];if(latest){const vals=[latest.id,latest.product,money(latest.sanctioned_amount),money(latest.disbursed_amount),latest.created_at?new Date(latest.created_at).toLocaleDateString('en-IN'):'—',latest.tenure_months?latest.tenure_months+' Months':'—',latest.interest_rate?latest.interest_rate+'% P.A.':'—',money(latest.monthly_emi),money(latest.outstanding_amount),'—',latest.status];document.querySelectorAll('.loan-details b').forEach((e,i)=>setText(e,vals[i]))}}
+document.querySelectorAll('.profile-tabs button,.sub-tabs button').forEach(b=>b.addEventListener('click',()=>{b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active')}));document.querySelectorAll('.profile-tabs button').forEach((b,i)=>b.addEventListener('click',()=>{if(i===1)location.href=`number-contact.html?customer_id=${customerId}`;if(i===2)location.href=`bank-analysis.html?customer_id=${customerId}`;if(i===3)location.href=`kyc-employment.html?customer_id=${customerId}`;if(i===4)location.href=`risk-score.html?customer_id=${customerId}`}));document.querySelectorAll('.head-actions button').forEach((b,i)=>b.onclick=()=>i===1?window.print():alert(i===0?'Edit Profile requires a connected update API.':'More customer profile actions.'));loadCustomerProfile();
