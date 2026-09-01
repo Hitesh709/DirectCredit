@@ -1,0 +1,9 @@
+/* Expanded text-only Admin navigation — matches the requested reference */
+.sidebar{width:170px!important;padding:0 8px!important;background:#062f6f!important;overflow-y:auto!important;overflow-x:hidden!important}
+.main{margin-left:170px!important}
+.brand{width:42px!important;height:42px!important;border-radius:50%!important;margin:10px auto 16px!important}
+.sidebar .product{display:none!important}
+.sidebar .nav{display:block!important;width:100%!important;height:auto!important;min-height:38px!important;margin:0!important;padding:9px 10px!important;text-align:left!important;color:#fff!important;background:transparent!important;border:0!important;border-radius:6px!important;font-size:11px!important;font-weight:600!important;line-height:1.25!important;white-space:normal!important;overflow:visible!important}
+.sidebar .nav:before{content:none!important;display:none!important}
+.sidebar .nav:hover,.sidebar .nav.active{background:#0b4ea8!important;color:#fff!important}
+@media(max-width:900px){.sidebar{width:150px!important}.main{margin-left:150px!important}.sidebar .nav{font-size:10px!important;padding-left:8px!important;padding-right:8px!important}}
