@@ -3,8 +3,7 @@ import hashlib
 import hmac
 import os
 from typing import Optional
-from fastapi import Depends, Header, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import Header, HTTPException
 
 SECRET = os.getenv("DIRECTCREDIT_SECRET", "change-this-in-render")
 TOKEN_TTL_HOURS = int(os.getenv("TOKEN_TTL_HOURS", "24"))
@@ -43,15 +42,8 @@ def decode_demo_token(token: str) -> Optional[dict]:
     except (ValueError, TypeError):
         return None
 
-def get_current_customer(
-    authorization: Optional[str] = Header(default=None),
-    db: Session = Depends(lambda: None),
-):
-    """Resolve the authenticated customer from the signed bearer token.
-
-    This is intentionally a small dependency for the MVP. It prevents a customer
-    session from selecting another customer's numeric ID in the browser.
-    """
+def get_current_customer(authorization: Optional[str] = Header(default=None)) -> dict:
+    """Resolve the customer identity from the signed bearer session token."""
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status_code=401, detail="Customer authentication required")
     token = authorization.split(" ", 1)[1].strip()
