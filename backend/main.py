@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, inspect, text
 import os
 from .database import Base, engine, get_db
 from .db_models import CustomerRecord, LoanRecord, DocumentRecord, RepaymentRecord
@@ -16,9 +16,22 @@ app = FastAPI(title="DirectCredit API", version="0.5.0")
 origins = [x.strip() for x in os.getenv("CORS_ORIGINS", "*").split(",") if x.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
+def migrate_customer_profile_columns():
+    inspector = inspect(engine)
+    columns = {c["name"] for c in inspector.get_columns("customers")}
+    additions = {
+        "permanent_address": "TEXT",
+        "gender": "VARCHAR(40)",
+    }
+    with engine.begin() as conn:
+        for name, sql_type in additions.items():
+            if name not in columns:
+                conn.execute(text(f"ALTER TABLE customers ADD COLUMN {name} {sql_type}"))
+
 @app.on_event("startup")
 def startup():
     Base.metadata.create_all(bind=engine)
+    migrate_customer_profile_columns()
     if os.getenv("SEED_DEMO_DATA", "true").lower() in {"1", "true", "yes"}:
         db = next(get_db())
         try:
@@ -53,6 +66,17 @@ def list_customers(db: Session = Depends(get_db)):
 def get_customer(customer_id: int, db: Session = Depends(get_db)):
     c = db.get(CustomerRecord, customer_id)
     if not c: raise HTTPException(404, "Customer not found")
+    return c
+
+@app.patch("/api/customers/{customer_id}/profile", response_model=CustomerOut)
+def update_customer_profile(customer_id: int, payload: CustomerCreate, db: Session = Depends(get_db)):
+    c = db.get(CustomerRecord, customer_id)
+    if not c: raise HTTPException(404, "Customer not found")
+    values = payload.model_dump(exclude_unset=True)
+    for key, value in values.items():
+        if key != "name" or str(value or "").strip():
+            setattr(c, key, value)
+    db.commit(); db.refresh(c)
     return c
 
 @app.get("/api/customers/{customer_id}/profile")
