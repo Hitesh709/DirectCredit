@@ -62,6 +62,16 @@ class StatusUpdate(BaseModel):
 class DocumentCreate(BaseModel):
     customer_id: int
     loan_id: Optional[int] = None
-    document_type: str
-    file_name: str
+    document_type: str = Field(min_length=1, max_length=80)
+    document_role: str = "supporting"
+    file_name: str = Field(min_length=1, max_length=255)
+    mime_type: Optional[str] = None
+    file_size: int = Field(default=0, ge=0)
+    checksum: Optional[str] = None
+    source: str = "customer_portal"
+    required: bool = False
     verification_status: str = "pending"
+    verified_by: Optional[str] = None
+    rejection_reason: Optional[str] = None
+    storage_provider: Optional[str] = None
+    storage_key: Optional[str] = None
