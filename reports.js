@@ -1,42 +1,18 @@
 (function(){
-  const el=document.getElementById('reports');
-  if(!el)return;
-  const tabs=[
-    ['Registration & Users','Registered users, MoM matrix, and onboarding...','users'],
-    ['Loan Pipeline','Approval → E-Sign → E-Mandate → Disbursement','pipeline'],
-    ['Disbursement Matrix','Disbursement counts by date/time → new vs...','disbursement'],
-    ['Loan Slab Performance','Active, overdue & repaid by loan amount slab','slab'],
-    ['Repayment Matrix','Due-date collection matrix — cash received → DPD...','repayment'],
-    ['Due Calendar','Month-wise due-date collection calendar and...','calendar']
-  ];
-  const registered=[
-    ['Total Registered','86,816','blue'],['Last Active This Month','21,729','green'],['Awaiting Approval','316','orange'],['Rejected / Dropped','16,877','red'],['Onboarding Completed','25,983','teal'],['Profile Incomplete','60,791','purple']
-  ];
-  const mom=[
-    ['Registered Users','86,816','50,328','13,005','-74.2%'],
-    ['Onboarding Completed','25,983','15,342','3,189','-79.2%'],
-    ['Profile Incomplete','60,791','34,806','9,812','-71.8%'],
-    ['Blocked / Deactivated','434','180','4','-97.8%']
-  ];
-  const funnel=[
-    ['Aadhaar Verification','86,816','63,228','23,303','285','0.3%','72.8%'],
-    ['PAN Verification','63,228','55,862','7,358','8','0%','88.4%'],
-    ['Selfie & Liveness','55,862','50,525','5,330','7','0%','90.4%'],
-    ['Personal Details','50,525','47,730','2,791','4','0%','94.5%'],
-    ['CIBIL Score Check','47,730','35,013','12,711','6','0%','73.4%'],
-    ['Bank Account Details','35,013','25,596','9,298','119','0.3%','73.1%']
-  ];
-  el.innerHTML=`
-    <div class="fr-head">
-      <div><h2>Funnel & Matrix Reports</h2><p>Registered users, MoM matrix, and onboarding stage conversion</p><small>Updated 08/May/2026, 12:25:57 PM</small></div>
-      <div class="fr-admin"><div class="fr-admin-avatar">●</div><div><b>Service Matrimony</b><span>Super Admin</span></div><button class="fr-refresh">⟳ &nbsp;Refresh</button></div>
-    </div>
-    <div class="fr-tabs">${tabs.map((t,i)=>`<button class="fr-tab ${i===0?'selected':''}" data-report-tab="${t[2]}"><span class="fr-tab-icon">${['♙','▤','$','▦','%','□'][i]}</span><div><b>${t[0]}</b><small>${t[1]}</small></div></button>`).join('')}</div>
-    <div class="fr-filter"><div class="fr-filter-label">▣ <b>Registration date & time</b><small>All registration dates</small></div><input placeholder="dd/mm/yyyy, --:-- --"><span>to</span><input placeholder="dd/mm/yyyy, --:-- --"><button>Apply</button></div>
-    <h3 class="fr-section-title">Registered Users <span>ⓘ</span></h3>
-    <div class="fr-kpis">${registered.map(k=>`<div class="fr-kpi ${k[2]}"><span class="fr-kpi-icon">${k[2]==='orange'?'◷':k[2]==='red'?'♙':k[2]==='green'?'↗':k[2]==='teal'?'✓':k[2]==='purple'?'✎':'♙'}</span><div><b>${k[0]}</b><strong>${k[1]}</strong><span>ⓘ</span></div></div>`).join('')}</div>
-    <div class="fr-bottom">
-      <div class="fr-panel"><h3>Month-over-month breakdown</h3><table><thead><tr><th>METRIC</th><th>TOTAL</th><th>PREVIOUS MONTH</th><th>THIS MONTH</th><th>MOM GROWTH %</th></tr></thead><tbody>${mom.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="fr-negative">${r[4]}</td></tr>`).join('')}</tbody></table></div>
-      <div class="fr-panel"><h3>Onboarding Funnel <span>ⓘ</span></h3><table><thead><tr><th>STAGE</th><th>REGISTERED</th><th>COMPLETED</th><th>PENDING</th><th>DROPPED</th><th>DROP %</th><th>CONV %</th></tr></thead><tbody>${funnel.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="fr-positive">${r[2]}</td><td class="fr-pending">${r[3]}</td><td class="fr-drop">${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td></tr>`).join('')}</tbody></table></div>
-    </div>`;
+const el=document.getElementById('reports');if(!el)return;
+const tabs=[['Registration & Users','Registered users, MoM matrix, and onboarding...','users'],['Loan Pipeline','Approval → E-Sign → E-Mandate → Disbursement','pipeline'],['Disbursement Matrix','Disbursement counts by date/time → new vs repeat','disbursement'],['Loan Slab Performance','Active, overdue & repaid by loan amount slab','slab'],['Repayment Matrix','Due-date collection matrix — cash received → DPD','repayment'],['Due Calendar','Month-wise due-date collection calendar and status','calendar']];
+const registered=[['Total Registered','86,816','blue'],['Last Active This Month','21,729','green'],['Awaiting Approval','316','orange'],['Rejected / Dropped','16,877','red'],['Onboarding Completed','25,983','teal'],['Profile Incomplete','60,791','purple']];
+const mom=[['Registered Users','86,816','50,328','13,005','-74.2%'],['Onboarding Completed','25,983','15,342','3,189','-79.2%'],['Profile Incomplete','60,791','34,806','9,812','-71.8%'],['Blocked / Deactivated','434','180','4','-97.8%']];
+const funnel=[['Aadhaar Verification','86,816','63,228','23,303','285','0.3%','72.8%'],['PAN Verification','63,228','55,862','7,358','8','0%','88.4%'],['Selfie & Liveness','55,862','50,525','5,330','7','0%','90.4%'],['Personal Details','50,525','47,730','2,791','4','0%','94.5%'],['CIBIL Score Check','47,730','35,013','12,711','6','0%','73.4%'],['Bank Account Details','35,013','25,596','9,298','119','0.3%','73.1%']];
+function table(title,rows){return '<div class="fr-panel fr-wide"><h3>'+title+'</h3><div class="fr-table-scroll"><table><thead><tr>'+rows[0].map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(1).map(r=>'<tr>'+r.map(x=>'<td>'+x+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></div>'}
+function users(){return '<h3 class="fr-section-title">Registered Users <span>ⓘ</span></h3><div class="fr-kpis">'+registered.map(k=>'<div class="fr-kpi '+k[2]+'"><span class="fr-kpi-icon">●</span><div><b>'+k[0]+'</b><strong>'+k[1]+'</strong></div></div>').join('')+'</div><div class="fr-bottom">'+table('Month-over-month breakdown',[['METRIC','TOTAL','PREVIOUS MONTH','THIS MONTH','MOM GROWTH %'],...mom])+table('Onboarding Funnel',[['STAGE','REGISTERED','COMPLETED','PENDING','DROPPED','DROP %','CONV %'],...funnel])+'</div>'}
+function pipeline(){return table('Loan Pipeline',[['STAGE','COUNT','% OF TOTAL','STATUS'],['Applications','25,919','100%','Active'],['Unique Users','16,665','64.3%','Tracked'],['Repeat Users','5,743','22.2%','Tracked'],['Completed','9,161','35.3%','Completed'],['Pending','313','1.2%','Pending'],['Dropped / Rejected','16,445','63.4%','Rejected'],['Disbursement','8,705','33.6%','Disbursed']])}
+function disbursement(){return table('Disbursement Matrix',[['METRIC','MAR-26','APR-26','MAY-26','JUN-26','JUL-26','AUG-26','TOTAL'],['Disbursed Count','75','248','846','3,126','1,001','4,296','9,592'],['Disbursed Amount (₹L)','3.00','9.92','18.99','50.58','15.76','98.25','196.50'],['New Users','73','235','790','2,891','860','3,946','8,795'],['Repeat Users','2','13','56','235','141','350','797'],['Repaid Amount (₹L)','2.30','9.18','19.01','44.36','1.83','76.68','153.36'],['Overdue Amount (₹L)','2.04','4.87','7.38','16.17','0.12','30.58','61.16']])}
+function slab(){return table('Loan Slab Performance',[['LOAN SLAB','TOTAL LOANS','ACTIVE','OVERDUE','REPAID','NPA'],['₹5,000–₹10,000','8,426','5,108','316','2,794','208'],['₹10,001–₹15,000','9,871','5,932','402','3,537','241'],['₹15,001–₹25,000','5,482','3,201','267','2,014','158'],['₹25,001–₹50,000','2,140','1,202','154','784','94']])}
+function repayment(){return table('Repayment Matrix',[['METRIC','TODAY','THIS WEEK','THIS MONTH','TOTAL'],['Due Loans','113','584','2,079','25,919'],['Collected','₹0.68 Cr','₹2.41 Cr','₹3.85 Cr','₹58.72 Cr'],['Overdue','₹0.06 Cr','₹0.18 Cr','₹0.63 Cr','₹4.01 Cr'],['Paid on Time','89.7%','91.2%','96.4%','92.8%'],['Partial Paid','199','418','1,026','3,814'],['EMI Payments','37','126','482','4,892']])}
+function calendar(){let cells='';for(let d=1;d<=30;d++)cells+='<button type="button" class="fr-cal-day '+(d%7===0?'high':d%5===0?'mid':'')+'"><b>'+d+'</b><small>'+(d%7===0?'12 due':d%5===0?'6 due':'2 due')+'</small></button>';return '<div class="fr-calendar"><div class="fr-calendar-head"><h3>Due Calendar — September 2026</h3><button type="button" class="fr-small-btn">Today</button></div><div class="fr-calendar-grid">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>'<b>'+x+'</b>').join('')+cells+'</div></div>'}
+const views={users,pipeline,disbursement,slab,repayment,calendar};
+el.innerHTML='<div class="fr-head"><div><h2>Funnel & Matrix Reports</h2><p>Registered users, MoM matrix, and onboarding stage conversion</p><small>Updated 08/May/2026, 12:25:57 PM</small></div><div class="fr-admin"><div class="fr-admin-avatar">●</div><div><b>Service Matrimony</b><span>Super Admin</span></div><button type="button" class="fr-refresh">⟳ &nbsp;Refresh</button></div></div><div class="fr-tabs">'+tabs.map((t,i)=>'<button type="button" class="fr-tab '+(i===0?'selected':'')+'" data-report-tab="'+t[2]+'"><span class="fr-tab-icon">'+['♙','▤','$','▦','%','□'][i]+'</span><div><b>'+t[0]+'</b><small>'+t[1]+'</small></div></button>').join('')+'</div><div class="fr-filter"><div class="fr-filter-label">▣ <b>Registration date & time</b><small>All registration dates</small></div><input placeholder="dd/mm/yyyy, --:-- --"><span>to</span><input placeholder="dd/mm/yyyy, --:-- --"><button type="button" class="fr-apply">Apply</button></div><div id="reportView"></div>';
+const view=document.getElementById('reportView');function activate(key){document.querySelectorAll('.fr-tab').forEach(b=>b.classList.toggle('selected',b.dataset.reportTab===key));view.innerHTML=views[key]();}
+document.querySelectorAll('.fr-tab').forEach(b=>b.addEventListener('click',function(){activate(this.dataset.reportTab)}));document.querySelector('.fr-refresh').addEventListener('click',function(){activate(document.querySelector('.fr-tab.selected').dataset.reportTab)});activate('users');
 })();
