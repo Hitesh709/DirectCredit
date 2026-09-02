@@ -1,0 +1,27 @@
+/* DirectCredit AI Fintech UI — visual layer only. Keeps existing Inter typography and business logic. */
+:root{--ai-ink:#10213f;--ai-muted:#71809a;--ai-blue:#2563eb;--ai-cyan:#06b6d4;--ai-violet:#7c3aed;--ai-line:#e7edf6;--ai-surface:#ffffff;--ai-bg:#f6f9fd;--ai-shadow:0 10px 30px rgba(28,52,94,.07)}
+html{background:var(--ai-bg)}
+body{font-family:Inter,Arial,sans-serif;background:radial-gradient(circle at 78% -10%,rgba(37,99,235,.09),transparent 32%),radial-gradient(circle at 18% 0,rgba(124,58,237,.055),transparent 25%),var(--ai-bg);color:var(--ai-ink)}
+.sidebar{background:linear-gradient(180deg,#071a38 0%,#0b2852 55%,#081d3c 100%);border-right:1px solid rgba(255,255,255,.08);box-shadow:8px 0 30px rgba(5,20,45,.12)}
+.brand{background:linear-gradient(135deg,#38bdf8,#2563eb 55%,#7c3aed);color:#fff;box-shadow:0 8px 22px rgba(37,99,235,.32);border:0}
+.nav-group{margin-bottom:12px}.nav-label{color:#7f94b4;font-size:9px;letter-spacing:1.4px;text-transform:uppercase;padding:8px 12px 5px;font-weight:800}
+.nav{transition:.18s ease;position:relative}.nav:hover{background:rgba(255,255,255,.07);transform:translateX(2px)}.nav.active{background:linear-gradient(90deg,rgba(37,99,235,.9),rgba(37,99,235,.48));box-shadow:inset 3px 0 #67e8f9,0 8px 18px rgba(0,0,0,.12)}
+.main{background:transparent}
+.page:not(#dashboard){background:transparent}
+.panel,.card,.dc-panel{border-color:var(--ai-line);box-shadow:var(--ai-shadow);border-radius:16px;background:rgba(255,255,255,.94);backdrop-filter:blur(8px)}
+.panel:hover,.card:hover{box-shadow:0 14px 34px rgba(28,52,94,.09)}
+.btn,.dc-refresh,.fr-refresh{border-color:#dce5f1;box-shadow:0 4px 12px rgba(30,55,95,.05);transition:.18s ease}.btn:hover,.dc-refresh:hover,.fr-refresh:hover{border-color:#a9c4f7;transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(135deg,#2563eb,#4f46e5);box-shadow:0 8px 20px rgba(37,99,235,.2)}
+.dc-head{background:rgba(255,255,255,.72);backdrop-filter:blur(12px)}
+.dc-title{font-size:22px;letter-spacing:-.3px}.dc-title:after{content:'';display:block;width:42px;height:3px;border-radius:3px;background:linear-gradient(90deg,#2563eb,#22d3ee);margin-top:8px}
+.dc-kpi{border:1px solid rgba(255,255,255,.16);box-shadow:0 12px 24px rgba(28,52,94,.13);position:relative;overflow:hidden}.dc-kpi:after{content:'';position:absolute;width:90px;height:90px;border-radius:50%;right:-32px;top:-38px;background:rgba(255,255,255,.10)}
+.dc-kpi.blue{background:linear-gradient(135deg,#2563eb,#1748b9)}.dc-kpi.purple{background:linear-gradient(135deg,#7c3aed,#5422bd)}.dc-kpi.green{background:linear-gradient(135deg,#10b981,#047857)}
+.dc-panel-head{padding:15px 16px 10px}.dc-panel-head h3{font-size:13px;letter-spacing:.15px}.dc-view{color:#2563eb}.dc-status{box-shadow:0 0 0 3px rgba(20,135,78,.06)}
+.fr-head h2{font-size:23px;letter-spacing:-.4px}.fr-tab{border-radius:14px;transition:.18s ease}.fr-tab:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(28,52,94,.08)}.fr-tab.selected{border-color:#8bb5ff;background:linear-gradient(180deg,#fff,#f4f8ff);box-shadow:0 8px 24px rgba(37,99,235,.08),0 0 0 1px #d7e5ff inset}.fr-tab.selected .fr-tab-icon{background:linear-gradient(135deg,#2563eb,#4f46e5)}
+input,select,textarea{font-family:inherit;border-color:#dce5f1!important;border-radius:10px!important;outline:none}input:focus,select:focus,textarea:focus{border-color:#7da7f5!important;box-shadow:0 0 0 3px rgba(37,99,235,.09)}
+table tr:hover td{background:#f8fbff}
+/* Remove decorative page/task numbering without hiding business values. */
+.number-box,.num,.title-wrap>.number-box,.page-head h1>b{display:none!important}
+.journeyStep span,.pipelineNo,.step-num{display:none!important}
+@media(max-width:900px){.main{margin-left:65px;padding:14px}.dc-kpis{grid-template-columns:repeat(2,1fr)}.dc-main-grid{grid-template-columns:1fr}.fr-tabs{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.dc-kpis{grid-template-columns:1fr}.fr-tabs{grid-template-columns:1fr}.main{margin-left:0;padding:10px}.sidebar{display:none}}
