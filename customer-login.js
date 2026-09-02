@@ -1,43 +1,122 @@
-const CUSTOMER_PROFILE_STORE='dcCustomerProfiles';
-const CUSTOMER_SESSION_KEY='dcCustomerId';
-function readProfiles(){try{return JSON.parse(localStorage.getItem(CUSTOMER_PROFILE_STORE)||'{}')}catch{return {}}}
-function writeProfiles(p){localStorage.setItem(CUSTOMER_PROFILE_STORE,JSON.stringify(p))}
-function initials(name){return String(name||'Customer').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'CU'}
-function money(n){return '₹'+Number(n||0).toLocaleString('en-IN')}
-function createProfile(customerId){const id=String(customerId).trim();const seed=[...id].reduce((a,c)=>a+c.charCodeAt(0),0);const names=['Amit Patel','Neha Shah','Rahul Mehta','Priya Desai','Vivek Joshi','Anita Verma'];const businesses=['Patel Enterprises','Shah Trading Co.','Mehta Wholesale','Desai Foods','Joshi Services','Verma Traders'];const i=seed%names.length;const sanctioned=300000+(seed%8)*50000;const outstanding=Math.round(sanctioned*(0.28+(seed%4)*0.08));const emi=Math.round((sanctioned/12)*0.28/10)*10;const loan='LN'+String(2026000000+seed).slice(-10);return {customerId:id,name:names[i],mobile:'+91 98'+String(10000000+(seed*7919)%89999999).slice(-8),email:names[i].toLowerCase().replace(/ /g,'.')+'@example.com',address:'23, Patel Street, Ahmedabad, Gujarat - 380001',businessName:businesses[i],businessType:'Wholesale Trading',monthlyIncome:95000+(seed%7)*10000,bank:'HDFC Bank (1234)',averageBalance:125000+(seed%6)*15000,cibil:720+(seed%70),foir:31+(seed%12),existingEmi:12000+(seed%5)*2500,score:84+(seed%13)+'.'+(seed%10),risk:'Low Risk',activeLoans:1+(seed%3),sanctioned,outstanding,emi,nextDue:'10 Jun 2026',applicationId:'LRQ'+String(2026000000+seed).slice(-10),status:'Approved',createdAt:new Date().toISOString(),panStatus:'Pending',aadhaarStatus:'Pending',bankStatus:'Pending',journey:{done:[],current:0},loans:[{account:loan,product:'Business Term Loan',sanctioned,outstanding,emi,status:'Active'}],repayments:[{date:'10 May 2026',loan,amount:emi,mode:'UPI',status:'Paid'},{date:'10 Jun 2026',loan,amount:emi,mode:'—',status:'Upcoming'}],documents:[{name:'PAN Card',value:'Pending verification',status:'Pending'},{name:'Aadhaar Card',value:'Not uploaded',status:'Pending'},{name:'Bank Statement',value:'Not uploaded',status:'Pending'},{name:'Business Proof',value:businesses[i],status:'Pending'}]}}
-function getCustomerProfile(customerId){const profiles=readProfiles();if(!profiles[customerId]){profiles[customerId]=createProfile(customerId);writeProfiles(profiles)}return profiles[customerId]}
-function saveCurrentProfile(){if(!window.currentCustomer)return;const profiles=readProfiles();profiles[window.currentCustomer.customerId]=window.currentCustomer;writeProfiles(profiles)}
-function profileValue(key,fallback){return window.currentCustomer?.[key]??fallback}
-const customerSteps=[
- {key:'pan',label:'PAN',title:'PAN Number',text:'Enter your PAN number. Demo mode checks the PAN format and records a temporary verification result.',body:`<label>PAN Number<input id="cPan" placeholder="ABCDE1234F" maxlength="10"></label><div class="info-box" id="cPanResult">PAN name verification: <b>Pending</b></div>`},
- {key:'aadhaar',label:'Aadhaar OCR / Verification',title:'Aadhaar OCR / Verification',text:'Upload your Aadhaar card for OCR and verification. Production verification can be connected later.',body:`<label>Aadhaar Card<input id="cAadhaar" type="file" accept="image/*,.pdf"></label><div class="info-box" id="cAadhaarResult">OCR status: <b>Waiting for upload</b></div>`},
- {key:'selfie',label:'Selfie',title:'Selfie Verification',text:'Capture or upload a selfie for identity and liveness verification.',body:`<label>Selfie<input id="cSelfie" type="file" accept="image/*" capture="user"></label><div class="info-box" id="cSelfieResult">Face/liveness status: <b>Pending</b></div>`},
- {key:'bureau',label:'Bureau',title:'Credit Bureau Check',text:'Your credit bureau information is checked as part of the loan assessment.',body:()=>`<div class="score-box"><div><small>Credit Score</small><strong>${profileValue('cibil',0)}</strong></div><div><small>DPD</small><strong>0</strong></div><div><small>Active Loans</small><strong>${profileValue('activeLoans',0)}</strong></div><div><small>Enquiries</small><strong>2</strong></div></div>`},
- {key:'profile',label:'Profile',title:'Profile Details',text:'Review and confirm your personal and business details.',body:()=>`<div class="detail-list"><div><span>Name</span><b>${profileValue('name','Customer')}</b></div><div><span>Mobile</span><b>${profileValue('mobile','—')}</b></div><div><span>Address</span><b>${profileValue('address','—')}</b></div><div><span>Business</span><b>${profileValue('businessName','—')}</b></div><div><span>Business Type</span><b>${profileValue('businessType','—')}</b></div></div>`},
- {key:'bank',label:'Bank Statement & Analysis',title:'Bank Statement Upload & Our Analysis',text:'Upload your bank statement. DirectCredit analyses the statement using its own analysis engine.',body:`<label>Bank Statement<input id="cBank" type="file" accept=".pdf,.csv,.xls,.xlsx"></label><div class="info-box" id="cBankResult">Analysis status: <b>Waiting for statement</b></div>`},
- {key:'documents',label:'Other Documents',title:'Other Documents',text:'Upload supporting business or income documents when required.',body:()=>`<div class="detail-list"><div><span>PAN Card</span><b class="green-text">${profileValue('panStatus','Pending')}</b></div><div><span>Aadhaar Card</span><b class="green-text">${profileValue('aadhaarStatus','Pending')}</b></div><div><span>Bank Statement</span><b class="green-text">${profileValue('bankStatus','Pending')}</b></div><div><span>Business Proof</span><b>Required if applicable</b></div></div><label>Additional Document<input id="cDoc" type="file" accept=".pdf,image/*"></label>`},
- {key:'assessment',label:'Loan Assessment',title:'Loan Assessment',text:'Your eligibility is calculated from identity, bureau, profile, bank analysis and supporting documents.',body:()=>`<div class="score-box"><div><small>Eligibility Score</small><strong>${profileValue('score','—')} / 110</strong></div><div><small>Risk Category</small><strong class="green-text">${profileValue('risk','Pending')}</strong></div><div><small>Recommended Limit</small><strong>${money(profileValue('sanctioned',0))}</strong></div><div><small>Decision</small><strong class="green-text">Eligible</strong></div></div>`},
- {key:'sanction',label:'Sanction',title:'Sanction',text:'Your approved loan offer is shown below for review.',body:()=>`<div class="approval-box"><span class="approved">APPROVED</span><h2>${money(profileValue('sanctioned',0))}</h2><p>Micro Business Loan · Monthly repayment</p><p>Recommended tenure: <b>12 Months</b></p></div>`},
- {key:'customerApproval',label:'Customer Approval',title:'Customer Approval',text:'Review the sanctioned amount and give your consent to continue.',body:()=>`<div class="approval-box"><h2>${money(profileValue('sanctioned',0))}</h2><p>Approved loan amount</p><label><input id="cConsent" type="checkbox" style="width:auto;display:inline-block;margin-right:8px"> I approve the loan offer and sanction details.</label></div>`},
- {key:'esign',label:'E-Sign',title:'E-Sign Agreement',text:'Review the loan agreement and complete the e-sign step. Demo mode records a temporary success.',body:`<div class="info-box">Agreement status: <b>Ready for E-Sign</b></div>`},
- {key:'disbursement',label:'Disbursement',title:'Disbursement',text:'After approval and e-sign, the loan moves to disbursement. Demo mode records a temporary success.',body:`<div class="info-box">Disbursement status: <b>Ready for Disbursement</b></div>`},
- {key:'repayment',label:'Repayment',title:'Repayment Schedule',text:'Your loan is active and the monthly repayment schedule is available here.',body:()=>`<div class="score-box"><div><small>Loan Amount</small><strong>${money(profileValue('sanctioned',0))}</strong></div><div><small>Monthly Repayment</small><strong>${money(profileValue('emi',0))}</strong></div><div><small>Status</small><strong class="green-text">Active</strong></div><div><small>Frequency</small><strong>Monthly</strong></div></div>`}
-];
-let cCurrent=0,cDone=[];
-function syncJourneyFromProfile(){cCurrent=Number(window.currentCustomer?.journey?.current||0);cDone=Array.isArray(window.currentCustomer?.journey?.done)?window.currentCustomer.journey.done:[]}
-function saveCustomer(){window.currentCustomer.journey={current:cCurrent,done:cDone};saveCurrentProfile()}
-function renderJourney(){const rail=document.getElementById('journeyRail');if(!rail)return;rail.innerHTML=customerSteps.map((s,i)=>`<button class="journey-step ${i===cCurrent?'current':''} ${cDone.includes(s.key)?'done':''}" onclick="goCustomerStep(${i})"><span class="num">${cDone.includes(s.key)?'✓':i+1}</span><span>${s.label}</span></button>`).join('')}
-function renderHomeJourney(){let host=document.getElementById('homeJourney');if(!host){const home=document.getElementById('home');if(!home)return;host=document.createElement('div');host.id='homeJourney';host.className='panel home-journey-panel';const firstPanel=home.querySelector('.panel');if(firstPanel)home.insertBefore(host,firstPanel);else home.appendChild(host)}host.innerHTML=`<div class="home-journey-head"><div><span class="eyebrow">LOAN APPLICATION JOURNEY</span><h2>Complete Your Loan Application</h2><p>13 steps from verification to repayment. Your progress is saved automatically.</p></div><span class="demo-badge">${cDone.length} / ${customerSteps.length} Completed</span></div><div class="home-journey-body"><div class="home-step-list">${customerSteps.map((s,i)=>`<button class="home-step ${i===cCurrent?'current':''} ${cDone.includes(s.key)?'done':''}" onclick="goHomeStep(${i})"><span class="home-step-num">${cDone.includes(s.key)?'✓':i+1}</span><span class="home-step-label"><b>${s.label}</b><small>${s.title}</small></span><span class="home-step-status">${cDone.includes(s.key)?'Completed':i===cCurrent?'Current':'Pending'}</span></button>`).join('')}</div><div class="home-step-summary"><span class="eyebrow">CURRENT STEP</span><h3>Step ${cCurrent+1} of ${customerSteps.length}</h3><h2>${customerSteps[cCurrent].title}</h2><p>${customerSteps[cCurrent].text}</p><button class="primary" onclick="openCustomerCurrentStep()">Continue Current Step →</button></div></div>`}
-function goHomeStep(i){if(i<=cCurrent||cDone.includes(customerSteps[i-1]?.key)){cCurrent=i;saveCustomer();renderHomeJourney();openSection('application')}}
-function openCustomerCurrentStep(){openSection('application')}
-function renderStep(){const s=customerSteps[cCurrent],body=typeof s.body==='function'?s.body():s.body;document.getElementById('stepPanel').innerHTML=`<div class="step-body"><span class="eyebrow">STEP ${cCurrent+1} OF ${customerSteps.length}</span><h2>${s.title}</h2><p>${s.text}</p>${body}<div class="step-actions">${cCurrent>0?'<button class="outline" onclick="goCustomerStep('+(cCurrent-1)+')">← Back</button>':''}<button class="primary" id="customerNext">${cCurrent===customerSteps.length-1?'Finish':'Complete & Continue →'}</button></div><div id="customerSuccess"></div></div>`;bindStep()}
-function bindStep(){const s=customerSteps[cCurrent],next=document.getElementById('customerNext');next.onclick=completeCustomerStep;if(s.key==='pan')document.getElementById('cPan').oninput=e=>e.target.value=e.target.value.toUpperCase();if(s.key==='aadhaar')document.getElementById('cAadhaar').onchange=e=>{if(e.target.files[0]){window.currentCustomer.aadhaarStatus='Verified';document.getElementById('cAadhaarResult').innerHTML='<b>Document received.</b> Demo OCR fields captured successfully.';saveCurrentProfile()}};if(s.key==='selfie')document.getElementById('cSelfie').onchange=e=>{if(e.target.files[0])document.getElementById('cSelfieResult').innerHTML='<b>Selfie received.</b> Demo face/liveness verification ready.'};if(s.key==='bank')document.getElementById('cBank').onchange=e=>{if(e.target.files[0]){window.currentCustomer.bankStatus='Verified';document.getElementById('cBankResult').innerHTML='<b>Statement received.</b> Our analysis engine is ready to analyse the file.';saveCurrentProfile()}}}
-function completeCustomerStep(){const s=customerSteps[cCurrent];if(s.key==='pan'){const v=document.getElementById('cPan').value.trim();if(!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(v)){alert('Enter a valid PAN format, for example ABCDE1234F.');return}window.currentCustomer.panStatus='Verified';document.getElementById('cPanResult').innerHTML='<b>Demo Verified</b> · PAN format and name match successful.'}if(s.key==='aadhaar'&&!document.getElementById('cAadhaar').files[0]){alert('Please upload Aadhaar card.');return}if(s.key==='selfie'&&!document.getElementById('cSelfie').files[0]){alert('Please capture or upload your selfie.');return}if(s.key==='bank'&&!document.getElementById('cBank').files[0]){alert('Please upload a bank statement.');return}if(s.key==='customerApproval'&&!document.getElementById('cConsent').checked){alert('Please approve the loan offer before continuing.');return}if(!cDone.includes(s.key))cDone.push(s.key);saveCustomer();const box=document.getElementById('customerSuccess');box.innerHTML='<div class="success">✓ '+s.label+' completed successfully.</div>';if(cCurrent<customerSteps.length-1){setTimeout(()=>{cCurrent++;saveCustomer();renderJourney();renderStep();renderHomeJourney();hydrateCustomerUI()},350)}else setTimeout(()=>{renderHomeJourney();hydrateCustomerUI();alert('Customer loan journey completed successfully.')},350)}
-function goCustomerStep(i){if(i<=cCurrent||cDone.includes(customerSteps[i-1]?.key)){cCurrent=i;saveCustomer();renderJourney();renderStep();renderHomeJourney()}}
-function hydrateCustomerUI(){const p=window.currentCustomer;if(!p)return;const set=(el,val)=>{if(el)el.textContent=val};document.querySelectorAll('.customer-mini b').forEach(x=>set(x,p.name));document.querySelectorAll('.customer-mini small').forEach(x=>set(x,p.customerId));const avatar=document.querySelector('.customer-mini .avatar');if(avatar)set(avatar,initials(p.name));set(document.querySelector('.welcome h2'),p.name);set(document.querySelector('.welcome-score strong'),p.score);set(document.querySelector('.welcome-score span'),`${p.risk} · ${Number(p.score)>=90?'Excellent':'Good'}`);const ms=[...document.querySelectorAll('#home .metrics .metric strong')];set(ms[0],p.activeLoans);set(ms[1],money(p.sanctioned));set(ms[2],money(p.outstanding));set(ms[3],money(p.emi));const msp=[...document.querySelectorAll('#home .metrics .metric span')];set(msp[3],`Due ${p.nextDue}`);const latest=[...document.querySelectorAll('#home .two-panels .detail-list b')];if(latest.length>=5){set(latest[0],p.loans[0]?.account||'—');set(latest[1],p.loans[0]?.product||'Business Term Loan');set(latest[2],money(p.sanctioned));set(latest[3],money(p.outstanding));set(latest[4],'Active')}set(document.querySelector('#home .due-box strong'),money(p.emi));set(document.querySelector('#home .due-box span'),`Next EMI due on ${p.nextDue}`);const pd=[...document.querySelectorAll('#profile .profile-card .detail-list b')];if(pd.length>=5){set(pd[0],p.mobile);set(pd[1],p.email);set(pd[2],p.address);set(pd[3],p.businessName);set(pd[4],p.businessType)}const fp=document.querySelector('#profile .profile-grid .panel:nth-child(2)');const f=fp?[...fp.querySelectorAll('.detail-list b')]:[];if(f.length>=6){set(f[0],money(p.monthlyIncome));set(f[1],p.bank);set(f[2],money(p.averageBalance));set(f[3],`${p.cibil} / 900 · Good`);set(f[4],p.foir+'%');set(f[5],money(p.existingEmi))}const loanBody=document.querySelector('#loans tbody');if(loanBody)loanBody.innerHTML=(p.loans||[]).map(l=>`<tr><td>${l.account}</td><td>${l.product}</td><td>${money(l.sanctioned)}</td><td>${money(l.outstanding)}</td><td>${l.emi?money(l.emi):'—'}</td><td><mark>${l.status}</mark></td></tr>`).join('');const repBody=document.querySelector('#repayment tbody');if(repBody)repBody.innerHTML=(p.repayments||[]).map(r=>`<tr><td>${r.date}</td><td>${r.loan}</td><td>${money(r.amount)}</td><td>${r.mode}</td><td>${r.status==='Paid'?'<mark>Paid</mark>':'<span class="due">Upcoming</span>'}</td></tr>`).join('');const rm=[...document.querySelectorAll('#repayment .metrics .metric strong')];if(rm.length>=3){set(rm[0],money(Math.max(0,p.sanctioned-p.outstanding)));set(rm[1],money(p.outstanding));set(rm[2],money(p.emi))}const rs=[...document.querySelectorAll('#repayment .metrics .metric span')];if(rs.length>=3){set(rs[0],'Total repaid');set(rs[1],'Remaining');set(rs[2],p.nextDue)}const docs=document.querySelectorAll('#documents .doc');(p.documents||[]).forEach((d,i)=>{const card=docs[i];if(card){set(card.querySelector('b'),d.name);set(card.querySelector('span'),d.value);set(card.querySelector('mark'),d.status)}});const jp=document.getElementById('homeProgress');if(jp){const pct=Math.round((cDone.length/customerSteps.length)*100);jp.innerHTML=`<div class="progress-summary"><b>Step ${Math.min(cCurrent+1,customerSteps.length)} of ${customerSteps.length}</b><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><b>${pct}%</b></div>`}}
-function openSection(id){document.querySelectorAll('.customer-section').forEach(x=>x.classList.remove('active-section'));document.getElementById(id).classList.add('active-section');document.querySelectorAll('.side-nav').forEach(x=>x.classList.toggle('active',x.dataset.section===id));document.getElementById('pageTitle').textContent=document.querySelector(`[data-section="${id}"]`)?.textContent.trim()||'Dashboard';if(id==='application'){renderJourney();renderStep()}}
-function initPortal(customerId){window.currentCustomer=getCustomerProfile(customerId);syncJourneyFromProfile();document.getElementById('loginView').classList.add('hidden');document.getElementById('portalView').classList.remove('hidden');renderJourney();renderStep();renderHomeJourney();hydrateCustomerUI()}
-document.getElementById('loginBtn').onclick=()=>{const id=document.getElementById('loginId').value.trim(),password=document.getElementById('loginPassword').value.trim();if(!id||!password){alert('Enter Customer ID and password/OTP.');return}sessionStorage.setItem('dcCustomerLoggedIn','1');sessionStorage.setItem(CUSTOMER_SESSION_KEY,id);initPortal(id)};
-document.getElementById('logoutBtn').onclick=()=>{sessionStorage.removeItem('dcCustomerLoggedIn');sessionStorage.removeItem(CUSTOMER_SESSION_KEY);location.reload()};
-document.querySelectorAll('.side-nav').forEach(b=>b.onclick=()=>openSection(b.dataset.section));
-if(sessionStorage.getItem('dcCustomerLoggedIn')==='1'&&sessionStorage.getItem(CUSTOMER_SESSION_KEY))initPortal(sessionStorage.getItem(CUSTOMER_SESSION_KEY));
+const API_BASE = (localStorage.getItem('directcredit_api_url') || window.DIRECTCREDIT_API_URL || '/api').replace(/\/$/, '');
+const TOKEN_KEY = 'directcredit_customer_token';
+const CUSTOMER_KEY = 'directcredit_customer_id';
+let currentCustomer = null;
+let profileData = null;
+
+const esc = (v) => String(v ?? '').replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
+const text = (v, fallback = 'Not available') => (v !== null && v !== undefined && String(v).trim() !== '' ? String(v) : fallback);
+const money = (v) => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? 'Not available' : `₹${Number(v).toLocaleString('en-IN')}`);
+const initials = (name) => String(name || 'Customer').split(/\s+/).filter(Boolean).slice(0,2).map(x => x[0]).join('').toUpperCase() || 'CU';
+
+async function api(path, options = {}) {
+  const headers = { Accept: 'application/json', ...(options.headers || {}) };
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  let body = null;
+  try { body = await response.json(); } catch (_) {}
+  if (!response.ok) throw new Error(body?.message || body?.detail || `Request failed (${response.status})`);
+  return body;
+}
+
+function setLoginMessage(message = '', error = false) {
+  const el = document.getElementById('loginMessage');
+  if (!el) return;
+  el.textContent = message;
+  el.className = `login-message${error ? ' error' : ''}`;
+}
+function showLogin() { document.getElementById('loginView')?.classList.remove('hidden'); document.getElementById('portalView')?.classList.add('hidden'); }
+function showPortal() { document.getElementById('loginView')?.classList.add('hidden'); document.getElementById('portalView')?.classList.remove('hidden'); }
+function statusLabel(status) { return text(status, 'Not available').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()); }
+
+function renderDashboard() {
+  const c = profileData?.customer || currentCustomer || {};
+  const m = profileData?.metrics || {};
+  const loans = profileData?.loans || [];
+  const repayments = profileData?.repayments || [];
+  const journey = profileData?.journey || [];
+  document.querySelectorAll('.customer-mini b').forEach(el => el.textContent = text(c.name, 'Customer'));
+  document.querySelectorAll('.customer-mini small').forEach(el => el.textContent = text(c.customer_code || c.id, 'Not available'));
+  const av = document.querySelector('.customer-mini .avatar'); if (av) av.textContent = initials(c.name);
+  const accountStatus = document.getElementById('accountStatus'); if (accountStatus) accountStatus.textContent = 'Customer Record Found';
+  const welcome = document.querySelector('.welcome h2'); if (welcome) welcome.textContent = text(c.name, 'Customer');
+
+  const score = profileData?.directcredit_score ?? (profileData?.risk_score?.source === 'scorecard' ? profileData.risk_score.total_score : null);
+  const scoreEl = document.querySelector('.welcome-score strong');
+  const scoreStatus = document.querySelector('.welcome-score span');
+  if (scoreEl) scoreEl.textContent = score == null ? 'Not available' : score;
+  if (scoreStatus) scoreStatus.textContent = score == null ? 'Not assessed' : text(profileData.risk_score?.risk_tier, 'Assessed');
+
+  const metrics = [...document.querySelectorAll('#home .metrics .metric')];
+  if (metrics[0]) { metrics[0].querySelector('strong').textContent = String(m.total_loans ?? 0); metrics[0].querySelector('span').textContent = 'Recorded loans'; }
+  if (metrics[1]) { metrics[1].querySelector('strong').textContent = money(m.total_loan_amount); metrics[1].querySelector('span').textContent = 'Recorded sanctioned amount'; }
+  if (metrics[2]) { metrics[2].querySelector('strong').textContent = money(m.outstanding_amount); metrics[2].querySelector('span').textContent = 'Recorded outstanding'; }
+  const next = repayments.filter(r => r.status !== 'paid' && Number(r.due_amount || 0) > Number(r.paid_amount || 0)).sort((a,b) => String(a.due_date).localeCompare(String(b.due_date)))[0];
+  if (metrics[3]) { metrics[3].querySelector('strong').textContent = next ? money(Math.max(Number(next.due_amount || 0) - Number(next.paid_amount || 0), 0)) : 'Not available'; metrics[3].querySelector('span').textContent = next ? `Due ${text(next.due_date)}` : 'No upcoming EMI recorded'; }
+
+  const latest = loans[0];
+  const detail = [...document.querySelectorAll('#home .latest-loan .detail-list b')];
+  if (detail.length) {
+    detail[0].textContent = latest ? text(latest.id) : 'Not available';
+    detail[1].textContent = latest ? text(latest.product) : 'Not available';
+    detail[2].textContent = latest ? money(latest.sanctioned_amount || latest.requested_amount) : 'Not available';
+    detail[3].textContent = latest ? money(latest.outstanding_amount) : 'Not available';
+    detail[4].textContent = latest ? statusLabel(latest.status) : 'Not available';
+  }
+  renderJourney(journey); renderProfile(c); renderProfileSecondary(c, profileData); renderLoans(loans); renderRepayments(repayments); renderDocuments(profileData?.documents || []);
+}
+
+function renderJourney(rows) {
+  const host = document.getElementById('homeProgress'); const rail = document.getElementById('journeyRail');
+  if (!rows.length) { const empty = '<div class="empty-state">No application journey data has been recorded for this customer.</div>'; if (host) host.innerHTML = empty; if (rail) rail.innerHTML = empty; const panel = document.getElementById('stepPanel'); if (panel) panel.innerHTML = '<div class="empty-state">No application step data is available.</div>'; return; }
+  const sorted = [...rows].sort((a,b) => Number(a.step_number || 0) - Number(b.step_number || 0));
+  const html = sorted.map((s,i) => `<div class="journey-row"><span class="num">${esc(s.step_number || i + 1)}</span><div><b>${esc(text(s.step_label))}</b><small>${esc(statusLabel(s.status))}</small></div></div>`).join('');
+  if (host) host.innerHTML = html; if (rail) rail.innerHTML = html;
+  const current = sorted.find(x => String(x.status).toLowerCase() === 'current') || sorted.find(x => String(x.status).toLowerCase() === 'pending') || sorted[0];
+  const panel = document.getElementById('stepPanel'); if (panel && current) panel.innerHTML = `<div class="step-body"><span class="eyebrow">APPLICATION STEP</span><h2>${esc(text(current.step_label))}</h2><p>Status: <b>${esc(statusLabel(current.status))}</b></p></div>`;
+}
+
+function renderProfile(c) {
+  const box = document.querySelector('.profile-data'); if (!box) return;
+  const rows = [['Customer ID', c.customer_code || c.id],['Mobile Number',c.mobile],['Email',c.email],['Address',c.address],['Business Name',c.business_name],['Business Type',c.business_type],['Customer Type',c.customer_type],['Occupation',c.occupation],['Monthly Income',c.monthly_income == null ? null : money(c.monthly_income)],['Primary Bank',c.primary_bank],['Average Bank Balance',c.average_bank_balance == null ? null : money(c.average_bank_balance)],['CIBIL Score',c.cibil_score],['FOIR',c.foir == null ? null : `${c.foir}%`],['Existing EMI',c.existing_emi == null ? null : money(c.existing_emi)]];
+  box.innerHTML = rows.map(([k,v]) => `<div><span>${esc(k)}</span><b>${esc(text(v))}</b></div>`).join('');
+}
+function renderProfileSecondary(c, data) {
+  const box = document.querySelector('.profile-data-secondary'); if (!box) return;
+  const k = data?.kyc_employment || {};
+  const rows = [['KYC Status',k.kyc_status],['Employment / Occupation',k.employment_type],['Monthly Income',k.income == null ? null : money(k.income)],['Work Experience',k.work_experience_years == null ? null : `${k.work_experience_years} years`],['Years in Business',k.years_in_business == null ? null : `${k.years_in_business} years`],['Residence Ownership',k.residence_ownership],['Ownership Proof',k.ownership_proof_status],['Credit Score',c.cibil_score],['FOIR',c.foir == null ? null : `${c.foir}%`],['Existing EMI',c.existing_emi == null ? null : money(c.existing_emi)]];
+  box.innerHTML = rows.map(([key,value]) => `<div><span>${esc(key)}</span><b>${esc(text(value))}</b></div>`).join('');
+}
+function renderLoans(loans) { const body = document.querySelector('#loans tbody'); if (!body) return; if (!loans.length) { body.innerHTML = '<tr><td colspan="6" class="empty-state">No loan records found.</td></tr>'; return; } body.innerHTML = loans.map(l => `<tr><td>${esc(text(l.id))}</td><td>${esc(text(l.product))}</td><td>${esc(money(l.sanctioned_amount || l.requested_amount))}</td><td>${esc(money(l.outstanding_amount))}</td><td>${esc(money(l.monthly_emi))}</td><td>${esc(statusLabel(l.status))}</td></tr>`).join(''); }
+function renderRepayments(rows) {
+  const body = document.querySelector('#repayment tbody'); if (!body) return;
+  const paid = rows.reduce((s,r) => s + Number(r.paid_amount || 0), 0); const unpaid = rows.reduce((s,r) => s + Math.max(Number(r.due_amount || 0) - Number(r.paid_amount || 0), 0), 0);
+  const metrics = [...document.querySelectorAll('#repayment .metrics .metric strong')]; if (metrics[0]) metrics[0].textContent = money(paid); if (metrics[1]) metrics[1].textContent = money(unpaid);
+  const next = rows.filter(r => Number(r.due_amount || 0) > Number(r.paid_amount || 0)).sort((a,b) => String(a.due_date).localeCompare(String(b.due_date)))[0]; if (metrics[2]) metrics[2].textContent = next ? money(Math.max(Number(next.due_amount || 0)-Number(next.paid_amount || 0),0)) : 'Not available';
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="5" class="empty-state">No repayment records found.</td></tr>'; return; }
+  body.innerHTML = rows.map(r => `<tr><td>${esc(text(r.due_date))}</td><td>${esc(text(r.loan_id))}</td><td>${esc(money(r.paid_amount || r.due_amount))}</td><td>Recorded</td><td>${esc(statusLabel(r.status))}</td></tr>`).join('');
+}
+function renderDocuments(rows) { const host = document.getElementById('documentGrid'); if (!host) return; if (!rows.length) { host.innerHTML = '<div class="panel empty-state">No document records found.</div>'; return; } host.innerHTML = rows.map(d => `<div class="panel doc"><b>${esc(text(d.document_type))}</b><span>${esc(text(d.file_name))}</span><mark>${esc(statusLabel(d.verification_status))}</mark></div>`).join(''); }
+
+async function loadCustomerProfile(customerId) { profileData = await api(`/customers/${encodeURIComponent(customerId)}/profile`); currentCustomer = profileData.customer; renderDashboard(); }
+async function loginWithMobile() {
+  const input = document.getElementById('loginId'); const mobile = String(input?.value || '').replace(/\D/g, '').slice(0, 10);
+  if (mobile.length !== 10) { setLoginMessage('Enter a valid 10-digit mobile number.', true); return; }
+  const button = document.getElementById('loginBtn'); if (button) { button.disabled = true; button.textContent = 'Checking customer record…'; } setLoginMessage('');
+  try {
+    const result = await api('/auth/customer-mobile-login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile})});
+    sessionStorage.setItem(TOKEN_KEY, result.access_token); sessionStorage.setItem(CUSTOMER_KEY, String(result.customer.id));
+    await loadCustomerProfile(result.customer.id); showPortal(); openSection('home');
+  } catch (err) { sessionStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(CUSTOMER_KEY); showLogin(); setLoginMessage(err.message || 'Customer record could not be loaded.', true); }
+  finally { if (button) { button.disabled = false; button.textContent = 'Enter Customer Portal'; } }
+}
+function logout() { sessionStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(CUSTOMER_KEY); currentCustomer = null; profileData = null; showLogin(); }
+function openSection(section) { document.querySelectorAll('.customer-section').forEach(s => s.classList.toggle('active-section', s.id === section)); document.querySelectorAll('.side-nav').forEach(b => b.classList.toggle('active', b.dataset.section === section)); const titles={home:'Dashboard',application:'Loan Application',profile:'My Profile',loans:'My Loans',repayment:'Repayments',documents:'Documents',support:'Support'}; const title=document.getElementById('pageTitle'); if(title) title.textContent=titles[section]||'Customer Portal'; }
+window.openSection = openSection;
+function bind() {
+  document.getElementById('loginBtn')?.addEventListener('click', loginWithMobile); document.getElementById('loginId')?.addEventListener('keydown', e => { if(e.key==='Enter') loginWithMobile(); }); document.getElementById('logoutBtn')?.addEventListener('click', logout);
+  document.querySelectorAll('.side-nav').forEach(btn => btn.addEventListener('click', () => openSection(btn.dataset.section))); document.querySelectorAll('[data-open-section]').forEach(btn => btn.addEventListener('click', () => openSection(btn.dataset.openSection)));
+  const mobile=sessionStorage.getItem(CUSTOMER_KEY), token=sessionStorage.getItem(TOKEN_KEY); if(mobile && token) loadCustomerProfile(mobile).then(()=>{showPortal();openSection('home');}).catch(()=>logout());
+}
+document.addEventListener('DOMContentLoaded', bind);
