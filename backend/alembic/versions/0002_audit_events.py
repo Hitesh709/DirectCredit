@@ -11,11 +11,12 @@ down_revision = "0001_baseline"
 branch_labels = None
 depends_on = None
 
+
 def upgrade():
     op.create_table(
         "audit_events",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("event_id", sa.String(36), nullable=False),
+        sa.Column("event_id", sa.String(36), nullable=False, unique=True),
         sa.Column("event_time", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("actor_type", sa.String(40), nullable=False),
         sa.Column("actor_id", sa.String(120)),
@@ -34,7 +35,7 @@ def upgrade():
     )
     for column in ("event_id", "event_time", "actor_type", "actor_id", "action", "entity_type", "entity_id", "customer_id", "loan_id", "request_id", "source", "outcome", "reason_code"):
         op.create_index(f"ix_audit_events_{column}", "audit_events", [column], unique=False)
-    op.create_unique_constraint("uq_audit_events_event_id", "audit_events", ["event_id"])
+
 
 def downgrade():
     op.drop_table("audit_events")
