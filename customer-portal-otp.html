@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DirectCredit Customer Portal</title>
+<style>
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f7fb;color:#172033;display:grid;place-items:center;min-height:100vh}.card{width:min(420px,calc(100% - 40px));background:#fff;border:1px solid #e5e9f2;border-radius:18px;padding:32px;box-shadow:0 14px 45px rgba(25,40,70,.09)}h1{margin:0 0 8px;font-size:25px}.sub{color:#667085;margin-bottom:28px}label{display:block;font-size:13px;font-weight:700;margin:16px 0 8px}input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #d7ddea;border-radius:10px;font-size:16px}button{width:100%;margin-top:18px;padding:13px;border:0;border-radius:10px;background:#173f8a;color:#fff;font-size:15px;font-weight:700;cursor:pointer}.back{background:#eef2f8;color:#24324a}.hidden{display:none}.msg{margin-top:14px;font-size:13px;color:#667085}.error{color:#b42318}.success{color:#067647}.badge{display:inline-block;background:#eef4ff;color:#244b91;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;margin-bottom:16px}</style>
+</head>
+<body>
+<div class="card">
+<div class="badge">DirectCredit • Customer</div>
+<div id="phoneStep"><h1>Sign in securely</h1><div class="sub">Enter your registered mobile number to receive an OTP.</div><label for="phone">Mobile number</label><input id="phone" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"><button id="sendOtp">Send OTP</button><div id="phoneMsg" class="msg"></div></div>
+<div id="otpStep" class="hidden"><h1>Verify OTP</h1><div id="sentText" class="sub"></div><label for="otp">Enter OTP</label><input id="otp" inputmode="numeric" maxlength="6" placeholder="Enter OTP"><button id="verifyOtp">Verify & Login</button><button id="back" class="back">Change mobile number</button><div class="msg">Demo mode: any 4–6 digit OTP is accepted.</div><div id="otpMsg" class="msg"></div></div>
+</div>
+<script>
+const phoneStep=document.getElementById('phoneStep'),otpStep=document.getElementById('otpStep');let mobile='';
+document.getElementById('sendOtp').onclick=()=>{const p=document.getElementById('phone').value.replace(/\D/g,'');const msg=document.getElementById('phoneMsg');if(!/^\d{10}$/.test(p)){msg.className='msg error';msg.textContent='Enter a valid 10-digit mobile number.';return}mobile=p;msg.textContent='';document.getElementById('sentText').textContent=`OTP sent to +91 ${p.slice(0,5)} ${p.slice(5)}.`;phoneStep.classList.add('hidden');otpStep.classList.remove('hidden');document.getElementById('otp').focus()};
+document.getElementById('verifyOtp').onclick=()=>{const otp=document.getElementById('otp').value.replace(/\D/g,'');const msg=document.getElementById('otpMsg');if(!/^\d{4,6}$/.test(otp)){msg.className='msg error';msg.textContent='Enter a 4–6 digit OTP.';return}sessionStorage.setItem('directcredit_customer_mobile',mobile);sessionStorage.setItem('directcredit_customer_auth','demo-otp');window.location.href='customer-portal.html'};
+document.getElementById('back').onclick=()=>{otpStep.classList.add('hidden');phoneStep.classList.remove('hidden');document.getElementById('otp').value='';document.getElementById('otpMsg').textContent=''};
+</script>
+</body></html>
