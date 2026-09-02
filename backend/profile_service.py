@@ -16,11 +16,10 @@ def profile_payload(customer_id: int, db: Session) -> dict:
     outstanding = sum(x.outstanding_amount or 0 for x in loans)
     paid = sum(x.paid_amount or 0 for x in repayments)
     overdue = sum(max((x.due_amount or 0) - (x.paid_amount or 0), 0) for x in repayments if x.status == "overdue")
-    bank = {"total_transactions": None,"upi_transactions": None,"last_balance": None,"average_eod_balance": c.average_bank_balance,"average_monthly_credit": None,"average_monthly_debit": None,"monthly_breakdown": [],"status":"Customer journey data connected" if journey else "No bank transaction data connected"}
+    bank = {"total_transactions": None,"upi_transactions": None,"last_balance": None,"average_eod_balance": c.average_bank_balance,"average_monthly_credit": None,"average_monthly_debit": None,"monthly_breakdown": [],"status":"No bank transaction data connected"}
     risk_score = None if not c.cibil_score else min(100, max(0, round((c.cibil_score or 0) / 9 + max(0, 20 - (c.foir or 0) / 2), 1)))
-    risk = {"total_score": risk_score,"risk_tier": ("Low" if risk_score is not None and risk_score >= 75 else "Medium" if risk_score is not None and risk_score >= 55 else "Not assessed"),"decision": "Eligible" if risk_score is not None and risk_score >= 55 else "Review required","age": None,"bank_verification": c.kyc_status,"credit_score": c.cibil_score,"credit_enquiries": None,"negative_balance": None,"monthly_income": c.monthly_income,"bank_vintage": None,"dpd_analysis": None,"debt_analysis": None,"cheque_return": None}
+    risk = {"total_score": risk_score,"source":"derived_from_cibil_foir" if risk_score is not None else None,"risk_tier": ("Low" if risk_score is not None and risk_score >= 75 else "Medium" if risk_score is not None and risk_score >= 55 else "Not assessed"),"decision": "Eligible" if risk_score is not None and risk_score >= 55 else "Review required","age": None,"bank_verification": c.kyc_status,"credit_score": c.cibil_score,"credit_enquiries": None,"negative_balance": None,"monthly_income": c.monthly_income,"bank_vintage": None,"dpd_analysis": None,"debt_analysis": None,"cheque_return": None}
     customer={k:getattr(c,k) for k in ["id","name","pan","mobile","email","address","permanent_address","current_city","gender","business_name","business_type","date_of_birth","aadhaar_masked","marital_status","customer_type","occupation","monthly_income","work_experience_years","years_in_business","average_bank_balance","primary_bank","cibil_score","foir","existing_emi","dependents","residence_ownership","residence_since","ownership_proof_name","ownership_proof_status","kyc_status","email_verified","selfie_status"]}
-    customer["status"]="active"
     loan_rows=[]
     for x in loans:
         disbursement_details = None
