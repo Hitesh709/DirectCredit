@@ -1,5 +1,4 @@
 import json
-import random
 from fastapi import APIRouter, HTTPException
 from sqlalchemy.orm import Session
 from fastapi import Depends
@@ -10,12 +9,10 @@ from .verification import validate_pan, validate_aadhaar
 from .loan_lifecycle import LOAN_STATUSES, LOAN_STAGES, STATUS_TO_STAGE, normalize_status, normalize_stage, transition_error, lifecycle_payload
 from .document_service import router as document_router, migrate_document_columns
 from .auth_routes import router as auth_router
-from .auth import issue_demo_token
 
 migrate_document_columns()
 router = APIRouter(prefix="/api/services", tags=["verification-services"])
 router.include_router(document_router)
-# Task 5 authentication is mounted through the main application router.
 router.include_router(auth_router)
 
 @router.get("/status")
@@ -83,30 +80,3 @@ def get_customer_journey(customer_id:int,db:Session=Depends(get_db)):
     if not db.get(CustomerRecord,customer_id): raise HTTPException(404,"Customer not found")
     rows=db.query(CustomerJourneyRecord).filter(CustomerJourneyRecord.customer_id==customer_id).order_by(CustomerJourneyRecord.step_number).all()
     return [{"step_key":r.step_key,"step_number":r.step_number,"step_label":r.step_label,"status":r.status,"details":json.loads(r.details or "{}")} for r in rows]
-
-# Demo customer OTP flow. Any 4-digit numeric OTP is accepted.
-# This endpoint intentionally does not send an SMS; it only prepares the demo login.
-@router.post("/customer/auth/request-otp")
-def request_customer_otp(payload:dict, db:Session=Depends(get_db)):
-    mobile=''.join(ch for ch in str(payload.get("mobile", "")) if ch.isdigit())
-    if mobile.startswith("91") and len(mobile)==12: mobile=mobile[2:]
-    if len(mobile)!=10: raise HTTPException(422,"Enter a valid 10-digit mobile number")
-    customer=db.query(CustomerRecord).filter(CustomerRecord.mobile==mobile).first()
-    if not customer:
-        customer=CustomerRecord(login_id=mobile,mobile=mobile,password_hash=None,name="",customer_type="Individual",occupation="",monthly_income=0,residence_ownership="",ownership_proof_status="pending",kyc_status="pending")
-        db.add(customer); db.commit(); db.refresh(customer)
-        customer.customer_code=f"CUST{customer.id:08d}"; db.commit(); db.refresh(customer)
-    demo_otp=f"{random.randint(0,9999):04d}"
-    return {"success":True,"demo":True,"mobile":mobile,"demo_otp":demo_otp,"message":"Demo OTP generated. Any 4-digit number is accepted."}
-
-@router.post("/customer/auth/verify-otp")
-def verify_customer_otp(payload:dict, db:Session=Depends(get_db)):
-    mobile=''.join(ch for ch in str(payload.get("mobile", "")) if ch.isdigit())
-    if mobile.startswith("91") and len(mobile)==12: mobile=mobile[2:]
-    otp=''.join(ch for ch in str(payload.get("otp", "")) if ch.isdigit())
-    if len(mobile)!=10: raise HTTPException(422,"Enter a valid 10-digit mobile number")
-    if len(otp)!=4: raise HTTPException(401,"Enter a valid 4-digit OTP")
-    customer=db.query(CustomerRecord).filter(CustomerRecord.mobile==mobile).first()
-    if not customer: raise HTTPException(401,"Mobile number is not registered")
-    token=issue_demo_token(customer.id,"customer")
-    return {"access_token":token,"token_type":"bearer","customer":{"id":customer.id,"customer_code":customer.customer_code or f"CUST{customer.id:08d}","name":customer.name,"mobile":customer.mobile,"login_id":customer.login_id}}
