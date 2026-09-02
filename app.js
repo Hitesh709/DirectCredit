@@ -1,11 +1,9 @@
 const pages=[...document.querySelectorAll('.page')];
 const navs=[...document.querySelectorAll('.nav')];
 const titles={
-  dashboard:'Dashboard',reports:'Reports',loanRequest:'Loan Request & Eligibility',pipeline:'Loans',profile:'Customers',
-  bank:'Bank Analysis',risk:'Risk & Score',trend:'Loan Trend & Summary',slab:'Loan Slab Performance Matrix',
+  dashboard:'Dashboard',reports:'Analytics',loanRequest:'Applications',pipeline:'Loans',
   disbursementMatrix:'Disbursement',accounting:'Accounting',repayment:'Repayment',calendar:'Due Calendar',
-  settlement:'Loan Settlement / Closure',collection:'Collection & Agent Performance',alerts:'Alerts',documents:'Documents',
-  settings:'Settings',support:'Support',logout:'Logout'
+  settlement:'Settlement',collection:'Collections',alerts:'Alerts',documents:'Documents',settings:'Settings',support:'Support'
 };
 function showPage(id,label){
   pages.forEach(p=>p.classList.toggle('activePage',p.id===id));
