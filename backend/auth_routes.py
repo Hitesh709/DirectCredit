@@ -1,10 +1,11 @@
-"""Task 5: complete application authentication without requiring an email vendor.
-Email/forgot-password endpoints generate signed one-time tokens. In production, deliver
-those tokens through the company's approved email/SMS provider instead of returning them.
+"""Task 5: application authentication plus a temporary customer demo login.
+
+The customer demo login is intentionally frictionless for testing: a mobile number
+is enough to create/load a customer session. Replace this endpoint with real OTP
+verification before production use.
 """
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
-from datetime import datetime, timezone
 from .database import get_db
 from .db_models import CustomerRecord
 from .auth import hash_password, verify_password, issue_token, decode_token, revoke_token
@@ -23,14 +24,61 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     db.add(c); db.commit(); db.refresh(c)
     c.customer_code = f"CUST{c.id:08d}"; db.commit(); db.refresh(c)
     verification_token = issue_token(c.id, "customer", "email_verify", 24)
-    return {"customer": {"id": c.id, "customer_code": c.customer_code, "login_id": c.login_id, "name": c.name, "email": c.email}, "access_token": issue_token(c.id, "customer", "access", 1), "refresh_token": issue_token(c.id, "customer", "refresh", 30), "email_verification_token": verification_token}
+    return {"customer": {"id": c.id, "customer_code": c.customer_code, "login_id": c.login_id, "name": c.name, "email": c.email, "mobile": c.mobile}, "access_token": issue_token(c.id, "customer", "access", 1), "refresh_token": issue_token(c.id, "customer", "refresh", 30), "email_verification_token": verification_token}
 
 @router.post("/login")
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     c = db.query(CustomerRecord).filter(CustomerRecord.login_id == payload.login_id.strip()).first()
     if not c or not c.password_hash or not verify_password(payload.password, c.password_hash):
         raise HTTPException(401, "Invalid customer ID or password")
-    return {"access_token": issue_token(c.id, "customer", "access", 1), "refresh_token": issue_token(c.id, "customer", "refresh", 30), "token_type": "bearer", "expires_in": 3600}
+    return {"access_token": issue_token(c.id, "customer", "access", 1), "refresh_token": issue_token(c.id, "customer", "refresh", 30), "token_type": "bearer", "expires_in": 3600, "customer": {"id": c.id, "customer_code": c.customer_code, "login_id": c.login_id, "name": c.name, "email": c.email, "mobile": c.mobile}}
+
+@router.post("/customer-mobile-login")
+def customer_mobile_login(payload: dict, db: Session = Depends(get_db)):
+    """TEMP DEMO LOGIN: mobile number only, no password and no OTP."""
+    raw_mobile = str(payload.get("mobile") or "").strip()
+    mobile = "".join(ch for ch in raw_mobile if ch.isdigit())
+    if mobile.startswith("91") and len(mobile) == 12:
+        mobile = mobile[2:]
+    if len(mobile) != 10:
+        raise HTTPException(422, "Enter a 10-digit mobile number")
+
+    c = db.query(CustomerRecord).filter(CustomerRecord.mobile == mobile).first()
+    if not c:
+        c = db.query(CustomerRecord).filter(CustomerRecord.mobile == f"+91{mobile}").first()
+    if not c:
+        c = CustomerRecord(
+            login_id=f"MOB{mobile}",
+            password_hash=hash_password(f"TEMP-{mobile}"),
+            name="New Customer",
+            mobile=mobile,
+            customer_type="micro_business",
+            kyc_status="pending",
+            email_verified="pending",
+            selfie_status="pending",
+        )
+        db.add(c)
+        db.commit()
+        db.refresh(c)
+        c.customer_code = f"CUST{c.id:08d}"
+        db.commit()
+        db.refresh(c)
+
+    return {
+        "access_token": issue_token(c.id, "customer", "access", 1),
+        "refresh_token": issue_token(c.id, "customer", "refresh", 30),
+        "token_type": "bearer",
+        "expires_in": 3600,
+        "customer": {
+            "id": c.id,
+            "customer_code": c.customer_code,
+            "login_id": c.login_id,
+            "name": c.name,
+            "email": c.email,
+            "mobile": c.mobile,
+        },
+        "demo_mode": True,
+    }
 
 @router.post("/refresh")
 def refresh(payload: RefreshRequest):
@@ -60,8 +108,6 @@ def verify_email(payload: EmailTokenRequest, db: Session = Depends(get_db)):
 @router.post("/forgot-password")
 def forgot_password(payload: EmailTokenRequest, db: Session = Depends(get_db)):
     c = db.query(CustomerRecord).filter(CustomerRecord.email == payload.token.strip()).first()
-    # Do not disclose whether an email exists in a production UI. The token is returned
-    # here only for local/demo testing because no external email service is configured.
     if not c: return {"status": "accepted"}
     return {"status": "accepted", "reset_token": issue_token(c.id, "customer", "password_reset", 1)}
 
