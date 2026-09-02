@@ -2,41 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Loan Request & Eligibility — DirectCredit</title>
+<title>Applications — DirectCredit</title>
 <link rel="stylesheet" href="loan-request-eligibility.css">
 </head>
 <body>
-<aside class="sidebar">
-  <div class="brand">Y</div>
-  <nav>
-    <a>⌂ <span>Dashboard</span></a><a>▥ <span>Analytics</span></a><a>▤ <span>Applications</span></a><a>♙ <span>Customers</span></a><a>▣ <span>Loans</span></a><a>⇩ <span>Disbursement</span></a><a>₹ <span>Repayment</span></a><a>▤ <span>Accounting</span></a><a>◉ <span>Bank Analysis</span></a><a>◆ <span>Risk & Score</span></a><a>▥ <span>Loan Trend & Summary</span></a><a class="active">17 <span>Loan Request & Eligibility</span></a><a>▤ <span>Reports</span></a><a>⚠ <span>Alerts</span></a><a>▧ <span>Documents</span></a><a>⚙ <span>Settings</span></a><a>◉ <span>Support</span></a><a>⇥ <span>Logout</span></a>
+<main class="content application-workspace">
+  <header class="page-head">
+    <div><h1>APPLICATIONS</h1><p>Customer and loan application workspace</p></div>
+    <div class="head-actions"><button id="exportBtn">⇩ Download Report</button><button id="filterBtn">☰ Filter</button></div>
+  </header>
+  <nav class="application-tabs" aria-label="Application sections">
+    <button class="application-tab" data-view="customer-profile"><span>♙</span><b>Customer Profile</b></button>
+    <button class="application-tab" data-view="number-contact"><span>☎</span><b>Number &amp; Contact Details</b></button>
+    <button class="application-tab active" data-view="bank-analysis"><span>▣</span><b>Bank Statement Analysis</b></button>
+    <button class="application-tab" data-view="kyc-employment"><span>▤</span><b>KYC &amp; Employment Summary</b></button>
+    <button class="application-tab" data-view="risk-score"><span>♙</span><b>Risk &amp; Score Breakdown</b></button>
+    <button class="application-tab" data-view="application-summary"><span>▤</span><b>Loan Request &amp; Eligibility</b></button>
   </nav>
-</aside>
-<main class="content">
-<header class="page-head"><div><h1><b>16</b> LOAN REQUEST &amp; ELIGIBILITY <span class="info">i</span></h1><p>Manage loan request, check eligibility and recommended offer</p></div><div class="head-actions"><button id="exportBtn">⇩ Export PDF</button><button onclick="window.print()">▣ Print</button><button id="filterBtn">☰ Filter</button><small>Last Updated: 16 May 2026 10:30 AM</small></div></header>
-<section class="metric-grid">
- <article class="metric blue"><span>▣</span><small>LOAN AMOUNT REQUESTED</small><strong>₹5,00,000</strong><em>Five Lakh Only</em></article>
- <article class="metric green"><span>₹</span><small>ELIGIBLE AMOUNT</small><strong>₹5,00,000</strong><em>100% of Requested</em></article>
- <article class="metric purple"><span>%</span><small>ELIGIBILITY SCORE</small><strong>92.65 / 110</strong><em>Excellent</em></article>
- <article class="metric orange"><span>▣</span><small>RECOMMENDED TENOR</small><strong>24 Months</strong><em>Max Eligible</em></article>
- <article class="metric navy"><span>◔</span><small>INTEREST RATE</small><strong>15.00% P.A.</strong><em>Reducing Balance</em></article>
- <article class="metric green"><span>✓</span><small>AUTO DECISION</small><strong>Approved</strong><em>Eligible for Disbursement</em></article>
-</section>
-<section class="two-col top-panels">
- <div class="panel"><h2>LOAN REQUEST DETAILS</h2><div class="details"><label>Application ID <b>LRQ202605160001</b></label><label>Application Date <b>16 May 2026 10:12 AM</b></label><label>Customer ID <b>CUST00012345</b></label><label>Customer Name <b>Rajesh Kumar</b></label><label>Loan Product <b>Business Term Loan</b></label><label>Purpose <b>Business Expansion</b></label><label>Requested Amount <b>₹5,00,000</b></label><label>Tenor Requested <b>24 Months</b></label><label>EMI (Approx.) <b>₹24,703</b></label><label>Preferred Disbursement <b>20 May 2026</b></label></div></div>
- <div class="panel factors"><h2>ELIGIBILITY FACTORS SUMMARY</h2><div class="radar-wrap"><canvas id="radar" width="310" height="250"></canvas></div></div>
- <div class="panel offer"><h2>RECOMMENDED OFFER <span class="best">Best Offer</span></h2><div class="offer-rows"><label>Sanction Amount <b>₹5,00,000</b></label><label>Interest Rate <b>15.00% P.A.</b></label><label>Processing Fee <b>₹2,500 + GST</b></label><label>Tenor <b>24 Months</b></label><label>EMI (Approx.) <b>₹24,703</b></label><label>Total Interest (Approx.) <b>₹92,872</b></label><label>Total Repayment (Approx.) <b>₹5,92,872</b></label></div><div class="valid">♡ Offer Valid Till: <b>23 May 2026</b></div></div>
-</section>
-<section class="three-col">
- <div class="panel"><h2>REQUIRED DOCUMENTS</h2><table><thead><tr><th>Document Name</th><th>Status</th><th>Remarks</th></tr></thead><tbody><tr><td>PAN Card</td><td class="ok">Verified</td><td>-</td></tr><tr><td>Aadhaar Card</td><td class="ok">Verified</td><td>-</td></tr><tr><td>Bank Statement (6 Months)</td><td class="ok">Verified</td><td>-</td></tr><tr><td>GST Registration</td><td class="ok">Verified</td><td>-</td></tr><tr><td>ITR (Last 2 Years)</td><td class="review">Uploaded</td><td>Under Review</td></tr><tr><td>Business Address Proof</td><td class="ok">Verified</td><td>-</td></tr></tbody></table><p class="note">✓ All mandatory documents are either verified or under review.</p></div>
- <div class="panel"><h2>LOAN PURPOSE &amp; TENOR</h2><div class="details compact"><label>Purpose of Loan <b>Business Expansion</b></label><label>Detailed Purpose <b>Purchase of new machinery and increase working capital</b></label><label>Tenor Requested <b>24 Months</b></label><label>Max Eligible Tenor <b>24 Months</b></label><label>Repayment Type <b>EMI – Monthly</b></label></div><p class="info-box">ⓘ Tenor is within eligible limit.</p></div>
- <div class="panel"><h2>REPAYMENT CAPACITY (FOR ANALYSIS)</h2><div class="details compact"><label>Monthly Net Income <b>₹1,10,000</b></label><label>Total Monthly Obligations <b>₹31,426</b></label><label>Proposed EMI <b>₹24,703</b></label><label>FOIR (After Loan) <b class="orange-text">50.19%</b></label><label>FOIR (Allowed Limit) <b>60.00%</b></label></div><p class="success-box">✓ FOIR is within acceptable limit.<br>Customer has adequate repayment capacity.</p></div>
-</section>
-<section class="two-col bottom-panels">
- <div class="panel"><h2>RISK INDICATORS</h2><div class="risk-grid"><label>Probability of Default (PD)<b>1.82%</b></label><label>Loss Given Default (LGD)<b>18.40%</b></label><label>Exposure at Default (EAD)<b>₹5,00,000</b></label><label>Expected Loss (EL)<b>₹18,200</b></label><label>Risk Grade<b>A</b></label></div><div class="low-risk">✓ Low Risk - Eligible for Loan</div></div>
- <div class="panel"><h2>LOAN PROCESS TRACKER</h2><div class="tracker"><div class="step done"><i>✓</i><b>Application Submitted</b><small>16 May 2026 10:12 AM</small></div><div class="step done"><i>✓</i><b>KYC Verified</b><small>16 May 2026 10:20 AM</small></div><div class="step done"><i>✓</i><b>Document Verification</b><small>16 May 2026 10:25 AM</small></div><div class="step done"><i>✓</i><b>Credit Assessment</b><small>16 May 2026 10:28 AM</small></div><div class="step done"><i>✓</i><b>Eligibility Approved</b><small>16 May 2026 10:30 AM</small></div><div class="step done"><i>✓</i><b>Sanction Generated</b><small>16 May 2026 10:30 AM</small></div><div class="step current"><i>+</i><b>Disbursement Pending</b><small>Next Step</small></div></div></div>
-</section>
-<div class="footer-note">ⓘ This loan request has been auto-approved based on scoring and eligibility criteria. Final disbursement is subject to documentation and bank verification.</div>
+  <section class="application-context">
+    <div class="context-avatar">DC</div>
+    <div><strong id="contextCustomer">Application</strong><small id="contextId">Select an application to view live information</small></div>
+    <div class="context-status"><span>Application workspace</span><b id="contextStatus">Live data</b></div>
+  </section>
+  <section class="application-view-wrap"><iframe id="applicationView" title="Application section" loading="eager"></iframe></section>
 </main>
 <script src="loan-request-eligibility.js"></script>
-</body></html>
+</body>
+</html>
