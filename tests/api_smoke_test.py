@@ -1,0 +1,79 @@
+import os
+from pathlib import Path
+
+TEST_DB = Path(__file__).resolve().parent / "smoke_test.db"
+os.environ["APP_ENV"] = "test"
+os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB}"
+os.environ["DIRECTCREDIT_SECRET"] = "task10-smoke-secret"
+os.environ["CORS_ORIGINS"] = "http://testserver"
+os.environ["SEED_DEMO_DATA"] = "false"
+os.environ["ALLOW_DEMO_CREDENTIAL_CLAIM"] = "false"
+
+from fastapi.testclient import TestClient
+from sqlalchemy import inspect
+from backend.database import engine
+from backend.main import app
+
+
+def test_foundation_smoke_flow():
+    with TestClient(app) as client:
+        health = client.get("/health")
+        assert health.status_code == 200
+        assert health.json()["status"] == "healthy"
+        assert health.headers.get("X-Request-ID")
+
+        version = client.get("/api/version")
+        assert version.status_code == 200
+        assert version.json()["version"] == "0.7.2"
+
+        invalid = client.post("/api/loans", json={"customer_id": 999, "requested_amount": 20000, "tenure_months": 6})
+        assert invalid.status_code == 422
+        assert invalid.json()["success"] is False
+        assert invalid.json()["error"]["code"] == "VALIDATION_ERROR"
+        assert invalid.json()["meta"]["request_id"]
+
+        login = client.post("/api/customer/login", json={"login_id": "task10-customer", "password": "SmokePass123"})
+        assert login.status_code == 200
+        body = login.json()
+        customer_id = body["customer"]["id"]
+        token = body["access_token"]
+        assert body["customer"]["customer_code"].startswith("CUST")
+        assert "password_hash" not in body["customer"]
+
+        me = client.get("/api/customer/me", headers={"Authorization": f"Bearer {token}"})
+        assert me.status_code == 200
+        assert me.json()["id"] == customer_id
+
+        loan = client.post("/api/loans", json={"customer_id": customer_id, "requested_amount": 10000, "tenure_months": 6})
+        assert loan.status_code == 200
+        loan_id = loan.json()["id"]
+        assert loan.json()["requested_amount"] == 10000
+
+        document = client.post("/api/documents", json={
+            "customer_id": customer_id,
+            "loan_id": loan_id,
+            "document_type": "PAN",
+            "document_role": "identity",
+            "file_name": "pan.pdf",
+            "mime_type": "application/pdf",
+            "file_size": 1024,
+        })
+        assert document.status_code == 200
+        assert document.json()["verification_status"] == "pending"
+
+        audits = client.get("/api/audit/events", params={"customer_id": customer_id, "limit": 50})
+        assert audits.status_code == 200
+        actions = {item["action"] for item in audits.json()}
+        assert "CUSTOMER_LOGIN" in actions
+        assert "LOAN_APPLICATION_CREATED" in actions
+        assert "DOCUMENT_RECEIVED" in actions
+
+
+def test_migration_head_contains_audit_table():
+    inspector = inspect(engine)
+    assert "customers" in inspector.get_table_names()
+    assert "loan_applications" in inspector.get_table_names()
+    assert "documents" in inspector.get_table_names()
+    assert "repayments" in inspector.get_table_names()
+    assert "customer_journey" in inspector.get_table_names()
+    assert "audit_events" in inspector.get_table_names()
