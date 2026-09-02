@@ -101,3 +101,23 @@ class CustomerJourneyRecord(Base):
     status = Column(String(40), default="pending")
     details = Column(Text)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class AuditEventRecord(Base):
+    __tablename__ = "audit_events"
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(String(36), unique=True, nullable=False, index=True)
+    event_time = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    actor_type = Column(String(40), nullable=False, index=True)
+    actor_id = Column(String(120), index=True)
+    action = Column(String(100), nullable=False, index=True)
+    entity_type = Column(String(80), nullable=False, index=True)
+    entity_id = Column(String(120), index=True)
+    customer_id = Column(Integer, index=True)
+    loan_id = Column(Integer, index=True)
+    request_id = Column(String(36), index=True)
+    source = Column(String(60), default="api", index=True)
+    outcome = Column(String(30), default="success", index=True)
+    reason_code = Column(String(100), index=True)
+    details = Column(Text)
+    ip_address = Column(String(64))
+    user_agent = Column(Text)
