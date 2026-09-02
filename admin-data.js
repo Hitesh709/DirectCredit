@@ -6,9 +6,14 @@ window.DirectCreditData = (() => {
     return r.json();
   }
   async function customer(id){
-    const r = await fetch(`${base}/customers/${id}/profile`, {headers:{Accept:'application/json'}});
+    const r = await fetch(`${base}/customers/${encodeURIComponent(id)}`, {headers:{Accept:'application/json'}});
     if(!r.ok) throw new Error(`Customer API ${r.status}`);
     return r.json();
   }
-  return {base, reporting, customer};
+  async function loans(){
+    const r = await fetch(`${base}/admin/loans`, {headers:{Accept:'application/json'}});
+    if(!r.ok) throw new Error(`Loans API ${r.status}`);
+    return r.json();
+  }
+  return {base, reporting, customer, loans};
 })();
