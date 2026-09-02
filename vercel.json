@@ -1,11 +1,13 @@
 {
   "rewrites": [
     { "source": "/customer", "destination": "/customer-login.html" },
-    { "source": "/customer-login", "destination": "/customer-login.html" }
+    { "source": "/customer/", "destination": "/customer-login.html" },
+    { "source": "/customer-login", "destination": "/customer-login.html" },
+    { "source": "/customer-login/", "destination": "/customer-login.html" }
   ],
   "headers": [
-    { "source": "/customer-login.html", "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }] },
-    { "source": "/customer-login.js", "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }] },
-    { "source": "/customer-login.css", "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }] }
+    { "source": "/customer-login.html", "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0, s-maxage=0" }] },
+    { "source": "/customer-login.js", "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0, s-maxage=0" }] },
+    { "source": "/customer-login.css", "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0, s-maxage=0" }] }
   ]
 }
