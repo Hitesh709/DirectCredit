@@ -1,0 +1,30 @@
+name: DirectCredit API Smoke Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  api-smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: python -m pip install -r backend/requirements.txt pytest httpx
+
+      - name: Run API smoke tests
+        env:
+          PYTHONPATH: .
+        run: pytest -q tests/api_smoke_test.py
