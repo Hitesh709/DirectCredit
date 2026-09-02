@@ -1,0 +1,23 @@
+/* DirectCredit UI polish: preserves Inter while replacing the student-project feel with a clean lending-operations interface. */
+:root{--ui-navy:#062f6f;--ui-navy-deep:#042454;--ui-blue:#1768ed;--ui-text:#17223a;--ui-muted:#667085;--ui-line:#e6eaf0;--ui-bg:#f7f9fc;--ui-card:#fff;--ui-radius:10px;--ui-shadow:0 2px 10px rgba(23,35,58,.06)}
+html,body{font-family:Inter,Arial,sans-serif;background:var(--ui-bg);color:var(--ui-text)}
+.sidebar{width:224px!important;padding:18px 12px!important;background:var(--ui-navy)!important;overflow-y:auto!important;overflow-x:hidden!important;box-shadow:2px 0 14px rgba(4,36,84,.08)}
+.brand{width:42px!important;height:42px!important;border-radius:10px!important;margin:0 auto 14px!important;background:#f5b000!important;color:#fff!important;border:2px solid rgba(255,255,255,.9)!important;font-size:16px!important;letter-spacing:.2px}
+.product{display:block!important;text-align:center!important;color:#fff!important;font-size:12px!important;font-weight:800!important;margin:0 0 18px!important}.product span{display:none!important}
+.nav-group{margin:0 0 14px}.nav-label{padding:0 10px 7px;color:#91a8c9;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.nav{width:100%!important;height:auto!important;margin:2px 0!important;padding:9px 10px!important;text-align:left!important;border:0!important;border-radius:7px!important;background:transparent!important;color:#dce7f5!important;font-size:12px!important;font-weight:650!important;line-height:1.35!important;white-space:nowrap!important}
+.nav:before{content:none!important}.nav:hover,.nav.active{background:#124789!important;color:#fff!important}.nav.active{box-shadow:inset 3px 0 #f5b000}
+.main{margin-left:224px!important;padding:22px 26px 34px!important;background:var(--ui-bg)!important;min-height:100vh!important}
+.topbar{display:flex!important;margin-bottom:20px!important}.topbar h1{font-size:24px!important}.demo{display:none!important}
+.page:not(#dashboard){padding-top:4px!important}.panel{border-radius:var(--ui-radius)!important;border:1px solid var(--ui-line)!important;box-shadow:var(--ui-shadow)!important;background:var(--ui-card)!important}
+.cards{gap:12px!important}.card{border-radius:10px!important;box-shadow:none!important}.btn{border-radius:7px!important}
+iframe{display:block;width:100%;border:0;border-radius:10px;background:#fff;min-height:780px}
+#loanRequest iframe{height:900px}#profile iframe{height:1080px}#accounting iframe,#settlement iframe{height:820px}#collection iframe{height:880px}
+/* Dashboard hierarchy */
+.dc-head{height:52px!important}.dc-head b{color:var(--ui-blue)!important;font-size:12px!important}.dc-title{font-size:20px!important;margin:14px 0!important}.dc-kpis{gap:11px!important}.dc-kpi{border-radius:9px!important;box-shadow:0 2px 7px rgba(23,35,58,.08)!important}.dc-panel{border-radius:9px!important;box-shadow:var(--ui-shadow)!important}.dc-panel-head{padding:13px 14px 9px!important}.dc-panel-head h3{font-size:12px!important}.dc-kpi-name span{display:none!important}
+/* Remove decorative numeric markers from journey/step tabs; sequence is communicated by state, not numbers. */
+.journeyStep span,.pipelineNo,.step-num{display:none!important}.journeyStep{min-width:0!important;padding:11px 13px!important}.pipelineItem{padding:12px 14px!important}.step{padding:12px 14px!important}
+/* Reports: reduce visual clutter and keep tabs text-led. */
+.fr-tabs{gap:8px!important}.fr-tab{min-height:60px!important;padding:9px 11px!important;border-radius:8px!important}.fr-tab-icon{width:24px!important;height:24px!important}.fr-tab small{font-size:8px!important}
+@media(max-width:900px){.sidebar{width:190px!important}.main{margin-left:190px!important;padding:18px!important}.nav{font-size:11px!important}}
+@media(max-width:650px){.sidebar{width:64px!important;padding:12px 7px!important}.product,.nav-label{display:none!important}.nav{font-size:0!important;text-align:center!important;padding:12px 5px!important}.nav:after{content:'•';font-size:16px!important;color:#dce7f5}.nav.active:after{color:#f5b000}.brand{width:38px!important;height:38px!important}.main{margin-left:64px!important;padding:14px!important}}
