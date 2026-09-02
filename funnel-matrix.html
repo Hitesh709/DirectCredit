@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DirectCredit — Funnel & Matrix</title>
+<link rel="stylesheet" href="pipeline.css">
+<link rel="stylesheet" href="disbursement-matrix.css">
+<link rel="stylesheet" href="loan-slab.css">
+<link rel="stylesheet" href="repayment-matrix.css">
+<link rel="stylesheet" href="due-calendar.css">
+<link rel="stylesheet" href="funnel-matrix.css">
+</head>
+<body>
+<div class="fm-shell">
+  <header class="fm-header">
+    <div><span class="fm-eyebrow">LENDING WORKSPACE</span><h1>Funnel &amp; Matrix</h1><p>Loan portfolio, disbursement, repayment, due calendar, pipeline and registered users in one workspace.</p></div>
+    <button id="fmRefresh" class="fm-refresh">⟳ Refresh</button>
+  </header>
+  <nav class="fm-tabs" aria-label="Funnel and Matrix functions">
+    <button class="fm-tab active" data-view="loan">Loan</button>
+    <button class="fm-tab" data-view="disbursement">Disbursement</button>
+    <button class="fm-tab" data-view="repayment">Repayment</button>
+    <button class="fm-tab" data-view="calendar">Due Calendar</button>
+    <button class="fm-tab" data-view="pipeline">Loan Pipeline</button>
+    <button class="fm-tab" data-view="users">Registration &amp; Users</button>
+  </nav>
+  <main class="fm-content">
+    <section class="fm-view active" data-panel="loan"><div id="slab"></div></section>
+    <section class="fm-view" data-panel="disbursement"><div id="disbursementMatrix"></div></section>
+    <section class="fm-view" data-panel="repayment"><div id="repayment"></div></section>
+    <section class="fm-view" data-panel="calendar"><div id="calendar"></div></section>
+    <section class="fm-view" data-panel="pipeline"><div id="pipeline"></div></section>
+    <section class="fm-view" data-panel="users"><div id="registrationUsers"><div class="fm-loading">Loading registered users…</div></div></section>
+  </main>
+</div>
+<script src="loan-slab.js"></script>
+<script src="disbursement-matrix.js"></script>
+<script src="repayment-matrix.js"></script>
+<script src="due-calendar.js"></script>
+<script src="pipeline.js"></script>
+<script src="funnel-matrix.js"></script>
+</body>
+</html>
