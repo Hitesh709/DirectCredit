@@ -1,19 +1,8 @@
 window.DirectCreditData = (() => {
   const base = (localStorage.getItem('directcredit_api_url') || window.DIRECTCREDIT_API_URL || '/api').replace(/\/$/, '');
-  async function reporting(){
-    const r = await fetch(`${base}/admin/reporting`, {headers:{Accept:'application/json'}});
-    if(!r.ok) throw new Error(`Reporting API ${r.status}`);
-    return r.json();
+  async function reporting(){const r=await fetch(`${base}/admin/reporting`,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error(`Reporting API ${r.status}`);return r.json()}
+  async function loans(){const r=await fetch(`${base}/admin/loans`,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error(`Loans API ${r.status}`);return r.json()}
+  async function customer(id){const [cr,lr]=await Promise.all([fetch(`${base}/customers/${encodeURIComponent(id)}`,{headers:{Accept:'application/json'}}),loans()]);if(!cr.ok)throw new Error(`Customer API ${cr.status}`);const customer=await cr.json();const all=await lr;const rows=all.filter(x=>Number(x.customer_id)===Number(id));const outstanding=rows.reduce((s,x)=>s+Number(x.outstanding_amount||0),0);const paid=rows.reduce((s,x)=>s+Math.max(Number(x.disbursed_amount||0)-Number(x.outstanding_amount||0),0),0);const overdue=rows.filter(x=>x.status==='overdue').reduce((s,x)=>s+Number(x.outstanding_amount||0),0);return {customer,loans:rows,metrics:{total_loans:rows.length,total_loan_amount:rows.reduce((s,x)=>s+Number(x.sanctioned_amount||x.requested_amount||0),0),outstanding_amount:outstanding,amount_paid:paid,overdue_amount:overdue},bank_analysis:{status:customer.primary_bank?'Customer banking data available':'No bank account data connected'},kyc_employment:{kyc_status:customer.kyc_status,employment_type:customer.occupation,income:customer.monthly_income,work_experience_years:customer.work_experience_years,years_in_business:customer.years_in_business,residence_ownership:customer.residence_ownership,ownership_proof_status:customer.ownership_proof_status},risk_score:{total_score:customer.cibil_score?Math.min(100,Math.max(0,Math.round(customer.cibil_score/9+Math.max(0,20-(customer.foir||0)/2)))):null,risk_tier:customer.cibil_score?'Assessed':'Not assessed',decision:customer.cibil_score?'Review required':'Not assessed',credit_score:customer.cibil_score}};
   }
-  async function customer(id){
-    const r = await fetch(`${base}/customers/${encodeURIComponent(id)}`, {headers:{Accept:'application/json'}});
-    if(!r.ok) throw new Error(`Customer API ${r.status}`);
-    return r.json();
-  }
-  async function loans(){
-    const r = await fetch(`${base}/admin/loans`, {headers:{Accept:'application/json'}});
-    if(!r.ok) throw new Error(`Loans API ${r.status}`);
-    return r.json();
-  }
-  return {base, reporting, customer, loans};
+  return {base,reporting,customer,loans};
 })();
