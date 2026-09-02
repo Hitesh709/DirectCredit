@@ -4,18 +4,17 @@ This directory is the canonical schema-change mechanism for DirectCredit.
 
 ## Commands
 
-From the repository root:
+Run these commands from the repository root:
 
 ```bash
-cd backend
-alembic upgrade head
+alembic -c backend/alembic.ini upgrade head
 ```
 
-For a new migration after changing `db_models.py`:
+For a new migration after changing `backend/db_models.py`:
 
 ```bash
-alembic revision --autogenerate -m "describe schema change"
-alembic upgrade head
+alembic -c backend/alembic.ini revision --autogenerate -m "describe schema change"
+alembic -c backend/alembic.ini upgrade head
 ```
 
 Production deployments must run migrations before starting the API. The application must not silently mutate production schema with ad-hoc `ALTER TABLE` statements.
