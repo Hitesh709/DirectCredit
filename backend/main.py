@@ -13,7 +13,6 @@ from .profile_service import profile_payload
 from .api_services import router as service_router
 from .reporting import router as reporting_router
 from .audit_routes import router as audit_router
-from .seed_demo import seed_demo_data
 from .auth import hash_password, verify_password, issue_demo_token, get_current_customer
 from .migration_runner import migrate_database
 from .api_response import error as api_error, public_http_error, request_id
@@ -60,10 +59,6 @@ def audit_http(request: Request, db: Session, *, action: str, entity_type: str, 
 @app.on_event("startup")
 def startup():
     migrate_database()
-    if os.getenv("SEED_DEMO_DATA", "false").lower() in {"1", "true", "yes"}:
-        db = next(get_db())
-        try: seed_demo_data(db)
-        finally: db.close()
 
 app.include_router(service_router)
 app.include_router(reporting_router)
@@ -88,7 +83,7 @@ def customer_login(payload: CustomerLogin, request: Request, db: Session = Depen
             audit_http(request, db, action="CUSTOMER_LOGIN", entity_type="customer", entity_id=customer.id, customer_id=customer.id, outcome="failure", reason_code="INVALID_CREDENTIALS"); db.commit()
             raise HTTPException(401, "Invalid customer ID or password")
     else:
-        customer = CustomerRecord(login_id=login_id, password_hash=hash_password(payload.password), name="New Customer", customer_type="Individual", occupation="Business", monthly_income=0, residence_ownership="", ownership_proof_status="pending", kyc_status="pending")
+        customer = CustomerRecord(login_id=login_id, password_hash=hash_password(payload.password), name="", customer_type="Individual", occupation="", monthly_income=0, residence_ownership="", ownership_proof_status="pending", kyc_status="pending")
         db.add(customer); db.commit(); db.refresh(customer); customer.customer_code = f"CUST{customer.id:08d}"; db.commit(); db.refresh(customer)
     audit_http(request, db, action="CUSTOMER_LOGIN", entity_type="customer", entity_id=customer.id, customer_id=customer.id, details={"login_id": login_id}); db.commit()
     token = issue_demo_token(customer.id, "customer")
@@ -145,6 +140,11 @@ def loan_trend(customer_id:int,db:Session=Depends(get_db),claims:dict=Depends(ge
     assert_customer_access(customer_id,claims); data=profile_payload(customer_id,db)
     if not data: raise HTTPException(404,"Customer not found")
     return data["loan_trend"]
+@app.get("/api/customers/{customer_id}/loans")
+def customer_loans(customer_id:int,db:Session=Depends(get_db),claims:dict=Depends(get_current_customer)):
+    assert_customer_access(customer_id,claims)
+    if not db.get(CustomerRecord,customer_id): raise HTTPException(404,"Customer not found")
+    return db.query(LoanRecord).filter(LoanRecord.customer_id==customer_id).order_by(LoanRecord.id.desc()).all()
 @app.post("/api/loans", response_model=LoanApplicationOut)
 def create_loan(payload:LoanApplicationCreate, request:Request, db:Session=Depends(get_db)):
     if not db.get(CustomerRecord,payload.customer_id): raise HTTPException(404,"Customer not found")
@@ -188,4 +188,4 @@ def admin_loans(db:Session=Depends(get_db)): return db.query(LoanRecord).order_b
 @app.get("/api/admin/dashboard")
 def admin_dashboard(db:Session=Depends(get_db)):
     loans=db.query(LoanRecord).all()
-    return {"applications":len(loans),"assessment":sum(x.status=="assessment" for x in loans),"sanctioned":sum(x.status=="sanctioned" for x in loans),"disbursed":sum(x.status=="disbursed" for x in loans),"repayment":sum(x.status=="repayment" for x in loans),"overdue":sum(x.status=="overdue" for x in loans),"total_sanctioned":sum(x.sanctioned_amount or 0 for x in loans),"total_outstanding":sum(x.outstanding_amount or 0 for x in loans),"customers":db.query(CustomerRecord).count()}
+    return {"applications":len(loans),"assessment":sum(x.status=="assessment" for x in loans),"sanctioned":sum(x.status=="sanctioned" for x in loans),"disbursed":sum(x.status=="disbursed" for x in loans),"repayment":sum(x.status=="repayment" for x in loans),"overdue":sum(x.status=="overdue" for x in loans),"repaid":sum(x.status=="repaid" for x in loans)}
