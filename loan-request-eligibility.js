@@ -1,5 +1,85 @@
-const radarData=[['Cash Flow',14],['Bank Statement',13.5],['Credit History',16],['Repayment Track',9],['Existing Obligations',7.5],['Stability & Vintage',7],['GST & ITR Compliance',3.5],['Enquiries & Behaviour',4.5]];
-function drawRadar(){const c=document.getElementById('radar');if(!c)return;const x=c.getContext('2d'),cx=155,cy=125,r=82,n=radarData.length;x.clearRect(0,0,310,250);x.font='9px Segoe UI';x.textAlign='center';for(let ring=1;ring<=4;ring++){x.beginPath();for(let i=0;i<n;i++){const a=-Math.PI/2+i*2*Math.PI/n,rr=r*ring/4,px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;i?x.lineTo(px,py):x.moveTo(px,py)}x.closePath();x.strokeStyle='#d7e1dc';x.stroke()}x.beginPath();radarData.forEach((d,i)=>{const a=-Math.PI/2+i*2*Math.PI/n,rr=r*(d[1]/16),px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;i?x.lineTo(px,py):x.moveTo(px,py)});x.closePath();x.fillStyle='rgba(19,155,85,.15)';x.fill();x.strokeStyle='#169252';x.lineWidth=2;x.stroke();radarData.forEach((d,i)=>{const a=-Math.PI/2+i*2*Math.PI/n,px=cx+Math.cos(a)*(r+28),py=cy+Math.sin(a)*(r+28);x.fillStyle='#34516e';x.fillText(d[0],px,py);});}
-function exportPDF(){window.print()}
-document.addEventListener('DOMContentLoaded',()=>{drawRadar();document.getElementById('exportBtn')?.addEventListener('click',exportPDF);document.getElementById('filterBtn')?.addEventListener('click',()=>alert('Filters: Application Date, Customer, Loan Product, Decision, Risk Grade and Status.'));
-const id=new URLSearchParams(location.search).get('customer_id')||localStorage.getItem('directcredit_customer_id')||'1';localStorage.setItem('directcredit_customer_id',id);const tabs=[['♙','Customer Profile','customer-profile.html'],['☎','Number & Contact Details','number-contact.html'],['▣','Bank Statement Analysis','bank-analysis.html'],['▤','KYC & Employment Summary','kyc-employment.html'],['♙','Risk & Score Breakdown','risk-score.html'],['17','Loan Request & Eligibility','loan-request-eligibility.html']];const nav=document.createElement('nav');nav.className='customer-profile-tabs';nav.innerHTML=tabs.map((t,i)=>`<a class="${i===5?'active':''}" href="${t[2]}?customer_id=${encodeURIComponent(id)}"><span>${t[0]}</span>${t[1]}</a>`).join('');const style=document.createElement('style');style.textContent='.customer-profile-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));width:100%;margin:0 0 12px;border:1px solid #dbe3ef;border-radius:8px;background:#fff;overflow:hidden;box-sizing:border-box}.customer-profile-tabs a{min-width:0;padding:12px 8px;border:0;border-bottom:3px solid transparent;text-decoration:none;text-align:center;color:#123a70;font:600 11px/1.25 Arial,sans-serif;white-space:normal}.customer-profile-tabs a span{margin-right:6px}.customer-profile-tabs a:hover{background:#f5f8ff}.customer-profile-tabs a.active{color:#075ee8;border-bottom-color:#075ee8;background:#eef5ff}@media(max-width:1000px){.customer-profile-tabs{grid-template-columns:repeat(3,1fr)}.customer-profile-tabs a{font-size:11px}}';document.head.appendChild(style);const main=document.querySelector('main.content');if(main){const header=main.querySelector('.page-head,header');if(header)header.insertAdjacentElement('afterend',nav);else main.prepend(nav);}if(window.self!==window.top){document.querySelector('body>.sidebar')?.remove();if(main){main.style.margin='0';main.style.width='100%';main.style.maxWidth='none';main.style.paddingLeft='28px';main.style.paddingRight='28px';}document.body.style.overflowX='hidden';}});window.addEventListener('resize',drawRadar);
+(() => {
+  const params = new URLSearchParams(location.search);
+  const customerId = params.get('customer_id') || localStorage.getItem('directcredit_customer_id') || '';
+  const base = (localStorage.getItem('directcredit_api_url') || window.DIRECTCREDIT_API_URL || '/api').replace(/\/$/, '');
+  const tabs = [
+    ['customer-profile','♙','Customer Profile','View customer identity, contact, business and loan history.'],
+    ['number-contact','☎','Number & Contact Details','Mobile, email, address and contact verification.'],
+    ['bank-analysis','▣','Bank Statement Analysis','Cash flow, balances, transactions and banking behaviour.'],
+    ['kyc-employment','▤','KYC & Employment Summary','KYC, occupation, business and employment information.'],
+    ['risk-score','♙','Risk & Score Breakdown','Credit, risk indicators and score explanation.'],
+    ['application-summary','▤','Loan Request & Eligibility','Requested amount, eligibility, offer and decision.']
+  ];
+  const view = document.getElementById('applicationView');
+  const contextCustomer = document.getElementById('contextCustomer');
+  const contextId = document.getElementById('contextId');
+  const contextStatus = document.getElementById('contextStatus');
+
+  function urlFor(file){
+    const q = customerId ? `?customer_id=${encodeURIComponent(customerId)}&embedded=1` : '?embedded=1';
+    return `${file}.html${q}`;
+  }
+
+  function cleanFrame(frame){
+    try {
+      const doc = frame.contentDocument;
+      if(!doc) return;
+      const style = doc.createElement('style');
+      style.textContent = `
+        html,body{background:#fff!important;overflow-x:hidden!important}
+        body{margin:0!important;font-family:Inter,Segoe UI,Arial,sans-serif!important}
+        body>.sidebar,.sidebar,.profile-tabs,.customer-profile-tabs,.page-head,.head{display:none!important}
+        .content,.profile-page{margin:0!important;padding:16px!important;width:100%!important;max-width:none!important}
+        .content{background:#fff!important}
+      `;
+      doc.head.appendChild(style);
+      const height = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight, 560);
+      frame.style.height = `${Math.min(Math.max(height + 20, 560), 1800)}px`;
+    } catch(e) { console.warn('Embedded application view styling failed', e); }
+  }
+
+  function activate(key){
+    document.querySelectorAll('.application-tab').forEach(b => b.classList.toggle('active', b.dataset.view === key));
+    const item = tabs.find(t => t[0] === key) || tabs[0];
+    if(contextStatus) contextStatus.textContent = item[2];
+    if(view){
+      view.src = urlFor(item[0]);
+      view.onload = () => cleanFrame(view);
+    }
+  }
+
+  document.querySelectorAll('.application-tab').forEach(button => {
+    button.addEventListener('click', () => activate(button.dataset.view));
+  });
+
+  document.getElementById('exportBtn')?.addEventListener('click', () => {
+    if(view?.contentWindow) view.contentWindow.print();
+  });
+  document.getElementById('filterBtn')?.addEventListener('click', () => {
+    const id = customerId || 'No application selected';
+    alert(`Application filter\nCustomer / Application: ${id}\nUse the application list to select a record.`);
+  });
+
+  async function loadContext(){
+    if(!customerId){
+      if(contextCustomer) contextCustomer.textContent = 'Application';
+      if(contextId) contextId.textContent = 'Select an application to view live information';
+      return;
+    }
+    try{
+      const r = await fetch(`${base}/customers/${encodeURIComponent(customerId)}/profile`, {headers:{Accept:'application/json'}});
+      if(!r.ok) throw new Error(String(r.status));
+      const data = await r.json();
+      const c = data.customer || {};
+      if(contextCustomer) contextCustomer.textContent = c.name || 'Customer';
+      if(contextId) contextId.textContent = `Customer ID ${c.id || customerId}`;
+      if(contextStatus) contextStatus.textContent = 'Live data';
+    }catch(e){
+      if(contextCustomer) contextCustomer.textContent = 'Application';
+      if(contextId) contextId.textContent = `Customer ID ${customerId}`;
+    }
+  }
+
+  loadContext();
+  activate('bank-analysis');
+})();
