@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 
 class CustomerCreate(BaseModel):
@@ -6,7 +6,13 @@ class CustomerCreate(BaseModel):
     pan: Optional[str] = None; mobile: Optional[str] = None; email: Optional[str] = None; address: Optional[str] = None; permanent_address: Optional[str] = None; current_city: Optional[str] = None; gender: Optional[str] = None; business_name: Optional[str] = None; business_type: Optional[str] = None; date_of_birth: Optional[str] = None; aadhaar_masked: Optional[str] = None; marital_status: Optional[str] = None
     customer_type: str = "Individual"; occupation: str = "Business"; monthly_income: float = 0; work_experience_years: float = 0; years_in_business: float = 0; average_bank_balance: float = 0; primary_bank: Optional[str] = None; cibil_score: int = 0; foir: float = 0; existing_emi: float = 0; dependents: int = 0; residence_ownership: Optional[str] = None; residence_since: Optional[str] = None; ownership_proof_name: Optional[str] = None; ownership_proof_status: Optional[str] = None
 class CustomerOut(CustomerCreate): id: int; status: str = "active"
-class CustomerLogin(BaseModel): login_id: str = Field(min_length=1,max_length=120); password: str = Field(min_length=1,max_length=200)
+class CustomerLogin(BaseModel):
+    """Legacy credential login schema retained only for compatibility; the endpoint is disabled."""
+    login_id: str = Field(min_length=1,max_length=120); password: str = Field(min_length=1,max_length=200)
+    @field_validator('login_id')
+    @classmethod
+    def legacy_login_disabled(cls,value):
+        raise ValueError('Legacy customer ID/password login is disabled. Use the mobile-only customer access flow.')
 class RegisterRequest(BaseModel): name: str = Field(min_length=1,max_length=200); login_id: str = Field(min_length=1,max_length=120); password: str = Field(min_length=8,max_length=200); email: Optional[str] = None; mobile: Optional[str] = None; customer_type: str = "Individual"; occupation: str = "Business"
 class LoginRequest(BaseModel): login_id: str = Field(min_length=1,max_length=120); password: str = Field(min_length=8,max_length=200)
 class RefreshRequest(BaseModel): refresh_token: str = Field(min_length=20)
