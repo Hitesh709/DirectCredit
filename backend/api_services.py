@@ -16,17 +16,16 @@ from .eligibility_routes import router as eligibility_router
 from .servicing_routes import router as servicing_router
 from .analytics_routes import router as analytics_router
 from .report_routes_v2 import router as report_router
-
 migrate_document_columns()
-router = APIRouter(prefix="/api/services", tags=["verification-services"])
+router=APIRouter(prefix="/api/services",tags=["verification-services"])
 router.include_router(document_router); router.include_router(auth_router); router.include_router(repayment_router); router.include_router(customer_profile_router); router.include_router(loan_request_router); router.include_router(eligibility_router); router.include_router(servicing_router)
 
 @router.get("/status")
-def services_status(): return {"services": provider_status()}
+def services_status(): return {"services":provider_status()}
 @router.post("/pan/validate")
-def pan_validate(pan: str): return result("pan", validate_pan(pan))
+def pan_validate(pan:str): return result("pan",validate_pan(pan))
 @router.post("/aadhaar/validate")
-def aadhaar_validate(aadhaar: str): return result("aadhaar", validate_aadhaar(aadhaar))
+def aadhaar_validate(aadhaar:str): return result("aadhaar",validate_aadhaar(aadhaar))
 @router.get("/loan-lifecycle/contract")
 def loan_lifecycle_contract(): return {"statuses":list(LOAN_STATUSES),"stages":list(LOAN_STAGES),"status_to_stage":STATUS_TO_STAGE}
 @router.get("/loans/{loan_id}/lifecycle")
@@ -36,11 +35,10 @@ def get_loan_lifecycle(loan_id:int,db:Session=Depends(get_db),claims:dict=Depend
     if int(loan.customer_id)!=int(claims.get("user_id",-1)): raise HTTPException(403,"Loan access forbidden")
     return lifecycle_payload(loan)
 @router.post("/loans/{loan_id}/lifecycle")
-def transition_loan_lifecycle(loan_id:int,payload:dict,db:Session=Depends(get_db)):
-    raise HTTPException(403,"Direct lifecycle transition is disabled; use authorized admin operations")
+def transition_loan_lifecycle(loan_id:int,payload:dict,db:Session=Depends(get_db)): raise HTTPException(403,"Direct lifecycle transition is disabled; use authorized admin operations")
 @router.post("/customers/{customer_id}/journey")
 def sync_customer_journey(customer_id:int,payload:dict,db:Session=Depends(get_db),claims:dict=Depends(get_current_customer)):
-    if int(claims.get("user_id",-1)) != int(customer_id): raise HTTPException(403,"Customer session does not match customer")
+    if int(claims.get("user_id",-1))!=int(customer_id): raise HTTPException(403,"Customer session does not match customer")
     customer=db.get(CustomerRecord,customer_id)
     if not customer: raise HTTPException(404,"Customer not found")
     c=payload.get("customer") or {}
@@ -57,7 +55,6 @@ def sync_customer_journey(customer_id:int,payload:dict,db:Session=Depends(get_db
         for key in ["requested_amount","interest_rate","tenure_months","product"]:
             if key in lp and lp[key] is not None: setattr(loan,key,lp[key])
         if "status" in lp or "current_stage" in lp: raise HTTPException(403,"Customer cannot change loan lifecycle")
-        if "disbursement_details" in lp: loan.disbursement_details=json.dumps(lp["disbursement_details"],ensure_ascii=False)
     for index,step in enumerate(payload.get("steps") or [],1):
         key=str(step.get("key") or f"step_{index}"); record=db.query(CustomerJourneyRecord).filter(CustomerJourneyRecord.customer_id==customer_id,CustomerJourneyRecord.step_key==key).first()
         if not record: record=CustomerJourneyRecord(customer_id=customer_id,step_key=key); db.add(record)
@@ -65,7 +62,6 @@ def sync_customer_journey(customer_id:int,payload:dict,db:Session=Depends(get_db
     db.commit(); return {"status":"synced","customer_id":customer_id,"loan_id":loan.id if loan else None,"canonical_status":normalize_status(loan.status) if loan else None,"canonical_stage":normalize_stage(loan.current_stage,loan.status) if loan else None,"journey_steps":len(payload.get("steps") or [])}
 @router.get("/customers/{customer_id}/journey")
 def get_customer_journey(customer_id:int,db:Session=Depends(get_db),claims:dict=Depends(get_current_customer)):
-    if int(claims.get("user_id",-1))!=int(customer_id): raise HTTPException(403,"Customer session does not match this customer")
+    if int(claims.get("user_id",-1))!=int(customer_id): raise HTTPException(403,"Customer session does not match customer")
     if not db.get(CustomerRecord,customer_id): raise HTTPException(404,"Customer not found")
-    rows=db.query(CustomerJourneyRecord).filter(CustomerJourneyRecord.customer_id==customer_id).order_by(CustomerJourneyRecord.step_number).all()
-    return [{"step_key":r.step_key,"step_number":r.step_number,"step_label":r.step_label,"status":r.status,"details":json.loads(r.details or "{}")} for r in rows]
+    rows=db.query(CustomerJourneyRecord).filter(CustomerJourneyRecord.customer_id==customer_id).order_by(CustomerJourneyRecord.step_number).all(); return [{"step_key":r.step_key,"step_number":r.step_number,"step_label":r.step_label,"status":r.status,"details":json.loads(r.details or "{}")} for r in rows]
