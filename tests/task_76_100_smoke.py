@@ -33,6 +33,23 @@ def test_production_endpoints_require_admin():
             '/api/services/api/admin/phase-76-100/provider-status',
             '/api/admin/reporting',
             '/admin-data/customers',
+            '/api/admin/loans',
+            '/api/admin/dashboard',
         ):
             response = client.get(path)
             assert response.status_code == 401, (path, response.status_code)
+
+def test_legacy_mutation_routes_require_authentication():
+    from fastapi.testclient import TestClient
+    from backend.main import app
+    with TestClient(app) as client:
+        assert client.patch('/api/loans/1/status', json={'status':'sanctioned'}).status_code == 401
+        assert client.post('/api/loans/1/repayment-schedule').status_code == 401
+        assert client.post('/api/documents', json={'customer_id':1,'document_type':'test'}).status_code == 401
+
+def test_canonical_lifecycle_transition_is_disabled_for_direct_calls():
+    from fastapi.testclient import TestClient
+    from backend.main import app
+    with TestClient(app) as client:
+        response=client.post('/api/services/loans/1/lifecycle', json={'status':'sanctioned'})
+        assert response.status_code == 403
