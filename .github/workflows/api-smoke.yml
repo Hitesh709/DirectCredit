@@ -15,16 +15,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install backend dependencies
         run: python -m pip install -r backend/requirements.txt pytest httpx
-
       - name: Run API smoke tests
         env:
           PYTHONPATH: .
-        run: pytest -q tests/api_smoke_test.py
+          DIRECTCREDIT_SECRET: ci-test-secret-change-me-123456789
+          ALLOW_DEMO_CREDENTIAL_CLAIM: "false"
+        run: pytest -q tests/api_smoke_test.py tests/task_51_75_smoke.py tests/task_76_100_smoke.py
