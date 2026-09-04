@@ -31,6 +31,8 @@ def test_production_endpoints_require_admin():
             '/api/services/api/admin/phase-76-100/reconciliation',
             '/api/services/api/admin/phase-76-100/settings',
             '/api/services/api/admin/phase-76-100/provider-status',
+            '/api/admin/reporting',
+            '/admin-data/customers',
         ):
             response = client.get(path)
             assert response.status_code == 401, (path, response.status_code)
