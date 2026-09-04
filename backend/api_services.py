@@ -8,12 +8,14 @@ from .verification import validate_pan, validate_aadhaar
 from .loan_lifecycle import LOAN_STATUSES, LOAN_STAGES, STATUS_TO_STAGE, normalize_status, normalize_stage, transition_error, lifecycle_payload
 from .document_service import router as document_router, migrate_document_columns
 from .auth_routes import router as auth_router
+from .repayment_routes import router as repayment_router
 from .auth import get_current_customer
 
 migrate_document_columns()
 router = APIRouter(prefix="/api/services", tags=["verification-services"])
 router.include_router(document_router)
 router.include_router(auth_router)
+router.include_router(repayment_router)
 
 @router.get("/status")
 def services_status():
