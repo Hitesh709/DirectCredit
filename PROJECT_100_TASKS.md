@@ -123,8 +123,10 @@ This is the master implementation sequence for the full DirectCredit lending pla
 100. Final production audit: every menu, tab, form, API, record, calculation and report must use the same underlying data.
 
 ## Current status
-- Task 1: **IN PROGRESS**
-- Tasks 2–100: Planned
+- Tasks 1–30: **COMPLETE**
+- Tasks 31–40: **COMPLETE — backend eligibility contracts implemented; provider/official scorecard inputs remain explicit dependencies**
+- Tasks 41–50: **COMPLETE — canonical admin customer/loan operation contracts implemented**
+- Tasks 51–100: Planned
 
 ## Non-negotiable project rules
 1. No static customer identity in the customer portal.
