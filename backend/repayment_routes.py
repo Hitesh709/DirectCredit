@@ -9,7 +9,7 @@ from .database import get_db
 from .db_models import CustomerRecord, LoanRecord, RepaymentRecord
 from .repayment_contract import PAYMENT_METHODS, calculate_dpd, derive_status, repayment_payload
 
-router = APIRouter(prefix="/api/services/repayments", tags=["repayments"])
+router = APIRouter(prefix="/repayments", tags=["repayments"])
 
 class RepaymentPost(BaseModel):
     amount: float = Field(gt=0)
@@ -36,14 +36,14 @@ def customer_repayments(customer_id: int, claims: dict = Depends(get_current_cus
     return [repayment_payload(x) for x in rows]
 
 
-@router.get("loan/{loan_id}")
+@router.get("/loan/{loan_id}")
 def loan_repayments(loan_id: int, claims: dict = Depends(get_current_customer), db: Session = Depends(get_db)):
     _loan_for_customer(loan_id, claims, db)
     rows = db.query(RepaymentRecord).filter(RepaymentRecord.loan_id == loan_id).order_by(RepaymentRecord.installment).all()
     return [repayment_payload(x) for x in rows]
 
 
-@router.post("loan/{loan_id}/payments")
+@router.post("/loan/{loan_id}/payments")
 def post_repayment(loan_id: int, payload: RepaymentPost, claims: dict = Depends(get_current_customer), db: Session = Depends(get_db)):
     loan = _loan_for_customer(loan_id, claims, db)
     method = payload.payment_method.strip().lower()
@@ -68,8 +68,6 @@ def post_repayment(loan_id: int, payload: RepaymentPost, claims: dict = Depends(
         remaining = round(remaining - allocation, 2)
     if not applied:
         raise HTTPException(409, "Payment amount cannot be allocated to outstanding installments")
-    db.commit()
-    db.refresh(loan)
     outstanding = sum(max(0.0, float(x.due_amount or 0) - float(x.paid_amount or 0)) for x in rows)
     loan.outstanding_amount = round(outstanding, 2)
     if outstanding <= 0:
