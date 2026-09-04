@@ -1,14 +1,14 @@
 """Add repayment collection contract fields.
 
 Revision ID: 0003_repayment_contract
-Revises: 0001_baseline
+Revises: 0002_audit_events
 """
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import inspect
 
 revision = "0003_repayment_contract"
-down_revision = "0001_baseline"
+down_revision = "0002_audit_events"
 branch_labels = None
 depends_on = None
 
