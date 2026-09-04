@@ -2,7 +2,7 @@ import json
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from .database import get_db
-from .db_models import CustomerRecord, LoanRecord, DocumentRecord, RepaymentRecord, CustomerJourneyRecord
+from .db_models import CustomerRecord, LoanRecord, CustomerJourneyRecord
 from .provider_gateway import provider_status, result
 from .verification import validate_pan, validate_aadhaar
 from .loan_lifecycle import LOAN_STATUSES, LOAN_STAGES, STATUS_TO_STAGE, normalize_status, normalize_stage, lifecycle_payload
@@ -18,8 +18,7 @@ from .analytics_routes import router as analytics_router
 from .report_routes_v2 import router as report_router
 migrate_document_columns()
 router=APIRouter(prefix="/api/services",tags=["verification-services"])
-router.include_router(document_router); router.include_router(auth_router); router.include_router(repayment_router); router.include_router(customer_profile_router); router.include_router(loan_request_router); router.include_router(eligibility_router); router.include_router(servicing_router)
-
+for child in (document_router,auth_router,repayment_router,customer_profile_router,loan_request_router,eligibility_router,servicing_router,analytics_router,report_router): router.include_router(child)
 @router.get("/status")
 def services_status(): return {"services":provider_status()}
 @router.post("/pan/validate")
