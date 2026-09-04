@@ -42,6 +42,7 @@ def test_foundation_smoke_flow():
         body = login.json()
         assert body["customer"]["id"] == customer_id
         token = body["access_token"]
+        refresh_token = body["refresh_token"]
         assert "password_hash" not in body["customer"]
 
         missing_login = client.post("/api/services/api/auth/customer-mobile-login", json={"mobile": "9000000099"})
@@ -51,6 +52,15 @@ def test_foundation_smoke_flow():
         me = client.get("/api/customer/me", headers=headers)
         assert me.status_code == 200
         assert me.json()["id"] == customer_id
+
+        session = client.get("/api/services/api/auth/customer-session", headers=headers)
+        assert session.status_code == 200
+        assert session.json()["authenticated"] is True
+        assert session.json()["customer_id"] == customer_id
+
+        refreshed = client.post("/api/services/api/auth/refresh", json={"refresh_token": refresh_token})
+        assert refreshed.status_code == 200
+        assert refreshed.json()["access_token"]
 
         loan = client.post("/api/loans", json={"customer_id": customer_id, "requested_amount": 10000, "tenure_months": 6})
         assert loan.status_code == 200
@@ -85,8 +95,15 @@ def test_foundation_smoke_flow():
         assert "LOAN_APPLICATION_CREATED" in actions
         assert "DOCUMENT_RECEIVED" in actions
 
+        logout = client.post("/api/services/api/auth/logout", headers=headers)
+        assert logout.status_code == 200
+        assert logout.json()["status"] == "logged_out"
+        assert client.get("/api/customer/me", headers=headers).status_code == 401
+        assert client.get("/api/services/api/auth/customer-session", headers=headers).status_code == 401
+        assert client.post("/api/services/api/auth/refresh", json={"refresh_token": refresh_token}).status_code == 401
 
-def test_migration_head_contains_repayment_contract():
+
+def test_migration_head_contains_repayment_and_session_contracts():
     inspector = inspect(engine)
     assert "customers" in inspector.get_table_names()
     assert "loan_applications" in inspector.get_table_names()
@@ -94,5 +111,7 @@ def test_migration_head_contains_repayment_contract():
     assert "repayments" in inspector.get_table_names()
     assert "customer_journey" in inspector.get_table_names()
     assert "audit_events" in inspector.get_table_names()
+    customer_columns = {c["name"] for c in inspector.get_columns("customers")}
+    assert "session_version" in customer_columns
     repayment_columns = {c["name"] for c in inspector.get_columns("repayments")}
     assert {"payment_reference", "payment_method", "paid_at", "bounce_reason"}.issubset(repayment_columns)
