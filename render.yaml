@@ -8,5 +8,23 @@ services:
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
+      - key: APP_ENV
+        value: production
       - key: CORS_ORIGINS
-        value: "*"
+        sync: false
+      - key: DIRECTCREDIT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ALLOW_DEMO_CREDENTIAL_CLAIM
+        value: "false"
+      - key: FILE_STORAGE_PROVIDER
+        sync: false
+      - key: PAN_PROVIDER
+        sync: false
+      - key: AADHAAR_PROVIDER
+        sync: false
+      - key: BUREAU_PROVIDER
+        sync: false
+      - key: BANK_PROVIDER
+        sync: false
