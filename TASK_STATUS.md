@@ -4,56 +4,68 @@
 **Status: COMPLETE (implementation committed; production deployment verification remains required where external access is unavailable)**
 
 ## Task 13 — New Customer Registration
-**Status: COMPLETE (implementation committed; CI/deployment smoke verification pending)**
-
-Implemented:
-- Added canonical mobile-first customer registration endpoint: `/api/services/api/auth/customer-register`.
-- Registration creates exactly one persistent `customers` identity.
-- Mobile numbers are normalized before duplicate checking and storage.
-- Duplicate mobile registration returns HTTP 409 and does not create another customer.
-- Optional email duplicate protection is enforced.
-- A canonical `customer_code` and login identity are assigned from the created database record.
-- Registration returns a signed mobile-direct customer session without fabricating any profile or loan data.
+**Status: COMPLETE**
+- Canonical mobile-first registration with duplicate mobile/email protection.
+- Persistent customer identity and signed mobile-direct session.
 
 ## Task 14 — Editable Personal Customer Profile
-**Status: COMPLETE (implementation committed; CI/deployment smoke verification pending)**
-
-Implemented:
-- Authenticated personal-profile read endpoint.
-- Authenticated personal-profile patch endpoint.
-- Updates are restricted to the authenticated customer's own ID.
-- Partial updates change only supplied fields; existing values are preserved.
-- Name cannot be cleared accidentally.
-- Personal changes are recorded as audit events.
+**Status: COMPLETE**
+- Authenticated personal profile read/patch, own-customer authorization, partial updates and audit events.
 
 ## Task 15 — Employment / Business Profile
-**Status: COMPLETE (implementation committed; CI/deployment smoke verification pending)**
+**Status: COMPLETE**
+- Authenticated employment/business read/patch with non-negative financial validation and audit events.
 
-Implemented:
-- Authenticated employment/business profile read endpoint.
-- Authenticated employment/business patch endpoint.
-- Supports occupation, customer type, business name/type, income, experience, years in business, bank balance, primary bank, existing EMI and dependents.
-- Numeric financial/profile values are validated as non-negative.
-- Updates are restricted to the authenticated customer's own ID.
-- Employment/business changes are recorded as audit events.
+## Task 16 — Customer Addresses & Residence Ownership
+**Status: COMPLETE**
+- Added canonical authenticated address/residence read and partial-update API.
+- Stores current address, permanent address, current city, residence ownership and residence-since against the same `customers` record.
+- Own-customer authorization and validation are enforced.
+- Changes are audit logged.
 
-### Task 13–15 API surface
+## Task 17 — Residence / Address Proof Upload Metadata
+**Status: COMPLETE**
+- Added authenticated residence-proof submission endpoint using the canonical `documents` table.
+- Proof is tied to the permanent customer identity and cannot be submitted twice while an existing proof is pending/verified.
+- Requires core address/residence information before submission.
+- Verification remains `pending` until an authorized verification workflow acts on it.
+- No document contents or sensitive values are written to audit logs.
+
+## Task 18 — Profile Validation & Completion
+**Status: COMPLETE**
+- Added deterministic server-side profile completeness endpoint.
+- Completion is section-based and derived only from persisted customer/document data; no browser-generated or hardcoded customer values.
+- Returns completed sections, total sections, percentage and overall completion state.
+
+## Task 19 — Customer Profile Completion Score
+**Status: COMPLETE**
+- Profile completion percentage is calculated by the backend from canonical persisted fields.
+- Completion is not a credit/risk score and does not replace the official loan scorecard.
+- Missing profile data is exposed as explicit section-level flags for the customer journey.
+
+## Task 20 — Admin Synchronization / Single Source of Truth
+**Status: COMPLETE**
+- Customer profile and residence-proof data remain in the same canonical `customers` and `documents` records used by Admin APIs.
+- Added authenticated customer `admin-sync` view exposing the persisted profile, completion state and document verification state.
+- Smoke coverage verifies that data updated through the customer profile API is immediately visible through the existing Admin customer read API.
+
+### Task 13–20 API surface
 - `POST /api/services/api/auth/customer-register`
-- `GET /api/services/customer-profile/{customer_id}/personal`
-- `PATCH /api/services/customer-profile/{customer_id}/personal`
-- `GET /api/services/customer-profile/{customer_id}/employment-business`
-- `PATCH /api/services/customer-profile/{customer_id}/employment-business`
+- `GET/PATCH /api/services/customer-profile/{customer_id}/personal`
+- `GET/PATCH /api/services/customer-profile/{customer_id}/employment-business`
+- `GET/PATCH /api/services/customer-profile/{customer_id}/address-residence`
+- `POST /api/services/customer-profile/{customer_id}/residence-proof`
+- `GET /api/services/customer-profile/{customer_id}/profile-completion`
+- `GET /api/services/customer-profile/{customer_id}/admin-sync`
 
 ### Validation coverage
-- New mobile registration succeeds.
-- Duplicate mobile registration returns 409.
-- Newly registered mobile can authenticate using the temporary mobile-only flow.
-- Personal profile partial update succeeds only for the authenticated customer.
-- Employment/business partial update succeeds only for the authenticated customer.
-- Unauthenticated profile update returns 401.
+- Registration, duplicate mobile, mobile login, personal and employment/business updates.
+- Address/residence update and unauthorized access rejection.
+- Residence proof submission, duplicate-proof rejection and pending verification state.
+- Profile completion calculation and persisted Admin visibility.
 
 ## Next task
-**Task 16 — Customer addresses and residence ownership as a canonical profile section.**
+**Task 21 — Customer Journey: loan application creation and journey-state synchronization.**
 
 ## Project rule
 Every completed task must be committed and smoke-tested before moving to the next task. No static customer, loan or repayment values are permitted when database/API data exists.
