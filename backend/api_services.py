@@ -14,16 +14,12 @@ from .auth import get_current_customer
 from .loan_request_routes import router as loan_request_router
 from .eligibility_routes import router as eligibility_router
 from .servicing_routes import router as servicing_router
+from .analytics_routes import router as analytics_router
+from .report_routes_v2 import router as report_router
 
 migrate_document_columns()
 router = APIRouter(prefix="/api/services", tags=["verification-services"])
-router.include_router(document_router)
-router.include_router(auth_router)
-router.include_router(repayment_router)
-router.include_router(customer_profile_router)
-router.include_router(loan_request_router)
-router.include_router(eligibility_router)
-router.include_router(servicing_router)
+router.include_router(document_router); router.include_router(auth_router); router.include_router(repayment_router); router.include_router(customer_profile_router); router.include_router(loan_request_router); router.include_router(eligibility_router); router.include_router(servicing_router)
 
 @router.get("/status")
 def services_status(): return {"services": provider_status()}
@@ -42,36 +38,31 @@ def get_loan_lifecycle(loan_id:int,db:Session=Depends(get_db),claims:dict=Depend
 @router.post("/loans/{loan_id}/lifecycle")
 def transition_loan_lifecycle(loan_id:int,payload:dict,db:Session=Depends(get_db)):
     raise HTTPException(403,"Direct lifecycle transition is disabled; use authorized admin operations")
-
 @router.post("/customers/{customer_id}/journey")
 def sync_customer_journey(customer_id:int,payload:dict,db:Session=Depends(get_db),claims:dict=Depends(get_current_customer)):
-    if int(claims.get("user_id",-1)) != int(customer_id): raise HTTPException(403,"Customer session does not match this customer")
+    if int(claims.get("user_id",-1)) != int(customer_id): raise HTTPException(403,"Customer session does not match customer")
     customer=db.get(CustomerRecord,customer_id)
     if not customer: raise HTTPException(404,"Customer not found")
     c=payload.get("customer") or {}
-    fields={"name":c.get("name"),"pan":c.get("pan"),"mobile":c.get("mobile"),"email":c.get("email"),"address":c.get("address"),"permanent_address":c.get("permanent_address"),"current_city":c.get("current_city"),"gender":c.get("gender"),"business_name":c.get("business_name"),"business_type":c.get("business_type"),"date_of_birth":c.get("date_of_birth"),"aadhaar_masked":c.get("aadhaar_masked"),"marital_status":c.get("marital_status"),"occupation":c.get("occupation"),"monthly_income":c.get("monthly_income"),"work_experience_years":c.get("work_experience_years"),"years_in_business":c.get("years_in_business"),"average_bank_balance":c.get("average_bank_balance"),"primary_bank":c.get("primary_bank"),"cibil_score":c.get("cibil_score"),"foir":c.get("foir"),"existing_emi":c.get("existing_emi"),"dependents":c.get("dependents"),"kyc_status":c.get("kyc_status"),"email_verified":c.get("email_verified"),"selfie_status":c.get("selfie_status")}
-    for key,value in fields.items():
-        if value is not None and hasattr(customer,key): setattr(customer,key,value)
+    for key in ["name","pan","mobile","email","address","permanent_address","current_city","gender","business_name","business_type","date_of_birth","aadhaar_masked","marital_status","occupation","monthly_income","work_experience_years","years_in_business","average_bank_balance","primary_bank","cibil_score","foir","existing_emi","dependents","kyc_status","email_verified","selfie_status"]:
+        if c.get(key) is not None and hasattr(customer,key): setattr(customer,key,c[key])
     lp=payload.get("loan") or {}; loan_id=lp.get("id"); loan=db.get(LoanRecord,int(loan_id)) if loan_id is not None and str(loan_id).isdigit() else None
     if loan is None: loan=db.query(LoanRecord).filter(LoanRecord.customer_id==customer_id).order_by(LoanRecord.id.desc()).first()
     if loan is None and lp.get("requested_amount") is not None:
-        requested=float(lp.get("requested_amount"))
+        requested=float(lp["requested_amount"])
         if requested<5000 or requested>15000: raise HTTPException(422,"Loan amount must be between ₹5,000 and ₹15,000")
         loan=LoanRecord(customer_id=customer_id,requested_amount=requested,status="assessment",current_stage="ASSESSMENT"); db.add(loan); db.flush()
     if loan is not None:
         if loan.customer_id!=customer_id: raise HTTPException(403,"Loan does not belong to this customer")
-        for key in ["requested_amount","eligible_amount","monthly_emi","sanctioned_amount","disbursed_amount","outstanding_amount","interest_rate","tenure_months","product"]:
-            if key in lp and lp[key] is not None and hasattr(loan,key): setattr(loan,key,lp[key])
-        if "status" in lp and lp["status"] is not None: raise HTTPException(403,"Customer cannot change loan lifecycle status")
-        if "current_stage" in lp and lp["current_stage"] is not None: raise HTTPException(403,"Customer cannot change loan lifecycle stage")
+        for key in ["requested_amount","interest_rate","tenure_months","product"]:
+            if key in lp and lp[key] is not None: setattr(loan,key,lp[key])
+        if "status" in lp or "current_stage" in lp: raise HTTPException(403,"Customer cannot change loan lifecycle")
         if "disbursement_details" in lp: loan.disbursement_details=json.dumps(lp["disbursement_details"],ensure_ascii=False)
-    steps=payload.get("steps") or []
-    for index,step in enumerate(steps,1):
+    for index,step in enumerate(payload.get("steps") or [],1):
         key=str(step.get("key") or f"step_{index}"); record=db.query(CustomerJourneyRecord).filter(CustomerJourneyRecord.customer_id==customer_id,CustomerJourneyRecord.step_key==key).first()
         if not record: record=CustomerJourneyRecord(customer_id=customer_id,step_key=key); db.add(record)
         record.loan_id=loan.id if loan else None; record.step_number=int(step.get("step_number") or index); record.step_label=step.get("label") or key; record.status=step.get("status") or "pending"; record.details=json.dumps(step.get("details") or {},ensure_ascii=False)
-    db.commit(); return {"status":"synced","customer_id":customer_id,"loan_id":loan.id if loan else None,"canonical_status":normalize_status(loan.status) if loan else None,"canonical_stage":normalize_stage(loan.current_stage,loan.status) if loan else None,"journey_steps":len(steps)}
-
+    db.commit(); return {"status":"synced","customer_id":customer_id,"loan_id":loan.id if loan else None,"canonical_status":normalize_status(loan.status) if loan else None,"canonical_stage":normalize_stage(loan.current_stage,loan.status) if loan else None,"journey_steps":len(payload.get("steps") or [])}
 @router.get("/customers/{customer_id}/journey")
 def get_customer_journey(customer_id:int,db:Session=Depends(get_db),claims:dict=Depends(get_current_customer)):
     if int(claims.get("user_id",-1))!=int(customer_id): raise HTTPException(403,"Customer session does not match this customer")
