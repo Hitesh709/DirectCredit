@@ -89,6 +89,10 @@ class RepaymentRecord(Base):
     due_amount = Column(Float, nullable=False)
     paid_amount = Column(Float, default=0)
     status = Column(String(30), default="upcoming", index=True)
+    payment_reference = Column(String(160), index=True)
+    payment_method = Column(String(40))
+    paid_at = Column(DateTime(timezone=True))
+    bounce_reason = Column(Text)
 
 class CustomerJourneyRecord(Base):
     __tablename__ = "customer_journey"
