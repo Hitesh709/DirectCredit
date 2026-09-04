@@ -87,3 +87,42 @@ def test_tasks_13_to_15_registration_and_profile_updates():
         assert employment.json()["profile"]["business_name"] == "Updated Business"
         assert employment.json()["profile"]["monthly_income"] == 35000
         assert client.patch(f"/api/services/customer-profile/{customer_id}/personal", json={"name":"No Auth"}).status_code == 401
+
+
+def test_tasks_16_to_20_address_proof_completion_and_admin_sync():
+    with TestClient(app) as client:
+        registration = client.post("/api/services/api/auth/customer-register", json={"name":"Address Customer","mobile":"9000000016","occupation":"Business","business_name":"Address Shop","business_type":"Retail"})
+        assert registration.status_code == 200
+        customer_id = registration.json()["customer"]["id"]
+        headers={"Authorization":f"Bearer {registration.json()['access_token']}"}
+
+        address = client.patch(f"/api/services/customer-profile/{customer_id}/address-residence", headers=headers, json={"address":"12 Main Road","permanent_address":"45 Home Road","current_city":"Ahmedabad","residence_ownership":"owned","residence_since":"2019"})
+        assert address.status_code == 200
+        assert address.json()["profile"]["residence_ownership"] == "owned"
+
+        missing_proof = client.post(f"/api/services/customer-profile/{customer_id}/residence-proof", headers=headers, json={"file_name":"address.pdf","mime_type":"application/pdf","file_size":1200})
+        assert missing_proof.status_code == 200
+        assert missing_proof.json()["verification_status"] == "pending"
+        duplicate_proof = client.post(f"/api/services/customer-profile/{customer_id}/residence-proof", headers=headers, json={"file_name":"address2.pdf","mime_type":"application/pdf","file_size":1000})
+        assert duplicate_proof.status_code == 409
+
+        completion = client.get(f"/api/services/customer-profile/{customer_id}/profile-completion", headers=headers)
+        assert completion.status_code == 200
+        assert completion.json()["completion_percentage"] > 0
+        assert "address_residence" not in completion.json()["sections"]
+        assert completion.json()["sections"]["current_address"] is True
+        assert completion.json()["sections"]["residence_proof"] is True
+
+        sync = client.get(f"/api/services/customer-profile/{customer_id}/admin-sync", headers=headers)
+        assert sync.status_code == 200
+        assert sync.json()["source_of_truth"] == "customers_and_documents"
+        assert sync.json()["profile"]["address"] == "12 Main Road"
+        assert any(d["document_type"] == "RESIDENCE_PROOF" for d in sync.json()["documents"])
+
+        admin_view = client.get(f"/api/customers/{customer_id}")
+        assert admin_view.status_code == 200
+        assert admin_view.json()["address"] == "12 Main Road"
+        assert admin_view.json()["residence_ownership"] == "owned"
+
+        assert client.patch(f"/api/services/customer-profile/{customer_id}/address-residence", json={"address":"No Auth"}).status_code == 401
+        assert client.post(f"/api/services/customer-profile/{customer_id}/residence-proof", json={"file_name":"unauth.pdf"}).status_code == 401
