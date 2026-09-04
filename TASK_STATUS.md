@@ -1,31 +1,34 @@
 # DirectCredit Task Status
 
-## Tasks 1–10 — Foundation & Data Integrity
-**Status: COMPLETE (implementation committed; deployment verification remains required where external access is unavailable)**
+## Tasks 1–11 — Foundation & Customer Authentication
+**Status: COMPLETE (implementation committed; production deployment verification remains required where external access is unavailable)**
 
-## Task 11 — Customer Authentication
-**Status: COMPLETE (implementation committed; production smoke test pending deployment check)**
+## Task 12 — Customer Logout / Session Expiry / Revocation
+**Status: COMPLETE (implementation committed; CI/deployment smoke verification pending)**
 
 Implemented:
-- Canonical customer authentication is backed by the persistent `customers` table.
-- Temporary customer portal access accepts only a 10-digit mobile number (or +91 form) and finds an existing customer.
-- Mobile-only access never creates, guesses, seeds or fabricates a customer profile.
-- Unknown mobile numbers return HTTP 404 with a clear no-customer-record message.
-- Access and refresh tokens are issued only for an existing customer identity.
-- Customer authentication responses use a single sanitized customer payload and never expose `password_hash`.
-- Legacy customer ID/password schema is retained only for compatibility and explicitly disabled for the portal flow.
-- Registration remains an explicit backend operation; it is not triggered by login or journey synchronization.
-- Login, refresh and logout use signed token/session infrastructure.
+- Customer access tokens now carry a persistent `session_version`.
+- Customer authentication validates the token session version against the live customer database record.
+- Logout increments the customer's session version, immediately invalidating all previously issued customer access and refresh tokens.
+- Refresh tokens are checked against the current session version before a new access token is issued.
+- Password reset also increments session version, invalidating existing sessions after credential change.
+- Added `/api/auth/customer-session` authenticated session validation endpoint.
+- Missing/legacy customer tokens without session version are rejected by the current customer session guard.
+- Session expiry continues to be enforced by the token `exp` claim.
+- Session revocation is database-backed rather than browser/local-storage-only.
+- No customer, loan, repayment or profile record is created during logout, refresh or session validation.
 
 Validation requirements:
-- Existing mobile → authenticate the matching database customer.
-- Unknown mobile → 404; no database row is created.
-- Invalid mobile format → 422.
-- Customer identity returned by login must match `/api/customer/me`.
-- No fabricated name, loan, score, repayment or KYC values may be created by authentication.
+- Login → access token works while session version matches.
+- Logout → old access token returns HTTP 401.
+- Logout → old refresh token cannot create a new access token.
+- Refresh before logout → returns a fresh access token.
+- Refresh after logout → HTTP 401.
+- Password reset → prior sessions are invalidated.
+- Expired token → HTTP 401.
 
 ## Next task
-**Task 12 — Customer logout/session expiry and session revocation hardening.**
+**Task 13 — New customer registration with canonical identity creation and duplicate-mobile protection.**
 
 ## Project rule
 Every completed task must be committed and smoke-tested before moving to the next task. No static customer, loan or repayment values are permitted when database/API data exists.
