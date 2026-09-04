@@ -39,15 +39,7 @@ class CustomerRecord(Base):
     kyc_status = Column(String(40), default="pending")
     email_verified = Column(String(20), default="pending")
     selfie_status = Column(String(40), default="pending")
-
-class RevokedTokenRecord(Base):
-    __tablename__ = "revoked_tokens"
-    id = Column(Integer, primary_key=True, index=True)
-    token_hash = Column(String(64), nullable=False, unique=True, index=True)
-    user_id = Column(Integer, nullable=True, index=True)
-    role = Column(String(40))
-    expires_at = Column(DateTime(timezone=True), nullable=False)
-    revoked_at = Column(DateTime(timezone=True), server_default=func.now())
+    session_version = Column(Integer, nullable=False, default=1, server_default="1")
 
 class LoanRecord(Base):
     __tablename__ = "loans"
@@ -118,7 +110,7 @@ class AuditEventRecord(Base):
     actor_id = Column(String(120))
     action = Column(String(120), nullable=False)
     entity_type = Column(String(80), nullable=False)
-    entity_id = Column(String(120))
+    entity_id = Column(String(120)
     request_id = Column(String(120), index=True)
     metadata_json = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
