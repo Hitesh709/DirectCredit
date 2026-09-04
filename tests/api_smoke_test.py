@@ -32,13 +32,21 @@ def test_foundation_smoke_flow():
         assert invalid.json()["error"]["code"] == "VALIDATION_ERROR"
         assert invalid.json()["meta"]["request_id"]
 
-        login = client.post("/api/customer/login", json={"login_id": "task10-customer", "password": "SmokePass123"})
+        # Customer creation is explicit; login never creates a persona.
+        created = client.post("/api/customers", json={"name": "Smoke Customer", "mobile": "9000000001", "occupation": "Business"})
+        assert created.status_code == 200
+        customer_id = created.json()["id"]
+        assert created.json()["customer_code"].startswith("CUST")
+
+        login = client.post("/api/services/api/auth/customer-mobile-login", json={"mobile": "9000000001"})
         assert login.status_code == 200
         body = login.json()
-        customer_id = body["customer"]["id"]
+        assert body["customer"]["id"] == customer_id
         token = body["access_token"]
-        assert body["customer"]["customer_code"].startswith("CUST")
         assert "password_hash" not in body["customer"]
+
+        missing_login = client.post("/api/services/api/auth/customer-mobile-login", json={"mobile": "9000000099"})
+        assert missing_login.status_code == 404
 
         me = client.get("/api/customer/me", headers={"Authorization": f"Bearer {token}"})
         assert me.status_code == 200
@@ -64,12 +72,12 @@ def test_foundation_smoke_flow():
         audits = client.get("/api/audit/events", params={"customer_id": customer_id, "limit": 50})
         assert audits.status_code == 200
         actions = {item["action"] for item in audits.json()}
-        assert "CUSTOMER_LOGIN" in actions
+        assert "CUSTOMER_CREATED" in actions
         assert "LOAN_APPLICATION_CREATED" in actions
         assert "DOCUMENT_RECEIVED" in actions
 
 
-def test_migration_head_contains_audit_table():
+def test_migration_head_contains_repayment_contract():
     inspector = inspect(engine)
     assert "customers" in inspector.get_table_names()
     assert "loan_applications" in inspector.get_table_names()
@@ -77,3 +85,5 @@ def test_migration_head_contains_audit_table():
     assert "repayments" in inspector.get_table_names()
     assert "customer_journey" in inspector.get_table_names()
     assert "audit_events" in inspector.get_table_names()
+    repayment_columns = {c["name"] for c in inspector.get_columns("repayments")}
+    assert {"payment_reference", "payment_method", "paid_at", "bounce_reason"}.issubset(repayment_columns)
