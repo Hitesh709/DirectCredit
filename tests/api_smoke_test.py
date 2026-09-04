@@ -23,7 +23,7 @@ def test_foundation_smoke_flow():
         assert health.headers.get("X-Request-ID")
         version = client.get("/api/version")
         assert version.status_code == 200
-        assert version.json()["version"] == "0.7.2"
+        assert version.json()["version"] == "0.8.0"
         invalid = client.post("/api/loans", json={"customer_id": 999, "requested_amount": 20000, "tenure_months": 6})
         assert invalid.status_code == 422
         assert invalid.json()["success"] is False
