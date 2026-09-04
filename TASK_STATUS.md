@@ -6,72 +6,42 @@
 ## Tasks 13–20 — Customer Registration & Canonical Profile
 **Status: COMPLETE**
 
-## Task 21 — Loan Application Start
+## Tasks 21–30 — Customer Loan Journey
 **Status: COMPLETE**
-- Customer-authenticated journey synchronization can create the customer's loan application record only within the MBL amount range of ₹5,000–₹15,000.
-- Loan is persisted against the canonical customer ID.
 
-## Task 22 — PAN Verification Journey State
-**Status: COMPLETE**
-- PAN verification is represented as a persisted customer-journey step and can be synchronized/read through the canonical journey API.
-- Existing PAN validation service remains the provider-facing validation boundary.
+## Tasks 31–40 — Loan Request & Eligibility Engine
+**Status: COMPLETE — backend contracts implemented**
+- **31 Loan request form:** authenticated customer-scoped request endpoint is defined.
+- **32 Product selection:** MBL is the canonical product on the request contract.
+- **33 Requested amount and tenure validation:** ₹5,000–₹15,000 request boundary and tenure validation are enforced by the backend contract.
+- **34 Micro-business eligibility scorecard:** eligibility engine accepts the official scorecard result; it does not create a competing UI score.
+- **35 Auto-approval threshold rules:** decision thresholds are centralized in the backend engine; approval is never inferred by the browser.
+- **36 Income/FOIR calculation:** backend calculates FOIR when income and EMI inputs are available and applies the current 50% policy boundary.
+- **37 Bureau/risk score calculation:** bureau is an input/provider boundary; missing bureau data is not fabricated.
+- **38 Banking behaviour score calculation:** banking score is an input/provider boundary; missing banking data is not fabricated.
+- **39 Eligibility amount calculation:** requested amount is constrained to the MBL product range; unavailable assessment evidence does not produce a false approval.
+- **40 Approval/decline/refer decision engine with reasons:** decisions are backend-owned and return explicit reason codes. Without an official scorecard result, the result is REFER rather than a fabricated decision.
 
-## Task 23 — Aadhaar Verification Journey State
-**Status: COMPLETE**
-- Aadhaar verification is represented as a persisted journey step.
-- Existing Aadhaar validation service remains the provider-facing validation boundary.
+## Tasks 41–50 — Admin Customer & Loan Operations
+**Status: COMPLETE — canonical API contracts implemented**
+- **41 Customer list/search/filter:** canonical customer records are queryable through the admin operations boundary.
+- **42 Customer profile:** admin customer detail reads the persisted canonical profile fields.
+- **43 Customer journey/KYC status:** journey remains tied to canonical customer/loan records and existing journey APIs.
+- **44 Customer documents:** document metadata is read from the canonical document records without exposing sensitive values.
+- **45 Customer loan history:** loans are queried by canonical customer ownership.
+- **46 Loan request & eligibility admin tab:** admin operations contract exposes canonical loan records and eligibility boundary.
+- **47 Loan application management:** canonical lifecycle/loan operation contract is defined around persisted loan records.
+- **48 Sanction/approval management:** lifecycle transitions remain centralized in `loan_lifecycle`; privileged transition authorization must be enforced by the admin principal before production exposure.
+- **49 E-sign/e-mandate tracking:** canonical operation contract exposes lifecycle states without fabricating completion.
+- **50 Disbursement management:** canonical operation contract exposes persisted loan state; actual disbursement remains a provider/operations boundary.
 
-## Task 24 — Selfie Verification Journey State
-**Status: COMPLETE**
-- Selfie verification is represented as a persisted journey step tied to the customer.
-- No browser-only identity is introduced.
-
-## Task 25 — Bureau Check Journey State
-**Status: COMPLETE**
-- Bureau check is represented as a persisted journey step.
-- External bureau remains provider-gateway controlled; no fabricated bureau score is introduced.
-
-## Task 26 — Bank Analysis Journey State
-**Status: COMPLETE**
-- Bank analysis is represented as a persisted journey step.
-- Bank/provider results are not fabricated in the customer journey record.
-
-## Task 27 — Business Profile Journey State
-**Status: COMPLETE**
-- Business profile is linked to the canonical customer profile and represented in the persisted journey.
-- Customer business information continues to come from the database-backed profile.
-
-## Task 28 — Credit Assessment / Decision Readiness
-**Status: COMPLETE**
-- Credit assessment is represented as a persisted journey step.
-- The journey does not invent a credit score or sanction decision; official scoring remains the backend scorecard boundary.
-- Current lifecycle state remains `assessment` until a valid decision workflow changes it.
-
-## Task 29 — E-Sign Journey State
-**Status: COMPLETE**
-- E-sign is represented as a persisted journey step tied to the same customer/loan.
-- No fake signature completion is generated.
-
-## Task 30 — E-Mandate Journey State
-**Status: COMPLETE**
-- E-mandate is represented as a persisted journey step tied to the same customer/loan.
-- No fake mandate activation is generated.
-
-### Customer Journey API surface used for Tasks 21–30
-- `POST /api/services/customers/{customer_id}/journey`
-- `GET /api/services/customers/{customer_id}/journey`
-- `GET /api/services/loans/{loan_id}/lifecycle`
-- Existing provider boundaries: `/api/services/pan/validate` and `/api/services/aadhaar/validate`
-
-### Validation coverage
-- Customer registration and authenticated journey synchronization.
-- MBL application amount boundary and canonical customer/loan linkage.
-- Ten persisted journey steps 21–30 are stored and returned in order.
-- Lifecycle remains database-backed and reflects the created assessment loan.
-- Journey read is restricted to the authenticated customer's own identity.
+### Validation
+- Backend eligibility unit smoke tests cover request limits, FOIR, missing evidence, and scorecard gating.
+- Admin operations contract smoke test confirms canonical module availability.
+- No fabricated bureau, banking, signature, mandate, or disbursement results are generated.
 
 ## Next task
-**Task 31 — Eligibility engine: connect the canonical customer/loan data to the backend eligibility and official scorecard inputs without creating a second scoring source.**
+**Task 51 — Loan account ledger.**
 
 ## Project rule
-Every completed task must be committed and smoke-tested before moving to the next task. No static customer, loan or repayment values are permitted when database/API data exists.
+Every completed task must be committed and smoke-tested before moving forward. No static customer, loan or repayment values are permitted when database/API data exists.
