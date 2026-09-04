@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from .database import get_db
 from .db_models import CustomerRecord
 from .auth import hash_password, verify_password, issue_token, decode_token, get_current_customer
-from .schemas import RegisterRequest, LoginRequest, RefreshRequest, PasswordRequest, EmailTokenRequest
+from .schemas import RegisterRequest, CustomerRegistrationRequest, LoginRequest, RefreshRequest, PasswordRequest, EmailTokenRequest
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
@@ -14,13 +14,13 @@ def _customer_payload(c: CustomerRecord) -> dict:
 
 
 def _tokens(c: CustomerRecord) -> dict:
-    return {
-        "access_token": issue_token(c.id, "customer", "access", 1, c.session_version or 1),
-        "refresh_token": issue_token(c.id, "customer", "refresh", 30, c.session_version or 1),
-        "token_type": "bearer",
-        "expires_in": 3600,
-        "customer": _customer_payload(c),
-    }
+    return {"access_token": issue_token(c.id, "customer", "access", 1, c.session_version or 1), "refresh_token": issue_token(c.id, "customer", "refresh", 30, c.session_version or 1), "token_type": "bearer", "expires_in": 3600, "customer": _customer_payload(c)}
+
+
+def _normalize_mobile(value: str) -> str:
+    digits = "".join(ch for ch in str(value or "") if ch.isdigit())
+    if digits.startswith("91") and len(digits) == 12: digits = digits[2:]
+    return digits
 
 
 @router.post("/register")
@@ -34,6 +34,22 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     result=_tokens(c); result["email_verification_token"]=verification_token; return result
 
 
+@router.post("/customer-register")
+def customer_register(payload: CustomerRegistrationRequest, db: Session = Depends(get_db)):
+    """Create one canonical customer identity for the mobile-only portal."""
+    mobile = _normalize_mobile(payload.mobile)
+    if len(mobile) != 10: raise HTTPException(422, "Enter a valid 10-digit mobile number")
+    existing = db.query(CustomerRecord).filter(CustomerRecord.mobile.in_([mobile, f"+91{mobile}", f"91{mobile}"])).first()
+    if existing: raise HTTPException(409, "A customer is already registered for this mobile number")
+    if payload.email and db.query(CustomerRecord).filter(CustomerRecord.email == payload.email.strip()).first():
+        raise HTTPException(409, "Email is already registered")
+    c = CustomerRecord(name=payload.name.strip(), mobile=mobile, email=payload.email.strip() if payload.email else None, customer_type=payload.customer_type.strip(), occupation=payload.occupation.strip(), business_name=payload.business_name.strip() if payload.business_name else None, business_type=payload.business_type.strip() if payload.business_type else None, current_city=payload.current_city.strip() if payload.current_city else None, kyc_status="pending", email_verified="pending", selfie_status="pending", session_version=1)
+    db.add(c); db.commit(); db.refresh(c)
+    c.customer_code=f"CUST{c.id:08d}"; c.login_id=f"MOB{mobile}"
+    db.commit(); db.refresh(c)
+    return {"registered": True, "auth_method": "mobile_direct", **_tokens(c)}
+
+
 @router.post("/login")
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     c=db.query(CustomerRecord).filter(CustomerRecord.login_id==payload.login_id.strip()).first()
@@ -44,8 +60,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 @router.post("/customer-mobile-login")
 def customer_mobile_login(payload: dict, db: Session = Depends(get_db)):
     """Temporary mobile-only access for an existing customer record."""
-    raw_mobile=str(payload.get("mobile") or "").strip(); mobile="".join(ch for ch in raw_mobile if ch.isdigit())
-    if mobile.startswith("91") and len(mobile)==12: mobile=mobile[2:]
+    mobile = _normalize_mobile(payload.get("mobile"))
     if len(mobile)!=10: raise HTTPException(422,"Enter a 10-digit mobile number")
     c=db.query(CustomerRecord).filter(CustomerRecord.mobile.in_([mobile, f"+91{mobile}", f"91{mobile}"])).first()
     if not c: raise HTTPException(404,"No customer record is registered for this mobile number")
