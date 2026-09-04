@@ -32,7 +32,6 @@ def test_foundation_smoke_flow():
         assert invalid.json()["error"]["code"] == "VALIDATION_ERROR"
         assert invalid.json()["meta"]["request_id"]
 
-        # Customer creation is explicit; login never creates a persona.
         created = client.post("/api/customers", json={"name": "Smoke Customer", "mobile": "9000000001", "occupation": "Business"})
         assert created.status_code == 200
         customer_id = created.json()["id"]
@@ -48,7 +47,8 @@ def test_foundation_smoke_flow():
         missing_login = client.post("/api/services/api/auth/customer-mobile-login", json={"mobile": "9000000099"})
         assert missing_login.status_code == 404
 
-        me = client.get("/api/customer/me", headers={"Authorization": f"Bearer {token}"})
+        headers = {"Authorization": f"Bearer {token}"}
+        me = client.get("/api/customer/me", headers=headers)
         assert me.status_code == 200
         assert me.json()["id"] == customer_id
 
@@ -56,6 +56,15 @@ def test_foundation_smoke_flow():
         assert loan.status_code == 200
         loan_id = loan.json()["id"]
         assert loan.json()["requested_amount"] == 10000
+
+        schedule = client.post(f"/api/loans/{loan_id}/repayment-schedule")
+        assert schedule.status_code == 200
+        assert len(schedule.json()) == 6
+
+        repayment_ledger = client.get(f"/api/services/repayments/loan/{loan_id}", headers=headers)
+        assert repayment_ledger.status_code == 200
+        assert len(repayment_ledger.json()) == 6
+        assert {"due_amount", "paid_amount", "unpaid_amount", "status", "dpd"}.issubset(repayment_ledger.json()[0])
 
         document = client.post("/api/documents", json={
             "customer_id": customer_id,
