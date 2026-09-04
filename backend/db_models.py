@@ -110,7 +110,7 @@ class AuditEventRecord(Base):
     actor_id = Column(String(120))
     action = Column(String(120), nullable=False)
     entity_type = Column(String(80), nullable=False)
-    entity_id = Column(String(120)
+    entity_id = Column(String(120))
     request_id = Column(String(120), index=True)
     metadata_json = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
