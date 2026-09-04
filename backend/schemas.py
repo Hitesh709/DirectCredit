@@ -13,6 +13,38 @@ class CustomerLogin(BaseModel):
     @classmethod
     def legacy_login_disabled(cls,value):
         raise ValueError('Legacy customer ID/password login is disabled. Use the mobile-only customer access flow.')
+class CustomerRegistrationRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    mobile: str = Field(min_length=10, max_length=16)
+    email: Optional[str] = Field(default=None, max_length=200)
+    customer_type: str = Field(default="Individual", max_length=40)
+    occupation: str = Field(default="Business", max_length=100)
+    business_name: Optional[str] = Field(default=None, max_length=200)
+    business_type: Optional[str] = Field(default=None, max_length=120)
+    current_city: Optional[str] = Field(default=None, max_length=100)
+class PersonalProfileUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    email: Optional[str] = Field(default=None, max_length=200)
+    gender: Optional[str] = Field(default=None, max_length=40)
+    date_of_birth: Optional[str] = Field(default=None, max_length=20)
+    marital_status: Optional[str] = Field(default=None, max_length=40)
+    address: Optional[str] = None
+    permanent_address: Optional[str] = None
+    current_city: Optional[str] = Field(default=None, max_length=100)
+    residence_ownership: Optional[str] = Field(default=None, max_length=50)
+    residence_since: Optional[str] = Field(default=None, max_length=50)
+class EmploymentBusinessUpdate(BaseModel):
+    occupation: Optional[str] = Field(default=None, max_length=100)
+    customer_type: Optional[str] = Field(default=None, max_length=40)
+    business_name: Optional[str] = Field(default=None, max_length=200)
+    business_type: Optional[str] = Field(default=None, max_length=120)
+    monthly_income: Optional[float] = Field(default=None, ge=0)
+    work_experience_years: Optional[float] = Field(default=None, ge=0)
+    years_in_business: Optional[float] = Field(default=None, ge=0)
+    average_bank_balance: Optional[float] = Field(default=None, ge=0)
+    primary_bank: Optional[str] = Field(default=None, max_length=120)
+    existing_emi: Optional[float] = Field(default=None, ge=0)
+    dependents: Optional[int] = Field(default=None, ge=0)
 class RegisterRequest(BaseModel): name: str = Field(min_length=1,max_length=200); login_id: str = Field(min_length=1,max_length=120); password: str = Field(min_length=8,max_length=200); email: Optional[str] = None; mobile: Optional[str] = None; customer_type: str = "Individual"; occupation: str = "Business"
 class LoginRequest(BaseModel): login_id: str = Field(min_length=1,max_length=120); password: str = Field(min_length=8,max_length=200)
 class RefreshRequest(BaseModel): refresh_token: str = Field(min_length=20)
