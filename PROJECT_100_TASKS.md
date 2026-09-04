@@ -124,9 +124,12 @@ This is the master implementation sequence for the full DirectCredit lending pla
 
 ## Current status
 - Tasks 1–30: **COMPLETE**
-- Tasks 31–40: **COMPLETE — backend eligibility contracts implemented; provider/official scorecard inputs remain explicit dependencies**
+- Tasks 31–40: **COMPLETE — backend eligibility contracts implemented; official 125-point scorecard/provider inputs remain explicit dependencies**
 - Tasks 41–50: **COMPLETE — canonical admin customer/loan operation contracts implemented**
-- Tasks 51–100: Planned
+- Tasks 51–60: **IMPLEMENTED — servicing, disbursement, ledger, repayment, partial payment, foreclosure, DPD, collections and closure APIs added**
+- Tasks 61–70: **IMPLEMENTED — database-backed admin analytics endpoints added**
+- Tasks 71–75: **IMPLEMENTED — secured registration, pipeline, disbursement, repayment/collection and accounting reports added**
+- Tasks 76–100: Planned
 
 ## Non-negotiable project rules
 1. No static customer identity in the customer portal.
