@@ -45,6 +45,20 @@ class EmploymentBusinessUpdate(BaseModel):
     primary_bank: Optional[str] = Field(default=None, max_length=120)
     existing_emi: Optional[float] = Field(default=None, ge=0)
     dependents: Optional[int] = Field(default=None, ge=0)
+class AddressResidenceUpdate(BaseModel):
+    address: Optional[str] = Field(default=None, min_length=1)
+    permanent_address: Optional[str] = Field(default=None, min_length=1)
+    current_city: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    residence_ownership: Optional[str] = Field(default=None, min_length=1, max_length=50)
+    residence_since: Optional[str] = Field(default=None, min_length=1, max_length=50)
+class ResidenceProofCreate(BaseModel):
+    document_type: str = Field(default="RESIDENCE_PROOF", min_length=1, max_length=80)
+    file_name: str = Field(min_length=1, max_length=255)
+    mime_type: Optional[str] = Field(default=None, max_length=120)
+    file_size: int = Field(default=0, ge=0)
+    checksum: Optional[str] = Field(default=None, max_length=128)
+    storage_provider: Optional[str] = Field(default=None, max_length=50)
+    storage_key: Optional[str] = None
 class RegisterRequest(BaseModel): name: str = Field(min_length=1,max_length=200); login_id: str = Field(min_length=1,max_length=120); password: str = Field(min_length=8,max_length=200); email: Optional[str] = None; mobile: Optional[str] = None; customer_type: str = "Individual"; occupation: str = "Business"
 class LoginRequest(BaseModel): login_id: str = Field(min_length=1,max_length=120); password: str = Field(min_length=8,max_length=200)
 class RefreshRequest(BaseModel): refresh_token: str = Field(min_length=20)
