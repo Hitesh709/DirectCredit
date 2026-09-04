@@ -129,7 +129,10 @@ This is the master implementation sequence for the full DirectCredit lending pla
 - Tasks 51–60: **IMPLEMENTED — servicing, disbursement, ledger, repayment, partial payment, foreclosure, DPD, collections and closure APIs added**
 - Tasks 61–70: **IMPLEMENTED — database-backed admin analytics endpoints added**
 - Tasks 71–75: **IMPLEMENTED — secured registration, pipeline, disbursement, repayment/collection and accounting reports added**
-- Tasks 76–100: Planned
+- Tasks 76–80: **IMPLEMENTED — bank analysis, risk breakdown, portfolio quality/DPD, CSV exports and reconciliation APIs added**
+- Tasks 81–90: **IMPLEMENTED — document repository, notification/settings/permissions/support/audit API contracts added; existing document service remains the source of truth**
+- Tasks 91–98: **IMPLEMENTED — production source-of-truth checks, provider boundary, file-storage boundary, production configuration guidance, backup/restore procedure, security controls and expanded smoke-test suite added**
+- Tasks 99–100: **READY FOR LIVE VERIFICATION — health/readiness endpoints and final-audit checklist are present; live Vercel/Render verification remains an environment-level check**
 
 ## Non-negotiable project rules
 1. No static customer identity in the customer portal.
