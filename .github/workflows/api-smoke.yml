@@ -22,8 +22,22 @@ jobs:
       - name: Install backend dependencies
         run: python -m pip install -r backend/requirements.txt pytest httpx
       - name: Run API smoke tests
+        id: smoke
         env:
           PYTHONPATH: .
           DIRECTCREDIT_SECRET: ci-test-secret-change-me-123456789
           ALLOW_DEMO_CREDENTIAL_CLAIM: "false"
-        run: pytest -q tests/api_smoke_test.py tests/task_51_75_smoke.py tests/task_76_100_smoke.py tests/task_111_115_smoke.py
+        shell: bash
+        run: |
+          set +e
+          pytest -vv tests/api_smoke_test.py tests/task_51_75_smoke.py tests/task_76_100_smoke.py tests/task_111_115_smoke.py 2>&1 | tee pytest-output.txt
+          status=${PIPESTATUS[0]}
+          echo "pytest_exit_code=${status}" >> pytest-output.txt
+          exit ${status}
+      - name: Upload smoke-test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: directcredit-smoke-diagnostics
+          path: pytest-output.txt
+          if-no-files-found: ignore
