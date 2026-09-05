@@ -15,38 +15,40 @@
 **Status: COMPLETE — servicing APIs implemented; sample collection operations extended**
 
 ## Tasks 61–70 — Admin Dashboard & Analytics
-**Status: COMPLETE — database-backed analytics implemented and sample matrix payloads completed**
+**Status: COMPLETE — database-backed analytics and sample matrix payloads implemented**
 
 ## Tasks 71–80 — Reports, Accounting, Risk & Reconciliation
-**Status: COMPLETE — secured APIs implemented and sample reporting data structures completed**
+**Status: COMPLETE — secured APIs and sample reporting structures implemented**
 
 ## Tasks 81–90 — Documents, Alerts, Settings & Support
-**Status: COMPLETE — production API contracts implemented and CI-verified**
+**Status: COMPLETE — production API contracts implemented and previously CI-verified**
 
 ## Tasks 91–98 — Production Readiness
-**Status: COMPLETE — implemented and CI-verified**
-- Source-of-truth, demo separation, provider boundary, secure storage, production configuration, backup/restore, security controls and expanded smoke tests are implemented.
+**Status: COMPLETE — implemented and previously CI-verified**
 
 ## Tasks 99–100 — Deployment & Final Audit
 **Status: CODE COMPLETE — LIVE ENVIRONMENT VERIFICATION PENDING**
-- Health/readiness endpoints and deployment configuration are present. Live DirectCredit Render/Vercel verification requires the actual connected deployment environment.
+- Live DirectCredit Render verification remains an environment-level check.
 
 ## Tasks 101–110 — Post-100 Production Hardening
-**Status: IMPLEMENTED — smoke tests added**
-- Production data-contract, sensitive-data masking, idempotency, operational readiness, observability, audit integrity, configuration drift, provider matrix and release-readiness contracts are implemented.
+**Status: IMPLEMENTED — CI verification pending for latest branch state**
 
 ## Tasks 111–115 — Sample Loan Flow Completion
-**Status: IMPLEMENTED — CI verification pending for the latest changes**
-- 111 Official 125-point scorecard persistence and factor/reason-code breakdown.
-- 112 Complete dashboard/matrix reporting payloads: monthly, slabs, repayment status and due calendar.
-- 113 Collection agents, actions, provider debit-request workflow and ledger-backed collection receipts.
-- 114 Persisted bank transactions and cash-flow/transaction analytics.
-- 115 Sample UI wiring for risk, bank analysis, reporting and collection operations.
+**Status: IMPLEMENTED — CI verification pending for latest branch state**
+- 111 Official 125-point scorecard persistence, factor breakdown, hard-reject policy and approval matrix.
+- 112 Complete dashboard/matrix reporting: monthly applications/disbursement, loan slabs, repayment buckets and due calendar.
+- 113 Collection agents, collection actions, provider debit-request workflow and ledger-backed receipts.
+- 114 Persisted bank transactions, monthly cash flow, balances, categories, negative-balance events and transaction detail.
+- 115 Risk, bank, customer-profile and collection sample screens wired to authenticated live APIs.
+- 116 Full settlement/foreclosure/partial-settlement/write-off quote, approval and completion workflow with persisted records and NOC-ready closure state.
+
+## Source note
+The supplied MBL framework states a 125-point maximum, while its listed factor maxima sum to 130 before the +5 both-owned bonus. The implementation preserves all listed factors, records the raw factor total, and caps the published score at the stated 125 maximum instead of silently removing a source factor.
 
 ## Validation
-- Latest previously verified GitHub Actions regression run #191 passed 14 API smoke tests before the 111–115 changes.
-- The CI workflow now includes `tests/task_111_115_smoke.py`; latest changes require a fresh successful Actions run before being marked CI-verified.
-- Latest commit also has a successful Vercel status check; live Render verification remains an environment-level check.
+- Previously verified GitHub Actions run #191 passed the existing 14-test regression suite before the sample-flow completion changes.
+- CI workflow now includes `tests/task_111_115_smoke.py`; a fresh successful Actions run is required before the latest changes are marked CI-verified.
+- Latest checked commit had a successful Vercel status before the final settlement/test commits; live Render verification is still pending.
 
 ## Project rule
 Every completed task must be committed and smoke-tested before moving forward. No static customer, loan or repayment values are permitted when database/API data exists.
