@@ -26,4 +26,4 @@ jobs:
           PYTHONPATH: .
           DIRECTCREDIT_SECRET: ci-test-secret-change-me-123456789
           ALLOW_DEMO_CREDENTIAL_CLAIM: "false"
-        run: pytest -q tests/api_smoke_test.py tests/task_51_75_smoke.py tests/task_76_100_smoke.py
+        run: pytest -q tests/api_smoke_test.py tests/task_51_75_smoke.py tests/task_76_100_smoke.py tests/task_111_115_smoke.py
