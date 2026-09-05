@@ -5,6 +5,7 @@ rewriting or dropping business data. New databases are created exclusively by
 Alembic migrations. Legacy deployments that already contain the audit table are
 adopted at the audit revision; all newer migrations are then applied.
 """
+from pathlib import Path
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import inspect, text
@@ -12,11 +13,12 @@ from .database import engine
 
 BASELINE = "0001_baseline"
 AUDIT_REVISION = "0002_audit_events"
+BACKEND_DIR = Path(__file__).resolve().parent
 
 
 def _config() -> Config:
-    cfg = Config("backend/alembic.ini")
-    cfg.set_main_option("script_location", "backend/alembic")
+    cfg = Config(str(BACKEND_DIR / "alembic.ini"))
+    cfg.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
     return cfg
 
 
