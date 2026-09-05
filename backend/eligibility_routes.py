@@ -1,4 +1,5 @@
 from __future__ import annotations
+import json
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -23,6 +24,14 @@ class AssessmentInput(BaseModel):
 def owns(customer_id,claims):
     if int(claims.get("user_id",-1))!=int(customer_id): raise HTTPException(403,"customer_scope_forbidden")
 
+def _tier(score:int|None, decision:str)->str:
+    if score is None: return "Not assessed"
+    if decision=="REJECT": return "High Risk"
+    if score>=105: return "Low Risk"
+    if score>=100: return "Moderate Risk"
+    if score>=95: return "Moderate Risk"
+    return "Manual Review"
+
 @router.post("/{customer_id}/request")
 def create_or_update_request(customer_id:int,body:LoanRequest,db:Session=Depends(get_db),current=Depends(get_current_customer)):
     owns(customer_id,current); customer=db.get(CustomerRecord,customer_id)
@@ -37,15 +46,20 @@ def assess_customer(customer_id:int,body:AssessmentInput,db:Session=Depends(get_
     owns(customer_id,current); loan=db.query(LoanRecord).filter(LoanRecord.customer_id==customer_id).order_by(LoanRecord.id.desc()).first()
     if not loan: raise HTTPException(404,"loan_request_not_found")
     result=calculate(body.model_dump(exclude_none=True))
-    # Customer assessment may record the scored eligibility, but it cannot self-sanction.
     loan.status="assessment"; loan.current_stage="ASSESSMENT"
     loan.eligible_amount=int(round(float(loan.requested_amount or 0)*result.approval_percent/100))
-    db.commit()
-    payload=result.payload(); payload.update({"loan_id":loan.id,"customer_id":customer_id,"requested_amount":loan.requested_amount,"scorecard_version":VERSION,"max_score":MAX_POINTS})
+    loan.scorecard_score=result.score; loan.scorecard_max=result.max_score; loan.scorecard_version=result.version
+    loan.scorecard_decision=result.decision; loan.scorecard_approval_percent=result.approval_percent
+    loan.scorecard_reasons=json.dumps(result.reasons,ensure_ascii=False); loan.scorecard_hard_rejects=json.dumps(result.hard_rejects,ensure_ascii=False)
+    loan.scorecard_factor_scores=json.dumps(result.factor_scores,ensure_ascii=False)
+    if result.decision=="REJECT": loan.eligible_amount=0
+    db.commit(); db.refresh(loan)
+    payload=result.payload(); payload.update({"loan_id":loan.id,"customer_id":customer_id,"requested_amount":loan.requested_amount,"eligible_amount":loan.eligible_amount,"risk_tier":_tier(result.score,result.decision),"scorecard_version":VERSION,"max_score":MAX_POINTS})
     return payload
 
 @router.get("/{customer_id}")
 def get_eligibility(customer_id:int,db:Session=Depends(get_db),current=Depends(get_current_customer)):
     owns(customer_id,current); loan=db.query(LoanRecord).filter(LoanRecord.customer_id==customer_id).order_by(LoanRecord.id.desc()).first()
     if not loan: return {"loan":None,"decision":"NOT_ASSESSED","scorecard_version":VERSION}
-    return {"loan_id":loan.id,"customer_id":customer_id,"requested_amount":loan.requested_amount,"eligible_amount":loan.eligible_amount,"tenure_months":loan.tenure_months,"status":loan.status,"decision":"ASSESSMENT_RECORDED","scorecard_version":VERSION}
+    reasons=json.loads(loan.scorecard_reasons or "[]"); hard=json.loads(loan.scorecard_hard_rejects or "[]"); factors=json.loads(loan.scorecard_factor_scores or "{}")
+    return {"loan_id":loan.id,"customer_id":customer_id,"requested_amount":loan.requested_amount,"eligible_amount":loan.eligible_amount,"tenure_months":loan.tenure_months,"status":loan.status,"decision":loan.scorecard_decision or "NOT_ASSESSED","score":loan.scorecard_score,"max_score":loan.scorecard_max or MAX_POINTS,"approval_percent":loan.scorecard_approval_percent,"risk_tier":_tier(loan.scorecard_score,loan.scorecard_decision),"reasons":reasons,"hard_rejects":hard,"factor_scores":factors,"scorecard_version":loan.scorecard_version or VERSION}
