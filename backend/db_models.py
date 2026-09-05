@@ -58,6 +58,14 @@ class LoanRecord(Base):
     current_stage = Column(String(50), default="PAN", index=True)
     product = Column(String(120), default="Micro Business Loan")
     disbursement_details = Column(Text)
+    scorecard_score = Column(Integer)
+    scorecard_max = Column(Integer)
+    scorecard_version = Column(String(40))
+    scorecard_decision = Column(String(40))
+    scorecard_approval_percent = Column(Integer)
+    scorecard_reasons = Column(Text)
+    scorecard_hard_rejects = Column(Text)
+    scorecard_factor_scores = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class DocumentRecord(Base):
@@ -126,3 +134,40 @@ class AuditEventRecord(Base):
     details = Column(Text)
     ip_address = Column(String(64))
     user_agent = Column(Text)
+
+class CollectionAgentRecord(Base):
+    __tablename__ = "collection_agents"
+    id = Column(Integer, primary_key=True, index=True)
+    agent_code = Column(String(80), unique=True, index=True, nullable=False)
+    name = Column(String(160), nullable=False)
+    mobile = Column(String(30))
+    active = Column(Boolean, default=True, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class CollectionActionRecord(Base):
+    __tablename__ = "collection_actions"
+    id = Column(Integer, primary_key=True, index=True)
+    loan_id = Column(Integer, index=True, nullable=False)
+    customer_id = Column(Integer, index=True, nullable=False)
+    agent_id = Column(Integer, index=True)
+    action_type = Column(String(50), index=True, nullable=False)
+    amount = Column(Float, default=0)
+    reference = Column(String(160), index=True)
+    status = Column(String(40), index=True, default="recorded")
+    notes = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+class BankTransactionRecord(Base):
+    __tablename__ = "bank_transactions"
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, index=True, nullable=False)
+    loan_id = Column(Integer, index=True)
+    transaction_date = Column(String(20), index=True, nullable=False)
+    amount = Column(Float, nullable=False)
+    direction = Column(String(10), index=True, nullable=False)
+    category = Column(String(80), index=True)
+    description = Column(Text)
+    reference = Column(String(160), index=True)
+    balance = Column(Float)
+    source = Column(String(40), default="bank_statement")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
