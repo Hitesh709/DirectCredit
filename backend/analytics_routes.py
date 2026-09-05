@@ -1,5 +1,6 @@
 from collections import Counter,defaultdict
 from datetime import datetime
+import json
 from fastapi import APIRouter,Depends
 from sqlalchemy.orm import Session
 from .database import get_db
@@ -43,4 +44,6 @@ def trends(db:Session=Depends(get_db),admin=Depends(get_current_admin)):
  return [{"month":k,**v} for k,v in sorted(out.items())]
 @router.get("/risk")
 def risk(db:Session=Depends(get_db),admin=Depends(get_current_admin)):
- c,l,_=snapshot(db); s=[x.cibil_score for x in c if x.cibil_score and x.cibil_score>0]; return {"customers_with_bureau_score":len(s),"average_cibil":round(sum(s)/len(s),2) if s else None,"loan_status_counts":dict(Counter(x.status for x in l)),"scorecard_status":"official_125_point_scorecard_required"}
+ c,l,_=snapshot(db); s=[x.cibil_score for x in c if x.cibil_score and x.cibil_score>0]; scored=[x for x in l if x.scorecard_score is not None]
+ decisions=Counter(x.scorecard_decision for x in scored)
+ return {"customers_with_bureau_score":len(s),"average_cibil":round(sum(s)/len(s),2) if s else None,"loan_status_counts":dict(Counter(x.status for x in l)),"scorecard_status":"official_125_point_scorecard","scorecard_version":scored[0].scorecard_version if scored else "MBL-125-v1","scored_applications":len(scored),"decision_counts":dict(decisions)}
