@@ -10,60 +10,43 @@
 
 ## Tasks 41–50 — Admin Customer & Loan Operations
 **Status: COMPLETE — canonical API contracts implemented**
-- Customer, loan, document, lifecycle, sanction, e-sign/mandate and disbursement operations are backed by canonical records and authorization boundaries.
 
 ## Tasks 51–60 — Loan Servicing & Collections
 **Status: COMPLETE — servicing APIs implemented and smoke-tested**
-- Ledger, disbursement, EMI schedule, repayment, partial payment, foreclosure estimate, DPD, overdue tracking, collections and closure/NOC contract are implemented.
 
 ## Tasks 61–70 — Admin Dashboard & Analytics
 **Status: COMPLETE — database-backed analytics implemented and smoke-tested**
-- Dashboard, applications, customers, pipeline, disbursement, slabs, repayments, due calendar, trends and risk analytics read canonical database records.
 
-## Tasks 71–75 — Reports & Accounting
-**Status: COMPLETE — secured reports implemented and smoke-tested**
-- Registration/users, pipeline, disbursement, repayment/collection and accounting ledger reports require the admin principal.
-
-## Tasks 76–80 — Reports, Risk & Reconciliation
-**Status: COMPLETE — implemented and CI-verified**
-- 76 Bank analysis report: implemented from persisted customer/banking fields.
-- 77 Risk & score breakdown: implemented without exposing credentials or full identity secrets; official 125-point score remains explicit dependency.
-- 78 Portfolio quality/DPD: implemented with dynamic DPD buckets and status counts.
-- 79 Export CSV/PDF/print: implemented as secured admin endpoints; PDF uses reportlab and print returns print-ready HTML.
-- 80 Reconciliation: implemented against accounting and disbursement ledger totals.
+## Tasks 71–80 — Reports, Accounting, Risk & Reconciliation
+**Status: COMPLETE — secured APIs implemented and CI-verified**
 
 ## Tasks 81–90 — Documents, Alerts, Settings & Support
 **Status: COMPLETE — production API contracts implemented and CI-verified**
-- 81 Central document repository: existing DocumentRecord/document service remains the source of truth.
-- 82 Document metadata access: secured admin repository endpoint added; storage key remains opaque.
-- 83 Verification workflow: existing pending/under_review/verified/rejected document workflow retained.
-- 84 Alerts/notifications center: secured provider-backed contract endpoint added.
-- 85 SMS/email adapter boundary: notification provider is environment-selected; no credentials are hard-coded.
-- 86 Admin settings: product/provider configuration is environment-driven.
-- 87 Product/rule configuration: MBL product bounds remain backend configuration, not browser-owned values.
-- 88 User/role permissions: explicit admin/customer capability contract exposed behind admin auth.
-- 89 Support/ticket workflow: secured support contract endpoint added.
-- 90 System activity/audit log: secured audit view reads persisted audit events.
 
 ## Tasks 91–98 — Production Readiness
 **Status: COMPLETE — implemented and CI-verified**
-- 91 Source-of-truth production checks added; business data remains database/API owned.
-- 92 Demo credential claiming is disabled by default and rejected in production configuration.
-- 93 PAN/Aadhaar/bureau/bank/selfie/e-sign/mandate/disbursement provider boundary is environment-driven.
-- 94 Secure file-storage abstraction added with opaque keys and path traversal protection for local development storage.
-- 95 Render production configuration now requires explicit database, secret and CORS configuration.
-- 96 Backup/restore runbook added for managed PostgreSQL/PITR and restore drills.
-- 97 Security headers, request correlation, rate limiting and API validation/error boundaries are installed.
-- 98 Expanded API smoke tests cover production-readiness module imports and admin authorization.
+- Source-of-truth, demo separation, provider boundary, secure storage, production configuration, backup/restore, security controls and expanded smoke tests are implemented.
 
 ## Tasks 99–100 — Deployment & Final Audit
 **Status: CODE COMPLETE — LIVE ENVIRONMENT VERIFICATION PENDING**
-- 99 Health/readiness endpoints and Render deployment configuration are present; CI is green. Live DirectCredit Render/Vercel verification requires an actual connected DirectCredit deployment environment.
-- 100 Final audit contract is present and the API source-of-truth/security checks are CI-verified. Final approval still requires live environment checks against the production database and frontend.
+- Health/readiness endpoints and deployment configuration are present. Live DirectCredit Render/Vercel verification requires the actual connected deployment environment.
+
+## Tasks 101–110 — Post-100 Production Hardening
+**Status: IMPLEMENTED — smoke tests added; CI verification pending for this commit**
+- 101 Production data-contract audit.
+- 102 Central sensitive-data masking contract.
+- 103 Idempotency-key validation contract.
+- 104 Operational readiness/configuration contract.
+- 105 Safe observability/event-data contract.
+- 106 Persisted audit integrity checker.
+- 107 Production configuration drift detection.
+- 108 Provider readiness matrix without secret exposure.
+- 109 Dedicated post-100 regression smoke gate.
+- 110 Deterministic final release-readiness report; live deployment remains explicitly unverified until checked in the target environment.
 
 ## Validation
-- Latest GitHub Actions API smoke run: **SUCCESS** after resolving the stale API-version assertion and Alembic multiple-head migration graph.
-- Migration graph now has a single merge head after `0005_merge_0004_heads`.
+- Previous GitHub Actions regression run #191 was SUCCESS with 14 API smoke tests.
+- Tasks 101–110 add a dedicated smoke suite and production-hardening router; the new commit must pass CI before these tasks are marked CI-verified.
 
 ## Project rule
 Every completed task must be committed and smoke-tested before moving forward. No static customer, loan or repayment values are permitted when database/API data exists.
