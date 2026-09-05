@@ -1,4 +1,5 @@
 import importlib
+import inspect
 
 
 def test_missing_function_modules_import():
@@ -33,8 +34,9 @@ def test_reporting_contains_sample_matrix_contracts():
 
 def test_reporting_source_includes_reference_sections():
     from backend.reporting import reporting
-    names=reporting.__code__.co_names
-    assert 'bank_analysis' in names and 'risk_score' in names and 'loan_trend' in names and 'collection_agent_performance' in names
+    source=inspect.getsource(reporting)
+    for section in ('bank_analysis','risk_score','loan_trend','collection_agent_performance','due_calendar','repayment_status','slabs'):
+        assert section in source
 
 
 def test_collection_and_bank_routes_are_exposed():
