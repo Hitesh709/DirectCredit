@@ -4,21 +4,21 @@
 **Status: COMPLETE**
 
 ## Tasks 31–40 — Loan Request & Eligibility Engine
-**Status: COMPLETE — backend contracts implemented**
+**Status: COMPLETE — official MBL scorecard integrated**
 - Backend owns request limits, FOIR, risk/banking evidence boundaries and approval/refer reasons.
-- Official 125-point scorecard remains an explicit configuration/provider dependency; no fabricated score is produced.
+- Supplied MBL scorecard is implemented with persisted score, factor breakdown, hard-reject reasons and approval matrix.
 
 ## Tasks 41–50 — Admin Customer & Loan Operations
 **Status: COMPLETE — canonical API contracts implemented**
 
 ## Tasks 51–60 — Loan Servicing & Collections
-**Status: COMPLETE — servicing APIs implemented and smoke-tested**
+**Status: COMPLETE — servicing APIs implemented; sample collection operations extended**
 
 ## Tasks 61–70 — Admin Dashboard & Analytics
-**Status: COMPLETE — database-backed analytics implemented and smoke-tested**
+**Status: COMPLETE — database-backed analytics implemented and sample matrix payloads completed**
 
 ## Tasks 71–80 — Reports, Accounting, Risk & Reconciliation
-**Status: COMPLETE — secured APIs implemented and CI-verified**
+**Status: COMPLETE — secured APIs implemented and sample reporting data structures completed**
 
 ## Tasks 81–90 — Documents, Alerts, Settings & Support
 **Status: COMPLETE — production API contracts implemented and CI-verified**
@@ -32,21 +32,21 @@
 - Health/readiness endpoints and deployment configuration are present. Live DirectCredit Render/Vercel verification requires the actual connected deployment environment.
 
 ## Tasks 101–110 — Post-100 Production Hardening
-**Status: IMPLEMENTED — smoke tests added; CI verification pending for this commit**
-- 101 Production data-contract audit.
-- 102 Central sensitive-data masking contract.
-- 103 Idempotency-key validation contract.
-- 104 Operational readiness/configuration contract.
-- 105 Safe observability/event-data contract.
-- 106 Persisted audit integrity checker.
-- 107 Production configuration drift detection.
-- 108 Provider readiness matrix without secret exposure.
-- 109 Dedicated post-100 regression smoke gate.
-- 110 Deterministic final release-readiness report; live deployment remains explicitly unverified until checked in the target environment.
+**Status: IMPLEMENTED — smoke tests added**
+- Production data-contract, sensitive-data masking, idempotency, operational readiness, observability, audit integrity, configuration drift, provider matrix and release-readiness contracts are implemented.
+
+## Tasks 111–115 — Sample Loan Flow Completion
+**Status: IMPLEMENTED — CI verification pending for the latest changes**
+- 111 Official 125-point scorecard persistence and factor/reason-code breakdown.
+- 112 Complete dashboard/matrix reporting payloads: monthly, slabs, repayment status and due calendar.
+- 113 Collection agents, actions, provider debit-request workflow and ledger-backed collection receipts.
+- 114 Persisted bank transactions and cash-flow/transaction analytics.
+- 115 Sample UI wiring for risk, bank analysis, reporting and collection operations.
 
 ## Validation
-- Previous GitHub Actions regression run #191 was SUCCESS with 14 API smoke tests.
-- Tasks 101–110 add a dedicated smoke suite and production-hardening router; the new commit must pass CI before these tasks are marked CI-verified.
+- Latest previously verified GitHub Actions regression run #191 passed 14 API smoke tests before the 111–115 changes.
+- The CI workflow now includes `tests/task_111_115_smoke.py`; latest changes require a fresh successful Actions run before being marked CI-verified.
+- Latest commit also has a successful Vercel status check; live Render verification remains an environment-level check.
 
 ## Project rule
 Every completed task must be committed and smoke-tested before moving forward. No static customer, loan or repayment values are permitted when database/API data exists.
