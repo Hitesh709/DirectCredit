@@ -1,3 +1,12 @@
+from pathlib import Path
+import sys
+
+# Render currently starts this module as `uvicorn main:app` from /backend.
+# Make the backend package resolvable so its relative imports work in that mode.
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    __package__ = "backend"
+
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
