@@ -25,7 +25,13 @@ def test_reporting_contains_sample_matrix_contracts():
 
 def test_collection_and_bank_routes_are_exposed():
     from backend.main import app
-    paths={r.path for r in app.routes}; assert '/api/services/collection/agents' in paths; assert '/api/services/collection/agents/performance' in paths; assert '/api/services/bank-analysis/{customer_id}/transactions' in paths; assert '/api/services/bank-analysis/{customer_id}/summary' in paths; assert '/api/services/settlement/loan/{loan_id}/quote' in paths; assert '/api/services/settlement/{settlement_id}/complete' in paths
+    paths=set(app.openapi().get('paths',{}))
+    assert '/api/services/collection/agents' in paths
+    assert '/api/services/collection/agents/performance' in paths
+    assert '/api/services/bank-analysis/{customer_id}/transactions' in paths
+    assert '/api/services/bank-analysis/{customer_id}/summary' in paths
+    assert '/api/services/settlement/loan/{loan_id}/quote' in paths
+    assert '/api/services/settlement/{settlement_id}/complete' in paths
 
 
 def test_loan_model_has_persisted_score_fields():
