@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/:path*", "destination": "https://directcredit-api.onrender.com/api/:path*" },
     { "source": "/customer", "destination": "/customer-login.html" },
     { "source": "/customer/", "destination": "/customer-login.html" },
     { "source": "/customer-login", "destination": "/customer-login.html" },
