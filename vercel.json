@@ -6,6 +6,7 @@
     }
   },
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.py" },
     { "source": "/customer", "destination": "/customer-login.html" },
     { "source": "/customer/", "destination": "/customer-login.html" },
     { "source": "/customer-login", "destination": "/customer-login.html" },
