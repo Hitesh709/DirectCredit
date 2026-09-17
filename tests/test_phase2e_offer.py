@@ -4,7 +4,7 @@ from backend.phase2e_offer_engine import build_offer, calculate_emi, offer_is_ac
 
 
 def test_emi_is_deterministic():
-    assert calculate_emi(100000, 18, 12) == 9168.75
+    assert calculate_emi(100000, 18, 12) == 9168.0
 
 
 def test_100_percent_offer():
