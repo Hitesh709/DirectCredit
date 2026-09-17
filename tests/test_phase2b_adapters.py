@@ -27,7 +27,9 @@ def test_bank_statement_metrics_use_month_coverage_not_transaction_count():
     assert result["available"] is True
     assert result["coverage_months"] == 3
     assert result["avg_monthly_credits"] == 100000
-    assert result["aqb"] == 66000
+    # AQB is the arithmetic mean of the five supplied balance observations:
+    # (10k + 60k + 80k + 90k + 80k) / 5 = 64k.
+    assert result["aqb"] == 64000
     assert result["ecs_returns_12m"] == 1
 
 
