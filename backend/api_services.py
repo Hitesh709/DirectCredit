@@ -23,9 +23,10 @@ from .bank_analysis_routes import router as bank_analysis_router
 from .settlement_routes import router as settlement_router
 from .phase1_customer_routes import router as phase1_customer_router
 from .phase2_credit_routes import router as phase2_credit_router
+from .phase2c_provider_routes import router as phase2c_provider_router
 migrate_document_columns()
 router=APIRouter(prefix="/api/services",tags=["verification-services"])
-for child in (document_router,auth_router,repayment_router,customer_profile_router,loan_request_router,eligibility_router,servicing_router,analytics_router,report_router,phase_76_100_router,post_100_operations_router,collection_router,bank_analysis_router,settlement_router,phase1_customer_router,phase2_credit_router): router.include_router(child)
+for child in (document_router,auth_router,repayment_router,customer_profile_router,loan_request_router,eligibility_router,servicing_router,analytics_router,report_router,phase_76_100_router,post_100_operations_router,collection_router,bank_analysis_router,settlement_router,phase1_customer_router,phase2_credit_router,phase2c_provider_router): router.include_router(child)
 @router.get("/status")
 def services_status(): return {"services":provider_status()}
 @router.post("/pan/validate")
