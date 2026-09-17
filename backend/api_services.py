@@ -34,9 +34,10 @@ from .phase2j_routes import router as phase2j_router
 from .phase2k_routes import router as phase2k_router
 from .phase2l_routes import router as phase2l_router
 from .phase2m_routes import router as phase2m_router
+from .phase2n_routes import router as phase2n_router
 migrate_document_columns()
 router=APIRouter(prefix="/api/services",tags=["verification-services"])
-for child in (document_router,auth_router,repayment_router,customer_profile_router,loan_request_router,eligibility_router,servicing_router,analytics_router,report_router,phase_76_100_router,post_100_operations_router,collection_router,bank_analysis_router,settlement_router,phase1_customer_router,phase2_credit_router,phase2c_provider_router,phase2d_router,phase2e_router,phase2f_router,phase2g_router,phase2h_router,phase2i_router,phase2j_router,phase2k_router,phase2l_router,phase2m_router): router.include_router(child)
+for child in (document_router,auth_router,repayment_router,customer_profile_router,loan_request_router,eligibility_router,servicing_router,analytics_router,report_router,phase_76_100_router,post_100_operations_router,collection_router,bank_analysis_router,settlement_router,phase1_customer_router,phase2_credit_router,phase2c_provider_router,phase2d_router,phase2e_router,phase2f_router,phase2g_router,phase2h_router,phase2i_router,phase2j_router,phase2k_router,phase2l_router,phase2m_router,phase2n_router): router.include_router(child)
 @router.get("/status")
 def services_status(): return {"services":provider_status()}
 @router.post("/pan/validate")
