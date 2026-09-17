@@ -5,7 +5,8 @@ from .database import get_db
 from .db_models import LoanRecord, RepaymentRecord, CollectionActionRecord, CustomerRecord
 from .admin_auth import get_current_admin
 from .phase2m_control_tower import PHASE2M_VERSION, loan_metrics, aggregate, control_tower_contract
-from .phase2j_collections_intelligence import build_priority, collection_bucket, overdue_amount
+from .phase2i_collections import collection_bucket, overdue_amount
+from .phase2j_collections_intelligence import build_priority
 
 router=APIRouter(prefix="/api/v1/control-tower",tags=["phase-2m-control-tower"])
 
