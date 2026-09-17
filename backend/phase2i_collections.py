@@ -66,7 +66,9 @@ def overdue_amount(rows, as_of=None):
 
 
 def count_debit_attempts(actions):
-    return sum(1 for x in actions if x.action_type == "debit_request")
+    """Count all persisted auto-debit request action spellings."""
+    debit_types = {"debit_request", "auto_debit_request"}
+    return sum(1 for x in actions if str(getattr(x, "action_type", "")) in debit_types)
 
 
 def decide_collection(rows, actions, mandate_active=True, as_of=None):
