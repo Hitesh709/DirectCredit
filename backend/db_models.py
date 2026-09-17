@@ -31,7 +31,7 @@ class DocumentRecord(Base):
 
 class RepaymentRecord(Base):
     __tablename__ = "repayments"
-    id = Column(Integer, primary_key=True, index=True); loan_id = Column(Integer, index=True, nullable=False); installment = Column(Integer, nullable=False); due_date = Column(String(20), nullable=False); due_amount = Column(Float, nullable=False); paid_amount = Column(Float, default=0); status = Column(String(30), default="upcoming", index=True); payment_reference = Column(String(160), index=True); payment_method = Column(String(40)); paid_at = Column(DateTime(timezone=True)); bounce_reason = Column(Text)
+    id = Column(Integer, primary_key=True, index=True); loan_id = Column(Integer, index=True); installment = Column(Integer, nullable=False); due_date = Column(String(20), nullable=False); due_amount = Column(Float, nullable=False); paid_amount = Column(Float, default=0); status = Column(String(30), default="upcoming", index=True); payment_reference = Column(String(160), index=True); payment_method = Column(String(40)); paid_at = Column(DateTime(timezone=True)); bounce_reason = Column(Text)
 
 class CustomerJourneyRecord(Base):
     __tablename__ = "customer_journey"
@@ -55,16 +55,32 @@ class BankTransactionRecord(Base):
 
 class SettlementRecord(Base):
     __tablename__ = "loan_settlements"
-    id = Column(Integer, primary_key=True, index=True)
-    loan_id = Column(Integer, index=True, nullable=False)
-    customer_id = Column(Integer, index=True, nullable=False)
-    settlement_type = Column(String(40), index=True, nullable=False)
-    outstanding_amount = Column(Float, default=0)
-    proposed_amount = Column(Float, default=0)
-    approved_amount = Column(Float, default=0)
-    waiver_amount = Column(Float, default=0)
-    status = Column(String(40), index=True, default="quoted")
-    reason = Column(Text)
-    reference = Column(String(160), index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    approved_at = Column(DateTime(timezone=True))
+    id = Column(Integer, primary_key=True, index=True); loan_id = Column(Integer, index=True, nullable=False); customer_id = Column(Integer, index=True, nullable=False); settlement_type = Column(String(40), index=True, nullable=False); outstanding_amount = Column(Float, default=0); proposed_amount = Column(Float, default=0); approved_amount = Column(Float, default=0); waiver_amount = Column(Float, default=0); status = Column(String(40), index=True, default="quoted"); reason = Column(Text); reference = Column(String(160), index=True); created_at = Column(DateTime(timezone=True), server_default=func.now()); approved_at = Column(DateTime(timezone=True))
+
+class CustomerBusinessRecord(Base):
+    __tablename__ = "customer_businesses"
+    id = Column(Integer, primary_key=True); customer_id = Column(Integer, nullable=False, index=True); legal_name = Column(String(200), nullable=False); trade_name = Column(String(200)); business_type = Column(String(80)); constitution = Column(String(80)); pan = Column(String(20)); gstin = Column(String(30), index=True); industry = Column(String(120)); sub_industry = Column(String(120)); business_vintage_years = Column(Float); annual_turnover = Column(Float); monthly_turnover = Column(Float); employee_count = Column(Integer); ownership_type = Column(String(50)); verification_status = Column(String(40), nullable=False, default="pending"); created_at = Column(DateTime(timezone=True), server_default=func.now()); updated_at = Column(DateTime(timezone=True), server_default=func.now())
+class CustomerContactRecord(Base):
+    __tablename__ = "customer_contacts"
+    id = Column(Integer, primary_key=True); customer_id = Column(Integer, nullable=False, index=True); contact_type = Column(String(40), nullable=False); contact_value = Column(String(255), nullable=False, index=True); is_primary = Column(Boolean, nullable=False, default=False); verification_status = Column(String(40), nullable=False, default="pending"); verified_at = Column(DateTime(timezone=True)); created_at = Column(DateTime(timezone=True), server_default=func.now())
+class CustomerAddressRecord(Base):
+    __tablename__ = "customer_addresses"
+    id = Column(Integer, primary_key=True); customer_id = Column(Integer, nullable=False, index=True); address_type = Column(String(40), nullable=False); address_line_1 = Column(Text); address_line_2 = Column(Text); area = Column(String(160)); city = Column(String(100)); district = Column(String(100)); state = Column(String(100)); pin_code = Column(String(12)); country = Column(String(80), default="India"); latitude = Column(Float); longitude = Column(Float); verification_status = Column(String(40), nullable=False, default="pending"); created_at = Column(DateTime(timezone=True), server_default=func.now()); updated_at = Column(DateTime(timezone=True), server_default=func.now())
+class CustomerKYCRecord(Base):
+    __tablename__ = "customer_kyc_profiles"
+    id = Column(Integer, primary_key=True); customer_id = Column(Integer, nullable=False, unique=True, index=True); status = Column(String(40), nullable=False, default="not_started"); pan_status = Column(String(40), default="pending"); identity_status = Column(String(40), default="pending"); address_status = Column(String(40), default="pending"); business_status = Column(String(40), default="pending"); aadhaar_reference = Column(String(120)); last_verified_at = Column(DateTime(timezone=True)); verification_source = Column(String(80)); verification_reference = Column(String(160)); review_reason = Column(Text); created_at = Column(DateTime(timezone=True), server_default=func.now()); updated_at = Column(DateTime(timezone=True), server_default=func.now())
+class CustomerBankAccountRecord(Base):
+    __tablename__ = "customer_bank_accounts"
+    id = Column(Integer, primary_key=True); customer_id = Column(Integer, nullable=False, index=True); bank_name = Column(String(160), nullable=False); account_holder_name = Column(String(200)); account_number_masked = Column(String(40), nullable=False); account_number_fingerprint = Column(String(128), index=True); ifsc = Column(String(20)); account_type = Column(String(40)); is_primary = Column(Boolean, nullable=False, default=False); verification_status = Column(String(40), nullable=False, default="pending"); verified_at = Column(DateTime(timezone=True)); created_at = Column(DateTime(timezone=True), server_default=func.now()); updated_at = Column(DateTime(timezone=True), server_default=func.now())
+class CustomerConsentRecord(Base):
+    __tablename__ = "customer_consents"
+    id = Column(Integer, primary_key=True); customer_id = Column(Integer, nullable=False, index=True); consent_type = Column(String(80), nullable=False, index=True); purpose = Column(Text); version = Column(String(40), nullable=False); accepted = Column(Boolean, nullable=False); channel = Column(String(40)); accepted_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False); withdrawn_at = Column(DateTime(timezone=True)); created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+class CustomerPreferenceRecord(Base):
+    __tablename__ = "customer_preferences"
+    id = Column(Integer, primary_key=True); customer_id = Column(Integer, nullable=False, unique=True, index=True); sms = Column(Boolean, nullable=False, default=True); email = Column(Boolean, nullable=False, default=True); whatsapp = Column(Boolean, nullable=False, default=True); phone = Column(Boolean, nullable=False, default=True); push = Column(Boolean, nullable=False, default=True); transactional_only = Column(Boolean, nullable=False, default=True); updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+class CustomerRiskProfileRecord(Base):
+    __tablename__ = "customer_risk_profiles"
+    id = Column(Integer, primary_key=True); customer_id = Column(Integer, nullable=False, unique=True, index=True); risk_grade = Column(String(20)); risk_status = Column(String(40), nullable=False, default="not_assessed"); fraud_status = Column(String(40), nullable=False, default="not_assessed"); credit_status = Column(String(40), nullable=False, default="not_assessed"); risk_flags = Column(Text); last_assessed_at = Column(DateTime(timezone=True)); created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False); updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+class CustomerEventRecord(Base):
+    __tablename__ = "customer_events"
+    id = Column(Integer, primary_key=True); customer_id = Column(Integer, nullable=False, index=True); event_type = Column(String(80), nullable=False, index=True); event_status = Column(String(40), nullable=False, default="completed"); source = Column(String(60)); actor_type = Column(String(40)); actor_id = Column(String(120)); details = Column(Text); created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
