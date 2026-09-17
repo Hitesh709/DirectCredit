@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from datetime import date, datetime
 import json
 
+from .phase2i_collections import collection_bucket, overdue_amount
+
 PHASE2J_VERSION = "MBL-COLLECTIONS-2J-v1"
 
 BUCKET_WEIGHT = {
