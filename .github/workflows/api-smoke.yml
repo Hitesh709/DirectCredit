@@ -30,7 +30,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          pytest -vv tests/api_smoke_test.py tests/task_51_75_smoke.py tests/task_76_100_smoke.py tests/task_111_115_smoke.py tests/test_phase2b_adapters.py tests/test_phase2c_provider_gateway.py tests/test_phase2d_policy.py tests/test_phase2e_offer.py tests/test_phase2f_execution.py 2>&1 | tee pytest-output.txt
+          pytest -vv tests/api_smoke_test.py tests/task_51_75_smoke.py tests/task_76_100_smoke.py tests/task_111_115_smoke.py tests/test_phase2b_adapters.py tests/test_phase2c_provider_gateway.py tests/test_phase2d_policy.py tests/test_phase2e_offer.py tests/test_phase2f_execution.py tests/test_phase2g_disbursement.py tests/test_phase2h_servicing.py 2>&1 | tee pytest-output.txt
           status=${PIPESTATUS[0]}
           echo "pytest_exit_code=${status}" >> pytest-output.txt
           exit ${status}
