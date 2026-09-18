@@ -8,7 +8,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import inspect
 
-revision = "0009_repair_customer_session_version"
+revision = "0009_customer_session_repair"
 down_revision = "0008_phase1_customer_360"
 branch_labels = None
 depends_on = None
