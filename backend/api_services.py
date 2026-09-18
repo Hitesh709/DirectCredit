@@ -41,9 +41,15 @@ from .phase2q_routes import router as phase2q_router
 from .phase2r_routes import router as phase2r_router
 from .phase2s_routes import router as phase2s_router
 from .phase2t_routes import router as phase2t_router
+from .phase2u_routes import router as phase2u_router
+from .phase2v_routes import router as phase2v_router
+from .phase2w_routes import router as phase2w_router
+from .phase2x_routes import router as phase2x_router
+from .phase2y_routes import router as phase2y_router
+from .phase2z_routes import router as phase2z_router
 migrate_document_columns()
 router=APIRouter(prefix="/api/services",tags=["verification-services"])
-for child in (document_router,auth_router,repayment_router,customer_profile_router,loan_request_router,eligibility_router,servicing_router,analytics_router,report_router,phase_76_100_router,post_100_operations_router,collection_router,bank_analysis_router,settlement_router,phase1_customer_router,phase2_credit_router,phase2c_provider_router,phase2d_router,phase2e_router,phase2f_router,phase2g_router,phase2h_router,phase2i_router,phase2j_router,phase2k_router,phase2l_router,phase2m_router,phase2n_router,phase2o_router,phase2p_router,phase2q_router,phase2r_router,phase2s_router,phase2t_router): router.include_router(child)
+for child in (document_router,auth_router,repayment_router,customer_profile_router,loan_request_router,eligibility_router,servicing_router,analytics_router,report_router,phase_76_100_router,post_100_operations_router,collection_router,bank_analysis_router,settlement_router,phase1_customer_router,phase2_credit_router,phase2c_provider_router,phase2d_router,phase2e_router,phase2f_router,phase2g_router,phase2h_router,phase2i_router,phase2j_router,phase2k_router,phase2l_router,phase2m_router,phase2n_router,phase2o_router,phase2p_router,phase2q_router,phase2r_router,phase2s_router,phase2t_router,phase2u_router,phase2v_router,phase2w_router,phase2x_router,phase2y_router,phase2z_router): router.include_router(child)
 @router.get("/status")
 def services_status(): return {"services":provider_status()}
 @router.post("/pan/validate")
