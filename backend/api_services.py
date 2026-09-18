@@ -47,6 +47,13 @@ from .phase2w_routes import router as phase2w_router
 from .phase2x_routes import router as phase2x_router
 from .phase2y_routes import router as phase2y_router
 from .phase2z_routes import router as phase2z_router
+from .phase3a_funding import contract as phase3a_contract
+from .phase3b_investor_reporting import contract as phase3b_contract
+from .phase3c_securitisation import contract as phase3c_contract
+from .phase3d_pricing import contract as phase3d_contract
+from .phase3e_policy_engine import contract as phase3e_contract
+from .phase3f_experimentation import contract as phase3f_contract
+from .phase3g_customer_ai import contract as phase3g_contract
 migrate_document_columns()
 router=APIRouter(prefix="/api/services",tags=["verification-services"])
 for child in (document_router,auth_router,repayment_router,customer_profile_router,loan_request_router,eligibility_router,servicing_router,analytics_router,report_router,phase_76_100_router,post_100_operations_router,collection_router,bank_analysis_router,settlement_router,phase1_customer_router,phase2_credit_router,phase2c_provider_router,phase2d_router,phase2e_router,phase2f_router,phase2g_router,phase2h_router,phase2i_router,phase2j_router,phase2k_router,phase2l_router,phase2m_router,phase2n_router,phase2o_router,phase2p_router,phase2q_router,phase2r_router,phase2s_router,phase2t_router,phase2u_router,phase2v_router,phase2w_router,phase2x_router,phase2y_router,phase2z_router): router.include_router(child)
