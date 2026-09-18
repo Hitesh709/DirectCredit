@@ -1,0 +1,4 @@
+"""Phase 3K - Real-time event architecture."""
+PHASE3K_VERSION="MBL-REALTIME-EVENTS-3K-v1"
+def event(*,event_type:str,entity_type:str,entity_id:str,payload:dict|None=None,event_id:str|None=None)->dict: return {"version":PHASE3K_VERSION,"event_id":event_id or "pending-id","event_type":event_type,"entity_type":entity_type,"entity_id":entity_id,"payload":payload or {},"delivery":"AT_LEAST_ONCE","idempotency_required":True}
+def contract(): return {"version":PHASE3K_VERSION,"purpose":"Real-time event and integration contract","rules":["At-least-once delivery","Consumers must be idempotent","Events require stable IDs and auditability"]}
