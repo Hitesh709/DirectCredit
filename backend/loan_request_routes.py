@@ -68,6 +68,8 @@ def update_application_stage(customer_id: int, loan_id: int, payload: dict, db: 
     if current in APPLICATION_STAGES and APPLICATION_STAGES.index(stage) < APPLICATION_STAGES.index(current):
         raise HTTPException(422, "Application cannot move backwards")
     loan.current_stage = stage
+    if stage == "ASSESSMENT" and loan.status == "draft":
+        loan.status = "assessment"
     db.commit(); db.refresh(loan)
     return {"updated": True, "loan_id": loan.id, "current_stage": loan.current_stage, "status": loan.status}
 
