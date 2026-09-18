@@ -3,7 +3,7 @@
 .application-wizard{margin-top:20px}
 .wizard-top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;border-bottom:1px solid #e5eaf2;padding-bottom:18px}
 .wizard-top h3{margin:5px 0}.wizard-top p{margin:0;color:#64748b}.wizard-loan-ref{font-weight:800;color:#174b9b;background:#eef5ff;border-radius:10px;padding:10px 14px;white-space:nowrap}
-.wizard-progress{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}
+.wizard-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:20px 0}
 .wizard-dot{display:flex;align-items:center;gap:9px;color:#7b8798;font-size:12px}.wizard-dot span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#edf1f6;font-weight:800}.wizard-dot.done span{background:#dceaff;color:#1766e8}.wizard-dot.current{color:#0f3572}.wizard-dot.current span{background:#1766e8;color:#fff}
 #wizardBody{min-height:240px}
 .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.form-grid .full{grid-column:1/-1}
