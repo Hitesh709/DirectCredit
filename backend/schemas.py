@@ -23,6 +23,8 @@ class CustomerRegistrationRequest(BaseModel):
     business_type: Optional[str] = Field(default=None, max_length=120)
     current_city: Optional[str] = Field(default=None, max_length=100)
 class PersonalProfileUpdate(BaseModel):
+    pan: Optional[str] = Field(default=None, max_length=20)
+    aadhaar_masked: Optional[str] = Field(default=None, max_length=30)
     name: Optional[str] = Field(default=None, min_length=1, max_length=200)
     email: Optional[str] = Field(default=None, max_length=200)
     gender: Optional[str] = Field(default=None, max_length=40)
