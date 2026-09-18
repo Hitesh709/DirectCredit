@@ -65,9 +65,21 @@ from .phase3h_routes import router as phase3h_router
 from .phase3i_routes import router as phase3i_router
 from .phase3j_routes import router as phase3j_router
 from .phase3k_routes import router as phase3k_router
+from .phase3l_routes import router as phase3l_router
+from .phase3m_routes import router as phase3m_router
+from .phase3n_routes import router as phase3n_router
+from .phase3o_routes import router as phase3o_router
+from .phase3p_routes import router as phase3p_router
+from .phase3q_routes import router as phase3q_router
+from .phase3r_routes import router as phase3r_router
+from .phase3s_routes import router as phase3s_router
+from .phase3t_routes import router as phase3t_router
+from .phase3u_routes import router as phase3u_router
+from .phase3v_routes import router as phase3v_router
+from .phase3w_routes import router as phase3w_router
 migrate_document_columns()
 router=APIRouter(prefix="/api/services",tags=["verification-services"])
-for child in (document_router,auth_router,repayment_router,customer_profile_router,loan_request_router,eligibility_router,servicing_router,analytics_router,report_router,phase_76_100_router,post_100_operations_router,collection_router,bank_analysis_router,settlement_router,phase1_customer_router,phase2_credit_router,phase2c_provider_router,phase2d_router,phase2e_router,phase2f_router,phase2g_router,phase2h_router,phase2i_router,phase2j_router,phase2k_router,phase2l_router,phase2m_router,phase2n_router,phase2o_router,phase2p_router,phase2q_router,phase2r_router,phase2s_router,phase2t_router,phase2u_router,phase2v_router,phase2w_router,phase2x_router,phase2y_router,phase2z_router,phase3a_router,phase3b_router,phase3c_router,phase3d_router,phase3e_router,phase3f_router,phase3g_router,phase3h_router,phase3i_router,phase3j_router,phase3k_router): router.include_router(child)
+for child in (document_router,auth_router,repayment_router,customer_profile_router,loan_request_router,eligibility_router,servicing_router,analytics_router,report_router,phase_76_100_router,post_100_operations_router,collection_router,bank_analysis_router,settlement_router,phase1_customer_router,phase2_credit_router,phase2c_provider_router,phase2d_router,phase2e_router,phase2f_router,phase2g_router,phase2h_router,phase2i_router,phase2j_router,phase2k_router,phase2l_router,phase2m_router,phase2n_router,phase2o_router,phase2p_router,phase2q_router,phase2r_router,phase2s_router,phase2t_router,phase2u_router,phase2v_router,phase2w_router,phase2x_router,phase2y_router,phase2z_router,phase3a_router,phase3b_router,phase3c_router,phase3d_router,phase3e_router,phase3f_router,phase3g_router,phase3h_router,phase3i_router,phase3j_router,phase3k_router,phase3l_router,phase3m_router,phase3n_router,phase3o_router,phase3p_router,phase3q_router,phase3r_router,phase3s_router,phase3t_router,phase3u_router,phase3v_router,phase3w_router): router.include_router(child)
 @router.get("/status")
 def services_status(): return {"services":provider_status()}
 @router.post("/pan/validate")
