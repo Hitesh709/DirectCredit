@@ -150,7 +150,7 @@ async function createLoanApplication(){
   if(button){button.disabled=true;button.textContent='Creating application…';}
   if(msg){msg.textContent='';msg.className='login-message';}
   try{
-    const result=await api(`/services/api/loan-request/${encodeURIComponent(customerId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product:'Micro Business Loan',requested_amount:amount,tenure_months:tenure})});
+    const result=await api(`/services/loan-request/${encodeURIComponent(customerId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product:'Micro Business Loan',requested_amount:amount,tenure_months:tenure})});
     if(msg){msg.textContent=`Application #${result.loan_id} created. Continue with your application profile.`;msg.className='login-message success';}
     await refreshApplications();
     await loadCustomerProfile(customerId);
@@ -162,7 +162,7 @@ async function refreshApplications(){
   const customerId=sessionStorage.getItem(CUSTOMER_KEY), host=document.getElementById('applicationHistory');
   if(!customerId||!host)return;
   try{
-    const rows=await api(`/services/api/loan-request/${encodeURIComponent(customerId)}`);
+    const rows=await api(`/services/loan-request/${encodeURIComponent(customerId)}`);
     if(!rows.length){host.innerHTML='<div class="empty-state">No loan applications yet.</div>';return;}
     host.innerHTML='<div class="application-list">'+rows.map(r=>`<div class="application-row"><div><b>Application #${esc(r.loan_id)}</b><small>${esc(text(r.product))} · ${esc(r.tenure_months)} months</small></div><div><strong>${esc(money(r.requested_amount))}</strong><span class="status-badge">${esc(statusLabel(r.status))}</span></div></div>`).join('')+'</div>';
   }catch(err){host.innerHTML='<div class="empty-state">Application data could not be loaded.</div>';}
