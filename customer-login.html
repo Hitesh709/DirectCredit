@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DirectCredit — Customer Portal</title>
-<link rel="stylesheet" href="customer-login.css?v=20260902">
+<link rel="stylesheet" href="customer-login.css?v=20260918">
 </head>
 <body>
 <div id="loginView" class="login-shell">
   <div class="login-card">
-    <div class="brand">Y</div><div class="eyebrow">DIRECTCREDIT</div>
+    <div class="brand">DC</div><div class="eyebrow">DIRECTCREDIT</div>
     <h1>Customer Login</h1>
     <p>Enter your registered mobile number to access your customer record.</p>
     <label>Mobile Number<input id="loginId" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="Enter registered mobile number"></label>
@@ -31,13 +31,13 @@
 <div id="portalView" class="portal-shell hidden">
 <aside class="customer-sidebar">
   <div class="side-brand"><span class="brand">Y</span><div><b>DirectCredit</b><small>Customer Portal</small></div></div>
-  <button class="side-nav active" data-section="home">⌂ <span>Dashboard</span></button>
-  <button class="side-nav" data-section="application">▣ <span>Loan Application</span></button>
-  <button class="side-nav" data-section="profile">♙ <span>My Profile</span></button>
+  <div class="nav-label">OVERVIEW</div><button class="side-nav active" data-section="home">⌂ <span>Dashboard</span></button>
+  <div class="nav-label">LENDING</div><button class="side-nav" data-section="application">▣ <span>Apply for Loan</span></button>
+  <div class="nav-label">MY ACCOUNT</div><button class="side-nav" data-section="profile">♙ <span>My Profile</span></button>
   <button class="side-nav" data-section="loans">▤ <span>My Loans</span></button>
-  <button class="side-nav" data-section="repayment">₹ <span>Repayments</span></button>
+  <div class="nav-label">SERVICING</div><button class="side-nav" data-section="repayment">₹ <span>Repayments</span></button>
   <button class="side-nav" data-section="documents">▧ <span>Documents</span></button>
-  <button class="side-nav" data-section="support">? <span>Support</span></button>
+  <div class="nav-label">HELP</div><button class="side-nav" data-section="support">? <span>Support</span></button>
   <div class="side-bottom"><div class="customer-mini"><div class="avatar">CU</div><div><b>Customer</b><small>Not available</small></div></div><button id="logoutBtn" type="button">↪ Logout</button></div>
 </aside>
 <main class="customer-main">
@@ -58,7 +58,42 @@
   </div>
 </section>
 
-<section id="application" class="customer-section"><div class="section-title"><div><span class="eyebrow">LOAN APPLICATION</span><h2>Application Journey</h2><p>Only steps recorded against your customer account are displayed.</p></div></div><div class="journey-layout"><div class="journey-rail" id="journeyRail"><div class="empty-state">No application step data is available.</div></div><div class="step-content"><div class="panel" id="stepPanel"><div class="empty-state">No application step data is available.</div></div></div></div></section>
+<section id="application" class="customer-section">
+  <div class="section-title">
+    <div><span class="eyebrow">LENDING</span><h2>Apply for a Micro Business Loan</h2><p>Start your loan request. No payment or final credit decision is made on this screen.</p></div>
+    <span class="demo-badge">TEMPORARY ACCESS</span>
+  </div>
+  <div class="application-grid">
+    <div class="panel apply-panel">
+      <div class="apply-product">
+        <div class="apply-product-icon">₹</div>
+        <div><strong>Micro Business Loan</strong><span>Working capital support for your business</span></div>
+      </div>
+      <div class="apply-fields">
+        <label>Loan Amount
+          <div class="amount-input"><span>₹</span><input id="loanAmount" type="number" min="5000" max="15000" step="500" value="10000" placeholder="5000 - 15000"></div>
+          <small>Available request range: ₹5,000 to ₹15,000</small>
+        </label>
+        <label>Tenure
+          <select id="loanTenure"><option value="3">3 Months</option><option value="6" selected>6 Months</option><option value="9">9 Months</option><option value="12">12 Months</option></select>
+        </label>
+      </div>
+      <div id="loanApplyMessage" class="login-message" aria-live="polite"></div>
+      <button class="primary apply-button" id="applyLoanBtn" type="button">Start Loan Application</button>
+    </div>
+    <div class="panel apply-info">
+      <h3>Application Process</h3>
+      <div class="apply-step"><span>1</span><div><b>Loan request</b><small>Select amount and tenure.</small></div></div>
+      <div class="apply-step"><span>2</span><div><b>Profile & KYC</b><small>Complete the information and verification.</small></div></div>
+      <div class="apply-step"><span>3</span><div><b>Banking & assessment</b><small>Provide required evidence for assessment.</small></div></div>
+      <div class="apply-step"><span>4</span><div><b>Offer & execution</b><small>Eligible applications continue through the approved workflow.</small></div></div>
+    </div>
+  </div>
+  <div class="panel application-history">
+    <div class="panel-head"><div><h3>My Applications</h3><p>Requests created from your customer account.</p></div><button class="outline small" id="refreshApplicationsBtn" type="button">Refresh</button></div>
+    <div id="applicationHistory"><div class="empty-state">No loan applications yet.</div></div>
+  </div>
+</section>
 
 <section id="profile" class="customer-section"><div class="section-title"><div><span class="eyebrow">MY PROFILE</span><h2>Customer Profile</h2></div></div><div class="profile-grid"><div class="panel profile-card"><div class="profile-head"><div class="avatar large">CU</div><div><h2>Customer</h2><p>Customer information from the DirectCredit database.</p></div></div><h3>CUSTOMER INFORMATION</h3><div class="detail-list profile-data"></div></div><div class="panel"><h3>Verification & Employment</h3><div class="detail-list profile-data-secondary"></div></div></div></section>
 
