@@ -30,7 +30,7 @@
 
 <div id="portalView" class="portal-shell hidden">
 <aside class="customer-sidebar">
-  <div class="side-brand"><span class="brand">Y</span><div><b>DirectCredit</b><small>Customer Portal</small></div></div>
+  <div class="side-brand"><span class="brand">DC</span><div><b>DirectCredit</b><small>Customer Portal</small></div></div>
   <div class="nav-label">OVERVIEW</div><button class="side-nav active" data-section="home">⌂ <span>Dashboard</span></button>
   <div class="nav-label">LENDING</div><button class="side-nav" data-section="application">▣ <span>Apply for Loan</span></button>
   <div class="nav-label">MY ACCOUNT</div><button class="side-nav" data-section="profile">♙ <span>My Profile</span></button>
@@ -60,39 +60,34 @@
 
 <section id="application" class="customer-section">
   <div class="section-title">
-    <div><span class="eyebrow">LENDING</span><h2>Apply for a Micro Business Loan</h2><p>Start your loan request. No payment or final credit decision is made on this screen.</p></div>
-    <span class="demo-badge">TEMPORARY ACCESS</span>
+    <div><span class="eyebrow">LENDING</span><h2 id="applicationHeading">Apply for a Micro Business Loan</h2><p id="applicationSubheading">Complete your application step by step. Your progress is saved to this application.</p></div>
+    <span class="demo-badge">APPLICATION IN PROGRESS</span>
   </div>
-  <div class="application-grid">
+  <div id="applicationStart" class="application-grid">
     <div class="panel apply-panel">
-      <div class="apply-product">
-        <div class="apply-product-icon">₹</div>
-        <div><strong>Micro Business Loan</strong><span>Working capital support for your business</span></div>
-      </div>
+      <div class="apply-product"><div class="apply-product-icon">₹</div><div><strong>Micro Business Loan</strong><span>Working capital support for your business</span></div></div>
       <div class="apply-fields">
-        <label>Loan Amount
-          <div class="amount-input"><span>₹</span><input id="loanAmount" type="number" min="5000" max="15000" step="500" value="10000" placeholder="5000 - 15000"></div>
-          <small>Available request range: ₹5,000 to ₹15,000</small>
-        </label>
-        <label>Tenure
-          <select id="loanTenure"><option value="3">3 Months</option><option value="6" selected>6 Months</option><option value="9">9 Months</option><option value="12">12 Months</option></select>
-        </label>
+        <label>Loan Amount<div class="amount-input"><span>₹</span><input id="loanAmount" type="number" min="5000" max="15000" step="500" value="10000"></div><small>Available request range: ₹5,000 to ₹15,000</small></label>
+        <label>Tenure<select id="loanTenure"><option value="3">3 Months</option><option value="6" selected>6 Months</option><option value="9">9 Months</option><option value="12">12 Months</option></select></label>
       </div>
       <div id="loanApplyMessage" class="login-message" aria-live="polite"></div>
       <button class="primary apply-button" id="applyLoanBtn" type="button">Start Loan Application</button>
     </div>
-    <div class="panel apply-info">
-      <h3>Application Process</h3>
-      <div class="apply-step"><span>1</span><div><b>Loan request</b><small>Select amount and tenure.</small></div></div>
-      <div class="apply-step"><span>2</span><div><b>Profile & KYC</b><small>Complete the information and verification.</small></div></div>
-      <div class="apply-step"><span>3</span><div><b>Banking & assessment</b><small>Provide required evidence for assessment.</small></div></div>
-      <div class="apply-step"><span>4</span><div><b>Offer & execution</b><small>Eligible applications continue through the approved workflow.</small></div></div>
+    <div class="panel apply-info"><h3>Application Process</h3>
+      <div class="apply-step"><span>1</span><div><b>PAN & Aadhaar</b><small>Identity and KYC information.</small></div></div>
+      <div class="apply-step"><span>2</span><div><b>Personal & Address</b><small>Complete your personal and residence details.</small></div></div>
+      <div class="apply-step"><span>3</span><div><b>Business & Banking</b><small>Business profile and primary bank account.</small></div></div>
+      <div class="apply-step"><span>4</span><div><b>Documents & Review</b><small>Submit evidence and review before assessment.</small></div></div>
     </div>
   </div>
-  <div class="panel application-history">
-    <div class="panel-head"><div><h3>My Applications</h3><p>Requests created from your customer account.</p></div><button class="outline small" id="refreshApplicationsBtn" type="button">Refresh</button></div>
-    <div id="applicationHistory"><div class="empty-state">No loan applications yet.</div></div>
+  <div id="applicationWizard" class="panel application-wizard hidden">
+    <div class="wizard-top"><div><span class="eyebrow">APPLICATION</span><h3 id="wizardTitle">PAN & Aadhaar</h3><p id="wizardDescription">Enter your identity details.</p></div><div class="wizard-loan-ref" id="wizardLoanRef"></div></div>
+    <div class="wizard-progress" id="wizardProgress"></div>
+    <div id="wizardBody"></div>
+    <div id="wizardMessage" class="login-message" aria-live="polite"></div>
+    <div class="wizard-actions"><button class="outline" id="wizardBackBtn" type="button">Back</button><button class="primary" id="wizardNextBtn" type="button">Save & Continue</button></div>
   </div>
+  <div class="panel application-history"><div class="panel-head"><div><h3>My Applications</h3><p>Only one active loan application can be processed at a time.</p></div><button class="outline small" id="refreshApplicationsBtn" type="button">Refresh</button></div><div id="applicationHistory"><div class="empty-state">No loan applications yet.</div></div></div>
 </section>
 
 <section id="profile" class="customer-section"><div class="section-title"><div><span class="eyebrow">MY PROFILE</span><h2>Customer Profile</h2></div></div><div class="profile-grid"><div class="panel profile-card"><div class="profile-head"><div class="avatar large">CU</div><div><h2>Customer</h2><p>Customer information from the DirectCredit database.</p></div></div><h3>CUSTOMER INFORMATION</h3><div class="detail-list profile-data"></div></div><div class="panel"><h3>Verification & Employment</h3><div class="detail-list profile-data-secondary"></div></div></div></section>
