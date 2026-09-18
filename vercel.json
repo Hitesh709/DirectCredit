@@ -6,7 +6,7 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.py" },
+    { "source": "/api/(.*)", "destination": "https://directcredit-api.onrender.com/api/$1" },
     { "source": "/customer", "destination": "/customer-login.html" },
     { "source": "/customer/", "destination": "/customer-login.html" },
     { "source": "/customer-login", "destination": "/customer-login.html" },
