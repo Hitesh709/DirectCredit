@@ -91,6 +91,7 @@ function renderDocuments(rows) { const host=document.getElementById('documentGri
 
 function renderDashboard() {
   refreshApplications();
+  loadActiveApplication();
   const c=profileData?.customer||currentCustomer||{}, loans=profileData?.loans||[], repayments=profileData?.repayments||[], journey=profileData?.journey||[], metrics=profileData?.metrics||{};
   document.querySelectorAll('.customer-mini b').forEach(el=>el.textContent=text(c.name,'Customer'));
   document.querySelectorAll('.customer-mini small').forEach(el=>el.textContent=text(c.customer_code||c.id,'Not available'));
@@ -139,25 +140,84 @@ async function loginWithMobile(){ const input=document.getElementById('loginId')
 function logout(){sessionStorage.removeItem(TOKEN_KEY);sessionStorage.removeItem(CUSTOMER_KEY);currentCustomer=null;profileData=null;showLogin();}
 function openSection(section){document.querySelectorAll('.customer-section').forEach(s=>s.classList.toggle('active-section',s.id===section));document.querySelectorAll('.side-nav').forEach(b=>b.classList.toggle('active',b.dataset.section===section));const titles={home:'Dashboard',application:'Apply for Loan',profile:'My Profile',loans:'My Loans',repayment:'Repayments',documents:'Documents',support:'Support'},title=document.getElementById('pageTitle');if(title)title.textContent=titles[section]||'Customer Portal';}
 window.openSection=openSection;
+let activeApplication = null;
+let wizardIndex = 0;
+const wizardSteps = [
+  {key:'PAN', title:'PAN & Aadhaar', description:'Enter your identity details.', fields:'kyc'},
+  {key:'PERSONAL', title:'Personal & Address', description:'Complete your personal and residence details.', fields:'personal'},
+  {key:'BUSINESS', title:'Business & Banking', description:'Business profile and primary bank account.', fields:'business'},
+  {key:'DOCUMENTS', title:'Documents & Review', description:'Required evidence and final review.', fields:'documents'}
+];
+async function loadActiveApplication(){
+  const customerId=sessionStorage.getItem(CUSTOMER_KEY); if(!customerId)return null;
+  try{const result=await api('/services/loan-request/'+encodeURIComponent(customerId)+'/active');activeApplication=result.application||null;if(activeApplication)openApplicationWizard(activeApplication);return activeApplication;}catch(_){return null;}
+}
+function wizardIndexForStage(stage){const s=String(stage||'PAN').toUpperCase();if(s==='PAN'||s==='AADHAAR')return 0;if(s==='PERSONAL'||s==='ADDRESS')return 1;if(s==='BUSINESS'||s==='BANKING')return 2;return 3;}
+function openApplicationWizard(application){
+  activeApplication=application;wizardIndex=wizardIndexForStage(application.current_stage);
+  document.getElementById('applicationStart')?.classList.add('hidden');document.getElementById('applicationWizard')?.classList.remove('hidden');
+  const ref=document.getElementById('wizardLoanRef');if(ref)ref.textContent='Application #'+application.loan_id+' · '+money(application.requested_amount)+' · '+application.tenure_months+' months';renderWizard();
+}
+function renderWizard(){
+  const step=wizardSteps[wizardIndex],title=document.getElementById('wizardTitle'),desc=document.getElementById('wizardDescription'),body=document.getElementById('wizardBody'),progress=document.getElementById('wizardProgress');
+  if(title)title.textContent=step.title;if(desc)desc.textContent=step.description;
+  if(progress)progress.innerHTML=wizardSteps.map(function(s,i){return '<div class="wizard-dot '+(i<=wizardIndex?'done ':'')+(i===wizardIndex?'current':'')+'"><span>'+(i+1)+'</span><b>'+esc(s.title)+'</b></div>';}).join('');
+  if(!body)return;
+  if(step.fields==='kyc')body.innerHTML='<div class="form-grid"><label>PAN Number<input id="appPan" maxlength="10" placeholder="ABCDE1234F" value="'+esc(currentCustomer?.pan||'')+'"></label><label>Aadhaar Number<input id="appAadhaar" inputmode="numeric" maxlength="12" placeholder="12-digit Aadhaar number"></label></div><div class="info-note">Aadhaar is stored in masked form. Verification remains pending until required evidence/provider verification is completed.</div>';
+  if(step.fields==='personal')body.innerHTML='<div class="form-grid"><label>Date of Birth<input id="appDob" type="date" value="'+esc(currentCustomer?.date_of_birth||'')+'"></label><label>Gender<select id="appGender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></label><label>Marital Status<select id="appMarital"><option value="">Select</option><option>Single</option><option>Married</option><option>Other</option></select></label><label>Current City<input id="appCity" value="'+esc(currentCustomer?.current_city||'')+'"></label><label class="full">Current Address<textarea id="appAddress" rows="3">'+esc(currentCustomer?.address||'')+'</textarea></label><label class="full">Permanent Address<textarea id="appPermanent" rows="3">'+esc(currentCustomer?.permanent_address||'')+'</textarea></label><label>Residence Ownership<select id="appOwnership"><option value="">Select</option><option>Owned</option><option>Rented</option><option>Leased</option><option>Family</option><option>Company</option><option>Other</option></select></label><label>Residence Since<input id="appResidenceSince" value="'+esc(currentCustomer?.residence_since||'')+'"></label></div>';
+  if(step.fields==='business')body.innerHTML='<div class="form-grid"><label>Business Name<input id="appBusinessName" value="'+esc(currentCustomer?.business_name||'')+'"></label><label>Business Type<input id="appBusinessType" value="'+esc(currentCustomer?.business_type||'')+'"></label><label>Occupation<input id="appOccupation" value="'+esc(currentCustomer?.occupation||'Business')+'"></label><label>Monthly Income<input id="appIncome" type="number" min="0" value="'+(Number(currentCustomer?.monthly_income||0)||'')+'"></label><label>Years in Business<input id="appVintage" type="number" min="0" step="0.1" value="'+(Number(currentCustomer?.years_in_business||0)||'')+'"></label><label>Existing EMI<input id="appEmi" type="number" min="0" value="'+(Number(currentCustomer?.existing_emi||0)||'')+'"></label><label>Bank Name<input id="appBankName" placeholder="Bank name"></label><label>Account Holder Name<input id="appBankHolder" value="'+esc(currentCustomer?.name||'')+'"></label><label>Masked Account Number<input id="appAccountMasked" placeholder="XXXXXX1234"></label><label>IFSC<input id="appIfsc" maxlength="11" placeholder="ABCD0123456"></label><label>Account Type<select id="appAccountType"><option>SAVINGS</option><option>CURRENT</option></select></label></div>';
+  if(step.fields==='documents')body.innerHTML='<div class="document-check-grid"><label><input type="checkbox" id="docPan"> PAN Card</label><label><input type="checkbox" id="docAadhaar"> Aadhaar</label><label><input type="checkbox" id="docBank"> Bank Statement</label><label><input type="checkbox" id="docBusiness"> Business Proof</label><label><input type="checkbox" id="docAddress"> Address Proof</label><label><input type="checkbox" id="docSelfie"> Selfie</label></div><div class="info-note">Confirm the documents you will submit. Provider/file storage can be connected later without changing this workflow.</div><div class="review-card"><b>Application #'+esc(activeApplication?.loan_id)+'</b><span>Requested amount: '+money(activeApplication?.requested_amount)+'</span><span>Tenure: '+esc(activeApplication?.tenure_months)+' months</span><span>Status: '+statusLabel(activeApplication?.status)+'</span></div>';
+  [['appGender','gender'],['appMarital','marital_status'],['appOwnership','residence_ownership']].forEach(function(x){const el=document.getElementById(x[0]);if(el&&currentCustomer?.[x[1]])el.value=currentCustomer[x[1]];});
+}
+async function saveWizardStep(){
+  const customerId=sessionStorage.getItem(CUSTOMER_KEY),loanId=activeApplication?.loan_id,step=wizardSteps[wizardIndex],msg=document.getElementById('wizardMessage'),next=document.getElementById('wizardNextBtn');
+  if(!customerId||!loanId)return;if(msg){msg.textContent='Saving…';msg.className='login-message';}if(next)next.disabled=true;
+  try{
+    if(step.fields==='kyc'){
+      const pan=String(document.getElementById('appPan')?.value||'').trim().toUpperCase(),aadhaar=String(document.getElementById('appAadhaar')?.value||'').replace(/\D/g,'');
+      if(pan.length!==10||!/^([A-Z]{5}[0-9]{4}[A-Z])$/.test(pan))throw new Error('Enter a valid PAN number.');
+      if(aadhaar.length!==12)throw new Error('Enter a valid 12-digit Aadhaar number.');
+      await api('/services/loan-request/'+customerId+'/'+loanId+'/kyc',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({pan:pan,aadhaar:aadhaar})});
+      await api('/services/loan-request/'+customerId+'/'+loanId+'/stage',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage:'PERSONAL'})});
+    }else if(step.fields==='personal'){
+      const payload={date_of_birth:document.getElementById('appDob')?.value,gender:document.getElementById('appGender')?.value,marital_status:document.getElementById('appMarital')?.value,current_city:document.getElementById('appCity')?.value,address:document.getElementById('appAddress')?.value,permanent_address:document.getElementById('appPermanent')?.value,residence_ownership:document.getElementById('appOwnership')?.value,residence_since:document.getElementById('appResidenceSince')?.value};
+      if(!payload.date_of_birth||!payload.gender||!payload.marital_status||!payload.current_city||!payload.address||!payload.permanent_address||!payload.residence_ownership||!payload.residence_since)throw new Error('Please complete all required personal and address fields.');
+      await api('/services/customer-profile/'+customerId+'/personal',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      await api('/services/loan-request/'+customerId+'/'+loanId+'/stage',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage:'BUSINESS'})});
+    }else if(step.fields==='business'){
+      const payload={occupation:document.getElementById('appOccupation')?.value,customer_type:currentCustomer?.customer_type||'Individual',business_name:document.getElementById('appBusinessName')?.value,business_type:document.getElementById('appBusinessType')?.value,monthly_income:Number(document.getElementById('appIncome')?.value||0),years_in_business:Number(document.getElementById('appVintage')?.value||0),existing_emi:Number(document.getElementById('appEmi')?.value||0),primary_bank:document.getElementById('appBankName')?.value};
+      if(!payload.business_name||!payload.business_type||!payload.monthly_income||!payload.years_in_business||!payload.primary_bank)throw new Error('Please complete the required business and banking fields.');
+      if(!document.getElementById('appBankHolder')?.value||!document.getElementById('appAccountMasked')?.value)throw new Error('Enter the bank account holder and masked account number.');
+      await api('/services/customer-profile/'+customerId+'/employment-business',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      await api('/services/loan-request/'+customerId+'/'+loanId+'/bank-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bank_name:payload.primary_bank,account_holder_name:document.getElementById('appBankHolder')?.value,account_number_masked:document.getElementById('appAccountMasked')?.value,ifsc:document.getElementById('appIfsc')?.value,account_type:document.getElementById('appAccountType')?.value})});
+      await api('/services/loan-request/'+customerId+'/'+loanId+'/stage',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage:'DOCUMENTS'})});
+    }else{
+      const docs=[['PAN Card','docPan'],['Aadhaar','docAadhaar'],['Bank Statement','docBank'],['Business Proof','docBusiness'],['Address Proof','docAddress'],['Selfie','docSelfie']],selected=docs.filter(function(x){return document.getElementById(x[1])?.checked;});
+      if(selected.length<4)throw new Error('Please confirm at least PAN, Aadhaar, Bank Statement and Business Proof.');
+      for(const x of selected)await api('/services/loan-request/'+customerId+'/'+loanId+'/document',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_type:x[0].toUpperCase().replaceAll(' ','_'),file_name:x[0].replaceAll(' ','_')+'_customer_submission'})});
+      await api('/services/loan-request/'+customerId+'/'+loanId+'/stage',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage:'REVIEW'})});
+    }
+    if(wizardIndex<3){wizardIndex++;activeApplication.current_stage=wizardSteps[wizardIndex].key;renderWizard();if(msg){msg.textContent='Saved. Continue to the next step.';msg.className='login-message success';}}
+    else{if(msg){msg.textContent='Application submitted for review. DirectCredit will continue the assessment workflow.';msg.className='login-message success';}if(next)next.disabled=true;}
+    await loadCustomerProfile(customerId);
+  }catch(err){if(msg){msg.textContent=err.message||'Unable to save this step.';msg.className='login-message error';}}
+  finally{if(next&&wizardIndex<3)next.disabled=false;}
+}
 async function createLoanApplication(){
-  const customerId=sessionStorage.getItem(CUSTOMER_KEY);
-  const amount=Number(document.getElementById('loanAmount')?.value);
-  const tenure=Number(document.getElementById('loanTenure')?.value);
-  const msg=document.getElementById('loanApplyMessage'), button=document.getElementById('applyLoanBtn');
+  const customerId=sessionStorage.getItem(CUSTOMER_KEY),amount=Number(document.getElementById('loanAmount')?.value),tenure=Number(document.getElementById('loanTenure')?.value),msg=document.getElementById('loanApplyMessage'),button=document.getElementById('applyLoanBtn');
   if(!customerId){setLoginMessage('Please log in again.',true);return;}
+  const existing=await loadActiveApplication();if(existing){openApplicationWizard(existing);return;}
   if(!Number.isFinite(amount)||amount<5000||amount>15000){if(msg){msg.textContent='Enter an amount between ₹5,000 and ₹15,000.';msg.className='login-message error';}return;}
   if(![3,6,9,12].includes(tenure)){if(msg){msg.textContent='Select a supported tenure.';msg.className='login-message error';}return;}
   if(button){button.disabled=true;button.textContent='Creating application…';}
-  if(msg){msg.textContent='';msg.className='login-message';}
   try{
-    const result=await api(`/services/loan-request/${encodeURIComponent(customerId)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product:'Micro Business Loan',requested_amount:amount,tenure_months:tenure})});
-    if(msg){msg.textContent=`Application #${result.loan_id} created. Continue with your application profile.`;msg.className='login-message success';}
-    await refreshApplications();
-    await loadCustomerProfile(customerId);
-    openSection('application');
+    const result=await api('/services/loan-request/'+encodeURIComponent(customerId),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product:'Micro Business Loan',requested_amount:amount,tenure_months:tenure})});
+    activeApplication={loan_id:result.loan_id,requested_amount:result.requested_amount,tenure_months:result.tenure_months,product:result.product,status:result.status,current_stage:result.current_stage};
+    openApplicationWizard(activeApplication);await refreshApplications();
   }catch(err){if(msg){msg.textContent=err.message||'Unable to create loan application.';msg.className='login-message error';}}
   finally{if(button){button.disabled=false;button.textContent='Start Loan Application';}}
 }
+
 async function refreshApplications(){
   const customerId=sessionStorage.getItem(CUSTOMER_KEY), host=document.getElementById('applicationHistory');
   if(!customerId||!host)return;
@@ -168,5 +228,5 @@ async function refreshApplications(){
   }catch(err){host.innerHTML='<div class="empty-state">Application data could not be loaded.</div>';}
 }
 
-function bind(){document.getElementById('loginBtn')?.addEventListener('click',loginWithMobile);document.getElementById('loginId')?.addEventListener('keydown',e=>{if(e.key==='Enter')loginWithMobile();});document.getElementById('showSignupBtn')?.addEventListener('click',showSignup);document.getElementById('applyLoanBtn')?.addEventListener('click',createLoanApplication);document.getElementById('refreshApplicationsBtn')?.addEventListener('click',refreshApplications);document.getElementById('cancelSignupBtn')?.addEventListener('click',hideSignup);document.getElementById('signupBtn')?.addEventListener('click',signupCustomer);document.getElementById('signupMobile')?.addEventListener('keydown',e=>{if(e.key==='Enter')signupCustomer();});document.getElementById('logoutBtn')?.addEventListener('click',logout);document.querySelectorAll('.side-nav').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.section)));document.querySelectorAll('[data-open-section]').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.openSection)));const customerId=sessionStorage.getItem(CUSTOMER_KEY),token=sessionStorage.getItem(TOKEN_KEY);if(customerId&&token)loadCustomerProfile(customerId).then(()=>{showPortal();openSection('home');}).catch(()=>logout());}
+function bind(){document.getElementById('loginBtn')?.addEventListener('click',loginWithMobile);document.getElementById('loginId')?.addEventListener('keydown',e=>{if(e.key==='Enter')loginWithMobile();});document.getElementById('showSignupBtn')?.addEventListener('click',showSignup);document.getElementById('applyLoanBtn')?.addEventListener('click',createLoanApplication);document.getElementById('wizardNextBtn')?.addEventListener('click',saveWizardStep);document.getElementById('wizardBackBtn')?.addEventListener('click',()=>{if(wizardIndex>0){wizardIndex--;renderWizard();}});document.getElementById('refreshApplicationsBtn')?.addEventListener('click',refreshApplications);document.getElementById('cancelSignupBtn')?.addEventListener('click',hideSignup);document.getElementById('signupBtn')?.addEventListener('click',signupCustomer);document.getElementById('signupMobile')?.addEventListener('keydown',e=>{if(e.key==='Enter')signupCustomer();});document.getElementById('logoutBtn')?.addEventListener('click',logout);document.querySelectorAll('.side-nav').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.section)));document.querySelectorAll('[data-open-section]').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.openSection)));const customerId=sessionStorage.getItem(CUSTOMER_KEY),token=sessionStorage.getItem(TOKEN_KEY);if(customerId&&token)loadCustomerProfile(customerId).then(()=>{showPortal();openSection('home');}).catch(()=>logout());}
 document.addEventListener('DOMContentLoaded',bind);
