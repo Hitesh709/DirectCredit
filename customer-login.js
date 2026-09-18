@@ -21,6 +21,21 @@ async function api(path, options = {}) {
 }
 function setLoginMessage(message = '', error = false) { const el = document.getElementById('loginMessage'); if (!el) return; el.textContent = message; el.className = `login-message${error ? ' error' : ''}`; }
 function showLogin() { document.getElementById('loginView')?.classList.remove('hidden'); document.getElementById('portalView')?.classList.add('hidden'); }
+function showSignup() {
+  document.getElementById('signupView')?.classList.remove('hidden');
+  document.getElementById('showSignupBtn')?.classList.add('hidden');
+  document.getElementById('loginBtn')?.classList.add('hidden');
+  document.getElementById('loginId')?.closest('label')?.classList.add('hidden');
+  document.getElementById('signupName')?.focus();
+  setLoginMessage('');
+}
+function hideSignup() {
+  document.getElementById('signupView')?.classList.add('hidden');
+  document.getElementById('showSignupBtn')?.classList.remove('hidden');
+  document.getElementById('loginBtn')?.classList.remove('hidden');
+  document.getElementById('loginId')?.closest('label')?.classList.remove('hidden');
+  setLoginMessage('');
+}
 function showPortal() { document.getElementById('loginView')?.classList.add('hidden'); document.getElementById('portalView')?.classList.remove('hidden'); }
 
 function renderProfile(c, data) {
@@ -90,10 +105,38 @@ function renderDashboard() {
   renderJourney(journey); renderProfile(c,profileData); renderProfileSecondary(c,profileData); renderLoans(loans); renderRepayments(repayments); renderDocuments(profileData?.documents||[]);
 }
 
+async function signupCustomer(){
+  const name=String(document.getElementById('signupName')?.value||'').trim();
+  const mobile=String(document.getElementById('signupMobile')?.value||'').replace(/\D/g,'').slice(0,10);
+  if(name.length<2){setLoginMessage('Enter your full name.',true);return;}
+  if(mobile.length!==10){setLoginMessage('Enter a valid 10-digit mobile number.',true);return;}
+  const button=document.getElementById('signupBtn');
+  if(button){button.disabled=true;button.textContent='Creating account…';}
+  setLoginMessage('');
+  try{
+    const result=await api('/services/api/auth/customer-register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,mobile})
+    });
+    sessionStorage.setItem(TOKEN_KEY,result.access_token);
+    sessionStorage.setItem(CUSTOMER_KEY,String(result.customer.id));
+    await loadCustomerProfile(result.customer.id);
+    showPortal();
+    openSection('home');
+  }catch(err){
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(CUSTOMER_KEY);
+    setLoginMessage(err.message||'Customer registration failed.',true);
+  }finally{
+    if(button){button.disabled=false;button.textContent='Create Customer Account';}
+  }
+}
+
 async function loadCustomerProfile(customerId){ profileData=await api(`/services/api/v1/customers/${encodeURIComponent(customerId)}/360`); currentCustomer=profileData.customer; renderDashboard(); }
 async function loginWithMobile(){ const input=document.getElementById('loginId'),mobile=String(input?.value||'').replace(/\D/g,'').slice(0,10); if(mobile.length!==10){setLoginMessage('Enter a valid 10-digit mobile number.',true);return;} const button=document.getElementById('loginBtn'); if(button){button.disabled=true;button.textContent='Checking customer record…';} setLoginMessage(''); try{const result=await api('/services/api/auth/customer-mobile-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile})}); sessionStorage.setItem(TOKEN_KEY,result.access_token); sessionStorage.setItem(CUSTOMER_KEY,String(result.customer.id)); await loadCustomerProfile(result.customer.id); showPortal(); openSection('home');}catch(err){sessionStorage.removeItem(TOKEN_KEY);sessionStorage.removeItem(CUSTOMER_KEY);showLogin();setLoginMessage(err.message||'Customer record could not be loaded.',true);}finally{if(button){button.disabled=false;button.textContent='Enter Customer Portal';}} }
 function logout(){sessionStorage.removeItem(TOKEN_KEY);sessionStorage.removeItem(CUSTOMER_KEY);currentCustomer=null;profileData=null;showLogin();}
 function openSection(section){document.querySelectorAll('.customer-section').forEach(s=>s.classList.toggle('active-section',s.id===section));document.querySelectorAll('.side-nav').forEach(b=>b.classList.toggle('active',b.dataset.section===section));const titles={home:'Dashboard',application:'Loan Application',profile:'My Profile',loans:'My Loans',repayment:'Repayments',documents:'Documents',support:'Support'},title=document.getElementById('pageTitle');if(title)title.textContent=titles[section]||'Customer Portal';}
 window.openSection=openSection;
-function bind(){document.getElementById('loginBtn')?.addEventListener('click',loginWithMobile);document.getElementById('loginId')?.addEventListener('keydown',e=>{if(e.key==='Enter')loginWithMobile();});document.getElementById('logoutBtn')?.addEventListener('click',logout);document.querySelectorAll('.side-nav').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.section)));document.querySelectorAll('[data-open-section]').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.openSection)));const customerId=sessionStorage.getItem(CUSTOMER_KEY),token=sessionStorage.getItem(TOKEN_KEY);if(customerId&&token)loadCustomerProfile(customerId).then(()=>{showPortal();openSection('home');}).catch(()=>logout());}
+function bind(){document.getElementById('loginBtn')?.addEventListener('click',loginWithMobile);document.getElementById('loginId')?.addEventListener('keydown',e=>{if(e.key==='Enter')loginWithMobile();});document.getElementById('showSignupBtn')?.addEventListener('click',showSignup);document.getElementById('cancelSignupBtn')?.addEventListener('click',hideSignup);document.getElementById('signupBtn')?.addEventListener('click',signupCustomer);document.getElementById('signupMobile')?.addEventListener('keydown',e=>{if(e.key==='Enter')signupCustomer();});document.getElementById('logoutBtn')?.addEventListener('click',logout);document.querySelectorAll('.side-nav').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.section)));document.querySelectorAll('[data-open-section]').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.openSection)));const customerId=sessionStorage.getItem(CUSTOMER_KEY),token=sessionStorage.getItem(TOKEN_KEY);if(customerId&&token)loadCustomerProfile(customerId).then(()=>{showPortal();openSection('home');}).catch(()=>logout());}
 document.addEventListener('DOMContentLoaded',bind);
