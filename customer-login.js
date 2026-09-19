@@ -1,4 +1,5 @@
-// Customer Portal uses the Vercel /api rewrite in production. Ignore stale localStorage API overrides so an older browser session cannot point login at a retired backend.\nconst API_BASE = (window.DIRECTCREDIT_API_URL || '/api').replace(/\/$/, '');
+// Customer Portal uses the Vercel /api rewrite in production. Ignore stale localStorage API overrides so an older browser session cannot point login at a retired backend.
+const API_BASE = (window.DIRECTCREDIT_API_URL || '/api').replace(/\/$/, '');
 const TOKEN_KEY = 'directcredit_customer_token';
 const CUSTOMER_KEY = 'directcredit_customer_id';
 let currentCustomer = null;
