@@ -21,7 +21,7 @@ async function api(path, options = {}) {
   return body;
 }
 function setLoginMessage(message = '', error = false) { const el = document.getElementById('loginMessage'); if (!el) return; el.textContent = message; el.className = `login-message${error ? ' error' : ''}`; }
-function showLogin() { document.getElementById('loginView')?.classList.remove('hidden'); document.getElementById('portalView')?.classList.add('hidden'); }
+function showLogin() { document.getElementById('portalView')?.classList.add('portal-locked'); document.getElementById('customerAccessView')?.classList.remove('hidden'); }
 function showSignup() {
   document.getElementById('signupView')?.classList.remove('hidden');
   document.getElementById('showSignupBtn')?.classList.add('hidden');
@@ -37,7 +37,7 @@ function hideSignup() {
   document.getElementById('loginId')?.closest('label')?.classList.remove('hidden');
   setLoginMessage('');
 }
-function showPortal() { document.getElementById('loginView')?.classList.add('hidden'); document.getElementById('portalView')?.classList.remove('hidden'); }
+function showPortal() { document.getElementById('portalView')?.classList.remove('portal-locked'); document.getElementById('customerAccessView')?.classList.add('hidden'); }
 
 function renderProfile(c, data) {
   const box = document.querySelector('.profile-data'); if (!box) return;
