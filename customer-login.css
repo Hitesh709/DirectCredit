@@ -29,3 +29,12 @@
 .access-card .signup-view h2{margin:6px 0;font-size:19px}.access-card .signup-view p{margin-bottom:12px}
 .portal-locked .side-nav{pointer-events:none;opacity:.55}.portal-locked #logoutBtn{display:none}
 @media(max-width:700px){.customer-access{padding:18px}.access-card{padding:24px}}
+
+/* Admin-aligned customer access workspace */
+.portal-locked .customer-main{background:#f5f7fb}
+.portal-locked .topbar{display:flex!important;background:#fff;box-shadow:0 1px 0 #e5eaf1}
+.portal-locked .customer-access{min-height:calc(100vh - 102px);display:grid;grid-template-columns:minmax(0,1.25fr) minmax(360px,460px);align-items:center;gap:28px;padding:30px 0 50px;background:#f5f7fb}
+.portal-locked .customer-access:before{content:'DIRECTCREDIT CUSTOMER SERVICES\\A\\AManage your loan application, profile, documents and repayments from one secure workspace.\\A\\A✓ Customer 360\\A✓ Application tracking\\A✓ Loan & repayment visibility\\A✓ Secure account access';white-space:pre-wrap;display:block;max-width:620px;padding:36px;color:#17233f;font-size:19px;font-weight:800;line-height:1.65;background:linear-gradient(135deg,#eef5ff,#fff);border:1px solid #dce7f5;border-radius:14px;box-shadow:0 2px 8px rgba(20,45,90,.05)}
+.portal-locked .access-card{width:100%;padding:28px;border-radius:14px;box-shadow:0 2px 12px rgba(20,45,90,.08)}
+.portal-locked .access-card h1{font-size:26px}.portal-locked .access-card .primary{background:#1768ed}
+@media(max-width:900px){.portal-locked .customer-access{grid-template-columns:1fr;padding:20px 0 35px}.portal-locked .customer-access:before{display:none}.portal-locked .access-card{max-width:520px;margin:auto}.portal-locked .topbar{display:flex!important}}
