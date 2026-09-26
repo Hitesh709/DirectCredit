@@ -67,11 +67,17 @@ function demoReporting(){
       {date:'2026-08-07',count:3,due:38600,paid:24500},
       {date:'2026-08-08',count:4,due:46000,paid:29200}
     ],
-    collection:[
+    collection_trend:[
       {date:'2026-03',collected:24500,efficiency:89.2},{date:'2026-04',collected:28500,efficiency:91.3},
       {date:'2026-05',collected:30200,efficiency:92.6},{date:'2026-06',collected:31200,efficiency:92.7},
       {date:'2026-07',collected:32600,efficiency:93.1},{date:'2026-08',collected:38500,efficiency:96.4}
     ],
+    collection:DEMO_LOANS.map((x,i)=>({
+      loan_id:x.id,customer_id:x.customer_id,name:DEMO_CUSTOMERS[i].name,
+      loan_amount:x.sanctioned_amount||x.requested_amount,outstanding:x.outstanding_amount||0,
+      overdue:x.status==='overdue'?x.outstanding_amount||0:0,status:x.status,
+      mandate:x.status==='pending'?'Not connected':'Active',bank:DEMO_CUSTOMERS[i].primary_bank
+    })),
     collection_agent_performance:[
       {agent_code:'ACT001',name:'Ramesh Shah',actions:42,receipts:18,collected_amount:8200,efficiency:94.5},
       {agent_code:'ACT002',name:'Sunil Patel',actions:38,receipts:16,collected_amount:7600,efficiency:91.4},
