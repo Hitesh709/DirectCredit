@@ -14,10 +14,12 @@ def registration_users(db:Session=Depends(get_db),admin=Depends(get_current_admi
  c,_,_=_rows(db); return [{"customer_id":x.id,"customer_code":x.customer_code,"name":x.name,"mobile":x.mobile,"business_name":x.business_name,"kyc_status":x.kyc_status,"created_at":str(x.created_at) if x.created_at else None} for x in sorted(c,key=lambda z:z.id,reverse=True)]
 @router.get("/loan-pipeline")
 def loan_pipeline(db:Session=Depends(get_db),admin=Depends(get_current_admin)):
- _,l,_=_rows(db); return {"total":len(l),"by_status":dict(Counter(x.status for x in l)),"rows":[{"loan_id":x.id,"customer_id":x.customer_id,"requested_amount":x.requested_amount,"sanctioned_amount":x.sanctioned_amount,"disbursed_amount":x.disbursed_amount,"status":x.status,"stage":x.current_stage} for x in sorted(l,key=lambda z:z.id,reverse=True)]}
+ c,l,_=_rows(db); cm={x.id:x for x in c}
+ return {"total":len(l),"by_status":dict(Counter(x.status for x in l)),"rows":[{"loan_id":x.id,"customer_id":x.customer_id,"customer_code":cm.get(x.customer_id).customer_code if cm.get(x.customer_id) else None,"customer_name":cm.get(x.customer_id).name if cm.get(x.customer_id) else None,"mobile":cm.get(x.customer_id).mobile if cm.get(x.customer_id) else None,"business_name":cm.get(x.customer_id).business_name if cm.get(x.customer_id) else None,"requested_amount":x.requested_amount,"eligible_amount":x.eligible_amount,"sanctioned_amount":x.sanctioned_amount,"disbursed_amount":x.disbursed_amount,"outstanding_amount":x.outstanding_amount,"monthly_emi":x.monthly_emi,"tenure_months":x.tenure_months,"interest_rate":x.interest_rate,"status":x.status,"stage":x.current_stage,"created_at":str(x.created_at) if x.created_at else None} for x in sorted(l,key=lambda z:z.id,reverse=True)]}
 @router.get("/disbursement")
 def disbursement(db:Session=Depends(get_db),admin=Depends(get_current_admin)):
- _,l,_=_rows(db); return [{"loan_id":x.id,"customer_id":x.customer_id,"amount":x.disbursed_amount or 0,"status":x.status} for x in l if x.disbursed_amount]
+ c,l,_=_rows(db); cm={x.id:x for x in c}
+ return [{"loan_id":x.id,"customer_id":x.customer_id,"customer_code":cm.get(x.customer_id).customer_code if cm.get(x.customer_id) else None,"customer_name":cm.get(x.customer_id).name if cm.get(x.customer_id) else None,"business_name":cm.get(x.customer_id).business_name if cm.get(x.customer_id) else None,"amount":x.disbursed_amount or 0,"status":x.status,"created_at":str(x.created_at) if x.created_at else None} for x in l if x.disbursed_amount]
 @router.get("/repayment-collection")
 def repayment_collection(db:Session=Depends(get_db),admin=Depends(get_current_admin)):
  _,l,r=_rows(db); return {"total_due":round(sum(x.due_amount or 0 for x in r),2),"total_paid":round(sum(x.paid_amount or 0 for x in r),2),"total_unpaid":round(sum(max(0,(x.due_amount or 0)-(x.paid_amount or 0)) for x in r),2),"loans":len(l),"repayments":len(r)}
