@@ -204,7 +204,7 @@ async function saveWizardStep(){
       await api('/services/customer-profile/'+customerId+'/employment-business',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       await api('/services/loan-request/'+customerId+'/'+loanId+'/bank-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bank_name:payload.primary_bank,account_holder_name:document.getElementById('appBankHolder')?.value,account_number_masked:document.getElementById('appAccountMasked')?.value,ifsc:document.getElementById('appIfsc')?.value,account_type:document.getElementById('appAccountType')?.value})});
       await api('/services/loan-request/'+customerId+'/'+loanId+'/stage',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage:'DOCUMENTS'})});
-    }else{
+    }else if(step.fields==='documents'){
       const docs=[['PAN Card','docPan'],['Aadhaar','docAadhaar'],['Bank Statement','docBank'],['Business Proof','docBusiness'],['Address Proof','docAddress'],['Selfie','docSelfie']],selected=docs.filter(function(x){return document.getElementById(x[1])?.checked;});
       if(selected.length<4)throw new Error('Please confirm at least PAN, Aadhaar, Bank Statement and Business Proof.');
       for(const x of selected)await api('/services/loan-request/'+customerId+'/'+loanId+'/document',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_type:x[0].toUpperCase().replaceAll(' ','_'),file_name:x[0].replaceAll(' ','_')+'_customer_submission'})});
