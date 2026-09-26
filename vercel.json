@@ -7,10 +7,10 @@
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://directcredit-api.onrender.com/api/$1" },
-    { "source": "/customer", "destination": "/index.html" },
-    { "source": "/customer/", "destination": "/index.html" },
-    { "source": "/customer-login", "destination": "/index.html" },
-    { "source": "/customer-login/", "destination": "/index.html" }
+    { "source": "/customer", "destination": "/customer.html" },
+    { "source": "/customer/", "destination": "/customer.html" },
+    { "source": "/customer-login", "destination": "/customer.html" },
+    { "source": "/customer-login/", "destination": "/customer.html" }
   ],
   "headers": [
     { "source": "/customer-login.html", "headers": [{ "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0, s-maxage=0" }] },
