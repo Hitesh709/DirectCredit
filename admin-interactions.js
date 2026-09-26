@@ -17,7 +17,7 @@
       .dc-drill-table{width:100%;border-collapse:collapse;font-size:13px}.dc-drill-table th,.dc-drill-table td{padding:9px;border-bottom:1px solid #edf0f4;text-align:left}.dc-drill-table th{background:#f8fafc;position:sticky;top:58px}
       @media(max-width:600px){#dcDrillModal{padding:8px}.dc-drill-card{max-height:94vh}.dc-drill-body{padding:12px}.dc-drill-table{min-width:720px}.dc-drill-body{overflow:auto}}
     `;document.head.appendChild(s);
-    const m=document.createElement('div');m.id='dcDrillModal';m.hidden=true;m.innerHTML=`<div class="dc-drill-card" role="dialog" aria-modal="true" aria-labelledby="dcDrillTitle"><div class="dc-drill-head"><h2 id="dcDrillTitle">Details</h2><button class="dc-drill-close" type="button">Close</button></div><div class="dc-drill-body" id="dcDrillBody"></div></div>`;
+    const m=document.createElement('div');m.id='dcDrillModal';m.hidden=true;m.innerHTML=`<div class="dc-drill-card" role="dialog" aria-modal="true" aria-labelledby="dcDrillTitle"><div class="dc-drill-head"><h2 id="dcDrillTitle">Details</h2><div style="display:flex;gap:6px"><button class="dc-drill-btn" type="button" data-drill-export="csv">CSV</button><button class="dc-drill-btn" type="button" data-drill-export="json">JSON</button><button class="dc-drill-close" type="button">Close</button></div></div><div class="dc-drill-body" id="dcDrillBody"></div></div>`;
     document.body.appendChild(m);m.querySelector('.dc-drill-close').onclick=()=>m.hidden=true;m.onclick=e=>{if(e.target===m)m.hidden=true};
   }
   function reporting(){return window.DirectCreditData?.reporting?window.DirectCreditData.reporting():fetch((localStorage.getItem('directcredit_api_url')||'/api')+'/admin/reporting').then(r=>r.json())}
@@ -39,7 +39,7 @@
       if(!data.length)data=[{Metric:label||key,Value:row?.innerText?.trim()||'No detail records'}];
       const ids=[...new Set(data.map(x=>x.Customer).filter(Boolean))]; if(ids.length&&window.DirectCreditData?.customer){const details=await Promise.all(ids.map(id=>window.DirectCreditData.customer(id).catch(()=>null))); const byId=new Map(details.filter(Boolean).map(x=>[String(x.customer?.id),x.customer])); data=data.map(x=>{const q=byId.get(String(x.Customer));return q?{Customer:x.Customer,'Customer Name':q.name||'—','Business':q.business_name||'—',Mobile:q.mobile||'—',...x}:x;});} const body=document.getElementById('dcDrillBody');document.getElementById('dcDrillTitle').textContent=title+' — Details';
       const cols=Object.keys(data[0]);body.innerHTML=`<div class="dc-drill-meta"><div><span>Records</span><b>${data.length}</b></div><div><span>Source</span><b>${window.DEMO_MODE||window.DirectCreditData?'Demo / configured data':'Portal data'}</b></div></div><div style="overflow:auto"><table class="dc-drill-table"><thead><tr>${cols.map(esc).map(x=>'<th>'+x+'</th>').join('')}</tr></thead><tbody>${data.map(r=>'<tr>'+cols.map(c=>'<td>'+esc(r[c])+'</td>').join('')+'</tr>').join('')}</tbody></table></div>`;
-      document.getElementById('dcDrillModal').hidden=false;
+      window.__dcDrillData=data; document.getElementById('dcDrillModal').hidden=false;
     }).catch(()=>{ensure();document.getElementById('dcDrillTitle').textContent='Details unavailable';document.getElementById('dcDrillBody').innerHTML='<p>Unable to load detail records.</p>';document.getElementById('dcDrillModal').hidden=false});
   }
   function csvFromTable(table){
@@ -73,6 +73,7 @@
   enhance(); new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true});
   document.addEventListener('click',e=>{
     const exp=e.target.closest('[data-export]');if(exp){exportPage(exp.dataset.export);return}
+    const de=e.target.closest('[data-drill-export]');if(de){const rows=window.__dcDrillData||[];if(!rows.length)return;const cols=Object.keys(rows[0]);if(de.dataset.drillExport==='json')download('directcredit-drilldown.json',JSON.stringify({exported_at:new Date().toISOString(),rows},null,2),'application/json');else download('directcredit-drilldown.csv',[cols.join(','),...rows.map(r=>cols.map(c=>'"'+String(r[c]??'').replace(/"/g,'""')+'"').join(','))].join('\n'),'text/csv;charset=utf-8');return}
     const el=e.target.closest('[data-drill-key]');if(el&&!e.target.closest('button,input,select,a')){detail(el.dataset.drillKey,el.dataset.drillLabel,el);return}
     const row=e.target.closest('table tbody tr');if(row&&!e.target.closest('button,input,select,a')&&row.children.length&&!row.querySelector('td[colspan]')){detail('row',row.closest('.fr-panel,.dc-panel,.panel,.accounting-panel,.settlement-panel,.collection-page,.fm-view')?.querySelector('h2,h3')?.innerText||'Record',row);return}
   });
