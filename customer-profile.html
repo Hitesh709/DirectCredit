@@ -35,10 +35,10 @@
 <section class="panel detail-panel"><h3>LOAN &amp; OFFER MICRO-DETAILS</h3><div id="offerDetails" class="detail-grid"></div></section>
 <section class="panel detail-panel"><h3>OPERATIONS &amp; AUDIT MICRO-DETAILS</h3><div id="opsDetails" class="detail-grid"></div></section>
 </section>
-<section class="bottom-grid"><section class="panel table-panel"><h3>LOANS</h3><table><thead><tr><th>Loan</th><th>Product</th><th>Sanctioned</th><th>Outstanding</th><th>EMI</th><th>Status</th></tr></thead><tbody id="loanRows"><tr><td colspan="6">No live loan records.</td></tr></tbody></table></section><section class="panel table-panel small-table"><h3>REPAYMENTS</h3><table><thead><tr><th>Date</th><th>Loan</th><th>Amount</th><th>Status</th></tr></thead><tbody id="repaymentRows"><tr><td colspan="4">No live repayment records.</td></tr></tbody></table></section><section class="panel table-panel docs"><h3>DOCUMENTS</h3><table><tbody id="documentRows"><tr><td colspan="3">No live document records.</td></tr></tbody></table></section></section>
+<section class="bottom-grid"><section class="panel table-panel"><h3>LOANS</h3><table><thead><tr><th>Loan</th><th>Product</th><th>Requested</th><th>Sanctioned</th><th>Disbursed</th><th>Outstanding</th><th>EMI</th><th>Next Due</th><th>Status</th></tr></thead><tbody id="loanRows"><tr><td colspan="6">No live loan records.</td></tr></tbody></table></section><section class="panel table-panel small-table"><h3>REPAYMENTS</h3><table><thead><tr><th>Date</th><th>Loan</th><th>Amount</th><th>Status</th></tr></thead><tbody id="repaymentRows"><tr><td colspan="4">No live repayment records.</td></tr></tbody></table></section><section class="panel table-panel docs"><h3>DOCUMENTS</h3><table><tbody id="documentRows"><tr><td colspan="3">No live document records.</td></tr></tbody></table></section></section>
 </main></section>
 </div>
-<script src="admin-data.js?v=20260926.1"></script><script src="customer-profile.js?v=20260926.1"></script>
+<script src="admin-data.js?v=20260927.2"></script><script src="customer-profile.js?v=20260927.1"></script>
 <script>
 function go(page){const id=new URLSearchParams(location.search).get('customer_id'); location.href=id?`${page}?customer_id=${encodeURIComponent(id)}`:page;}
 </script>
