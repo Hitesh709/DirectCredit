@@ -37,8 +37,58 @@ function demoReporting(){
     documents:18,repayments:42,
     recent_loans:loans.map(x=>({id:x.id,customer_id:x.customer_id,customer_name:DEMO_CUSTOMERS[x.customer_id-1].name,amount:x.sanctioned_amount||x.requested_amount,status:x.status,created_at:new Date(Date.now()-(x.customer_id*86400000)).toISOString()})),
     monthly:[{month:'Apr',applications:2,disbursed_count:2,disbursed_amount:17500},{month:'May',applications:3,disbursed_count:2,disbursed_amount:22500},{month:'Jun',applications:2,disbursed_count:2,disbursed_amount:25000},{month:'Jul',applications:3,disbursed_count:2,disbursed_amount:30000}],
-    loan_trend:[],slabs:[],repayment_status:{},due_calendar:[],collection:[],collection_agent_performance:[],
-    bank_analysis:{transactions:120,credits:450000,debits:380000,negative_balance_events:1,monthly:[],top_categories:[]},
+    loan_trend:[
+      {month:'Mar-26',disbursed_amount:12000,loan_count:1},{month:'Apr-26',disbursed_amount:17500,loan_count:2},
+      {month:'May-26',disbursed_amount:22500,loan_count:2},{month:'Jun-26',disbursed_amount:25000,loan_count:2},
+      {month:'Jul-26',disbursed_amount:30000,loan_count:3},{month:'Aug-26',disbursed_amount:10000,loan_count:1}
+    ],
+    slabs:[
+      {amount:5000,total_count:2,active_count:1,overdue_count:0,repaid_count:1,active_amount:3600,overdue_amount:0,repaid_amount:5000},
+      {amount:7500,total_count:2,active_count:1,overdue_count:1,repaid_count:0,active_amount:5400,overdue_amount:4650,repaid_amount:0},
+      {amount:10000,total_count:2,active_count:1,overdue_count:1,repaid_count:0,active_amount:7200,overdue_amount:6200,repaid_amount:0},
+      {amount:12500,total_count:2,active_count:1,overdue_count:0,repaid_count:1,active_amount:9000,overdue_amount:0,repaid_amount:12500},
+      {amount:15000,total_count:2,active_count:1,overdue_count:0,repaid_count:1,active_amount:10800,overdue_amount:0,repaid_amount:15000}
+    ],
+    repayment_status:{
+      'On-Time / Paid':{count:20,due:42000,paid:42000,unpaid:0},
+      'Overdue DPD 1–30':{count:8,due:21000,paid:5500,unpaid:15500},
+      'Overdue DPD 31–60':{count:4,due:12500,paid:2500,unpaid:10000},
+      'Overdue DPD 61–90':{count:2,due:7000,paid:1000,unpaid:6000},
+      'NPA DPD 90+':{count:1,due:2500,paid:0,unpaid:2500},
+      'Upcoming':{count:7,due:37000,paid:0,unpaid:37000}
+    },
+    due_calendar:[
+      {date:'2026-08-01',count:4,due:31500,paid:21000},
+      {date:'2026-08-02',count:3,due:22500,paid:14500},
+      {date:'2026-08-03',count:5,due:49300,paid:32300},
+      {date:'2026-08-04',count:4,due:50800,paid:32500},
+      {date:'2026-08-05',count:4,due:55000,paid:36000},
+      {date:'2026-08-06',count:3,due:46300,paid:27000},
+      {date:'2026-08-07',count:3,due:38600,paid:24500},
+      {date:'2026-08-08',count:4,due:46000,paid:29200}
+    ],
+    collection:[
+      {date:'2026-03',collected:24500,efficiency:89.2},{date:'2026-04',collected:28500,efficiency:91.3},
+      {date:'2026-05',collected:30200,efficiency:92.6},{date:'2026-06',collected:31200,efficiency:92.7},
+      {date:'2026-07',collected:32600,efficiency:93.1},{date:'2026-08',collected:38500,efficiency:96.4}
+    ],
+    collection_agent_performance:[
+      {agent_code:'ACT001',name:'Ramesh Shah',actions:42,receipts:18,collected_amount:8200,efficiency:94.5},
+      {agent_code:'ACT002',name:'Sunil Patel',actions:38,receipts:16,collected_amount:7600,efficiency:91.4},
+      {agent_code:'ACT003',name:'Amit Kumar',actions:35,receipts:15,collected_amount:6900,efficiency:90.0},
+      {agent_code:'ACT004',name:'Meena Joshi',actions:31,receipts:13,collected_amount:6200,efficiency:88.7},
+      {agent_code:'ACT005',name:'Ankit Verma',actions:29,receipts:12,collected_amount:5700,efficiency:86.9},
+      {agent_code:'ACT006',name:'Pooja Mehta',actions:27,receipts:11,collected_amount:5200,efficiency:87.5}
+    ],
+    recent_repayments:DEMO_LOANS.slice(0,8).map((x,i)=>({loan_id:x.id,customer_id:x.customer_id,loan_amount:x.disbursed_amount,paid_amount:Math.round((x.disbursed_amount||0)*0.18),date:'2026-08-'+String(10+i).padStart(2,'0'),status:'SUCCESS'})),
+    bank_analysis:{transactions:120,credits:450000,debits:380000,negative_balance_events:1,monthly:[
+      {month:'Mar-26',credits:72000,debits:59000,transactions:18,average_balance:18500},
+      {month:'Apr-26',credits:78000,debits:62000,transactions:20,average_balance:21400},
+      {month:'May-26',credits:69000,debits:57000,transactions:17,average_balance:22800},
+      {month:'Jun-26',credits:84000,debits:71000,transactions:22,average_balance:25100},
+      {month:'Jul-26',credits:91000,debits:76000,transactions:23,average_balance:27400},
+      {month:'Aug-26',credits:56000,debits:55000,transactions:20,average_balance:29100}
+    ],top_categories:[['Business Payments',182000],['Supplier Payments',94000],['Cash Withdrawals',68000],['UPI / Loan Repayment',52000],['Utilities & Rent',34000],['Others',30000]]},
     risk_score:{assessed_loans:8,average_score:106.5,max_score:125,decisions:{APPROVE:7,MANUAL_REVIEW:1},approval_80_90_100:{80:2,90:2,100:4},hard_reject_count:0}
   };
 }
