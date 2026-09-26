@@ -34,11 +34,34 @@
    window.__dcDeepExport={customer:c,metrics:m,bank:b,risk:r,loans:ls,repayments:rs,documents:docs,bank_transactions:tx,journey:j};
   }catch(e){body.innerHTML='<div class="dcdeep-empty">Customer detail could not be loaded. Verify the authorized admin token and API connection.</div>'}
  }
+
+ async function openAggregate(key,title){
+  ensure();
+  const body=document.getElementById('dcDeepBody');document.getElementById('dcDeepTitle').textContent=(title||key)+' — Detailed Breakdown';body.innerHTML='<div class="dcdeep-empty">Loading detailed breakdown…</div>';document.getElementById('dcDeepModal').hidden=false;
+  try{
+   const rows0=window.DirectCreditData?.loans?await window.DirectCreditData.loans():await fetch(base()+'/admin/reports/loan-pipeline',{headers:auth()}).then(x=>x.json());
+   const rows=Array.isArray(rows0)?rows0:(rows0.rows||[]);
+   let filtered=rows;
+   if(key==='total-disbursed')filtered=rows.filter(x=>Number(x.disbursed_amount||x.amount)>0);
+   else if(key==='outstanding')filtered=rows.filter(x=>Number(x.outstanding_amount)>0);
+   else if(key==='overdue')filtered=rows.filter(x=>String(x.status).toLowerCase()==='overdue');
+   else if(key==='active')filtered=rows.filter(x=>String(x.status).toLowerCase()==='active');
+   else if(key==='repaid'||key==='paid')filtered=rows.filter(x=>String(x.status).toLowerCase()==='repaid');
+   else if(key==='pending')filtered=rows.filter(x=>['pending','assessment','review'].includes(String(x.status).toLowerCase()));
+   else if(key==='closed')filtered=rows.filter(x=>['closed','settled','written_off','repaid'].includes(String(x.status).toLowerCase()));
+   const money2=money;
+   const data=filtered.map(x=>[x.customer_id,x.customer_name||'Not available',x.business_name||'Not available',x.mobile||'Not available','LN'+String(x.loan_id??x.id).padStart(8,'0'),money2(x.requested_amount),money2(x.disbursed_amount??x.amount),money2(x.outstanding_amount),x.status,x.stage||x.current_stage||'—']);
+   body.innerHTML='<div class="dcdeep-grid">'+card('Records',data.length)+card('Function',title||key)+card('Source','Live loan pipeline')+'</div><p style="font-size:12px;color:#64748b">Customer-wise breakdown. Click any row to open the complete Customer 360 record.</p>'+table(['Customer ID','Customer','Business','Mobile','Loan ID','Requested','Disbursed','Outstanding','Status','Stage'],data);
+   window.__dcDeepExport={function:key,rows:data};
+   body.querySelectorAll('tbody tr').forEach((tr,i)=>tr.onclick=()=>openCustomer(Number(data[i][0]),data[i][1]+' — '+data[i][4]));
+  }catch(e){body.innerHTML='<div class="dcdeep-empty">Detailed breakdown is unavailable. Verify the authorized admin token and API connection.</div>'}
+ }
  document.addEventListener('click',e=>{
   const row=e.target.closest('table tbody tr');
   const cardEl=e.target.closest('[data-drill-key]');
   if(!row&&!cardEl)return;
   if(e.target.closest('button,input,select,a'))return;
+  if(cardEl && !row){const key=cardEl.dataset.drillKey;if(key){e.preventDefault();e.stopImmediatePropagation();openAggregate(key,cardEl.dataset.drillLabel||cardEl.innerText.split('\\n')[0]);return;}}
   const text=(row||cardEl).innerText||'';
   const cm=(text.match(/(?:CUST|customer(?:\s+id)?)[\s:#-]*(\d+)/i)||[])[1];
   if(cm){e.preventDefault();e.stopImmediatePropagation();openCustomer(Number(cm),'Customer '+cm+' — Detail');return}
