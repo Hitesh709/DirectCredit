@@ -54,7 +54,9 @@ def audit_http(request:Request,db:Session,*,action:str,entity_type:str,entity_id
 @app.on_event("startup")
 def startup(): migrate_database()
 app.include_router(service_router); app.include_router(reporting_router); app.include_router(audit_router)
-# Canonical auth paths are exposed at /api/auth/* as well as the legacy service namespace.\n# This keeps the customer portal login independent of the nested service router.\napp.include_router(auth_router)
+# Canonical auth paths are exposed at /api/auth/* as well as the legacy service namespace.
+# This keeps the customer portal login independent of the nested service router.
+app.include_router(auth_router)
 @app.get("/")
 def root(): return {"application":"DirectCredit","status":"online","mode":"production-ready","api_version":"0.8.0"}
 @app.get("/health")
