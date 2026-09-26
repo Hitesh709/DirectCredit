@@ -125,7 +125,7 @@
       if(source==='demo'){
         data=window.DirectCreditData.demoCustomer(Number(id));
       }else{
-        data=await window.DirectCreditData.customer(Number(id),{source:'live'});
+        data=await window.DirectCreditData.customer(Number(id),{source:'live',strictLive:true});
       }
       const c=data.customer||{};
       document.getElementById('contextCustomer').textContent=val(c.name,'Customer');
@@ -142,22 +142,36 @@
   async function load(){
     view.innerHTML='<div class="live-empty">Loading application list…</div>';
     try{
-      const liveRows=await window.DirectCreditData.loans();
+      // Applications must come from the real database first. Demo data is only a
+      // visual fallback when the live application API returns no records.
+      const liveRows=window.DirectCreditData.liveLoans
+        ? await window.DirectCreditData.liveLoans()
+        : await window.DirectCreditData.loans();
       const live=Array.isArray(liveRows)?liveRows:[];
       const liveCustomers=[...new Map(live.filter(x=>x.customer_id!=null).map(x=>[String(x.customer_id),x])).values()];
-      const demo=(window.DirectCreditData.demoCustomers||[]).map(c=>({customer_id:c.id,customer_name:c.name,business_name:c.business_name,requested_amount:c.loan?.requested_amount,status:c.loan?.status}));
-      const options=[
-        ...demo.map(x=>({value:'demo:'+x.customer_id,label:`DEMO • ${x.customer_name} • ${x.business_name||'Customer '+x.customer_id}`})),
-        ...liveCustomers.map(x=>({value:'live:'+x.customer_id,label:`LIVE • ${x.customer_name||'Customer '+x.customer_id}${x.business_name?' • '+x.business_name:''}`}))
-      ];
+      const options=liveCustomers.map(x=>({
+        value:'live:'+x.customer_id,
+        label:`LIVE • ${x.customer_name||'Customer '+x.customer_id}${x.business_name?' • '+x.business_name:''} • Application #${x.id||x.loan_id||'—'}`
+      }));
       if(!options.length){
-        view.innerHTML='<div class="live-empty">No demo or live applications are available.</div>';
-        return;
+        const demo=(window.DirectCreditData.demoCustomers||[]).map(c=>({
+          value:'demo:'+c.id,
+          label:`DEMO • ${c.name} • ${c.business_name}`
+        }));
+        if(!demo.length){
+          view.innerHTML='<div class="live-empty">No applications found in the database.</div>';
+          return;
+        }
+        buildSelector(demo);
+        selected='demo:'+demo[0].value.split(':')[1];
+      } else {
+        buildSelector(options);
+        const requested=params.get('customer_id');
+        const requestedSource=params.get('source');
+        selected=requested && requestedSource==='live'
+          ? 'live:'+requested
+          : options[0].value;
       }
-      buildSelector(options);
-      const requested=params.get('customer_id');
-      const requestedSource=params.get('source');
-      selected=requested?(requestedSource==='live'?'live:':'demo:')+requested:options[0].value;
       document.getElementById('applicationSelector').value=selected;
       await loadSelected(selected);
     }catch(e){
