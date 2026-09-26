@@ -23,7 +23,7 @@
   function reporting(){return window.DirectCreditData?.reporting?window.DirectCreditData.reporting():fetch((localStorage.getItem('directcredit_api_url')||'/api')+'/admin/reporting').then(r=>r.json())}
   function loans(){return window.DirectCreditData?.loans?window.DirectCreditData.loans():Promise.resolve([])}
   function detail(key,label,row){
-    ensure(); Promise.all([reporting(),loans()]).then(([d,ls])=>{
+    ensure(); Promise.all([reporting(),loans()]).then(async ([d,ls])=>{
       const rows=Array.isArray(ls)?ls:[];
       const customers=(window.DirectCreditData?.customer)?null:null;
       let title=label||key, data=[];
