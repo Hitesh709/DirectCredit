@@ -23,6 +23,7 @@ from .api_services import router as service_router
 from .reporting import router as reporting_router
 from .audit_routes import router as audit_router
 from .auth import hash_password, verify_password, issue_demo_token, get_current_customer
+from .admin_auth import get_current_admin
 from .auth_routes import router as auth_router
 from .migration_runner import migrate_database
 from .api_response import error as api_error, public_http_error, request_id
@@ -166,6 +167,12 @@ def customer_documents(customer_id:int,db:Session=Depends(get_db),claims:dict=De
     assert_customer_access(customer_id,claims)
     if not db.get(CustomerRecord,customer_id): raise HTTPException(404,"Customer not found")
     return db.query(DocumentRecord).filter(DocumentRecord.customer_id==customer_id).order_by(DocumentRecord.id.desc()).all()
+@app.get("/api/admin/reports/customer/{customer_id}/profile")
+def admin_customer_profile(customer_id:int,db:Session=Depends(get_db),_admin:dict=Depends(get_current_admin)):
+    data=profile_payload(customer_id,db)
+    if not data: raise HTTPException(404,"Customer not found")
+    return data
+
 @app.get("/api/admin/loans")
 def admin_loans(db:Session=Depends(get_db)): return db.query(LoanRecord).order_by(LoanRecord.id.desc()).all()
 @app.get("/api/admin/dashboard")
