@@ -241,32 +241,18 @@
         label:`LIVE • ${x.customer_name||'Customer '+x.customer_id}${x.business_name?' • '+x.business_name:''} • Application #${x.id||x.loan_id||'—'}`
       }));
       if(!options.length){
-        const demo=(window.DirectCreditData.demoCustomers||[]).map(c=>({
-          value:'demo:'+c.id,
-          label:`DEMO • ${c.name} • ${c.business_name}`
-        }));
-        if(!demo.length){
-          view.innerHTML='<div class="live-empty">No applications found in the database.</div>';
-          return;
-        }
-        buildSelector(demo);
-        selected='demo:'+demo[0].value.split(':')[1];
-      } else {
-        buildSelector(options);
-        const requested=params.get('customer_id');
-        const requestedSource=params.get('source');
-        selected=requested && requestedSource==='live'
-          ? 'live:'+requested
-          : options[0].value;
+        view.innerHTML='<div class="live-empty">No live application records are available. No sample records are shown.</div>';
+        return;
       }
+      buildSelector(options);
+      const requested=params.get('customer_id');
+      const requestedSource=params.get('source');
+      selected=requested && requestedSource==='live' && options.some(o=>o.value==='live:'+requested)
+        ? 'live:'+requested : options[0].value;
       document.getElementById('applicationSelector').value=selected;
       await loadSelected(selected);
     }catch(e){
-      // Even if live pipeline is unavailable, demo applications remain usable.
-      const demo=(window.DirectCreditData.demoCustomers||[]).map(c=>({value:'demo:'+c.id,label:`DEMO • ${c.name} • ${c.business_name}`}));
-      buildSelector(demo);
-      if(demo.length){selected=demo[0].value;document.getElementById('applicationSelector').value=selected;await loadSelected(selected);}
-      else view.innerHTML='<div class="live-empty">Application data is unavailable.</div>';
+      view.innerHTML=`<div class="live-empty">Live application data could not be loaded. No sample records are shown in this workspace. ${esc(e.message||'Please check the database/API connection and refresh.')}</div>`;
     }
   }
 
