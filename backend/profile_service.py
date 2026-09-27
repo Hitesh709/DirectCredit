@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict, Counter
 from sqlalchemy.orm import Session
-from .db_models import CustomerRecord, LoanRecord, RepaymentRecord, DocumentRecord, CustomerJourneyRecord, BankTransactionRecord
+from .db_models import CustomerRecord, LoanRecord, RepaymentRecord, DocumentRecord, CustomerJourneyRecord, BankTransactionRecord, CustomerBusinessRecord, CustomerContactRecord, CustomerAddressRecord, CustomerKYCRecord, CustomerBankAccountRecord, CustomerConsentRecord, CustomerPreferenceRecord, CustomerRiskProfileRecord, CustomerEventRecord
 
 
 def profile_payload(customer_id: int, db: Session) -> dict:
@@ -14,6 +14,15 @@ def profile_payload(customer_id: int, db: Session) -> dict:
     docs = db.query(DocumentRecord).filter(DocumentRecord.customer_id == customer_id).order_by(DocumentRecord.id.desc()).all()
     journey = db.query(CustomerJourneyRecord).filter(CustomerJourneyRecord.customer_id == customer_id).order_by(CustomerJourneyRecord.step_number).all()
     transactions = db.query(BankTransactionRecord).filter(BankTransactionRecord.customer_id == customer_id).order_by(BankTransactionRecord.transaction_date.desc(), BankTransactionRecord.id.desc()).all()
+    businesses = db.query(CustomerBusinessRecord).filter(CustomerBusinessRecord.customer_id == customer_id).order_by(CustomerBusinessRecord.id.desc()).all()
+    contacts = db.query(CustomerContactRecord).filter(CustomerContactRecord.customer_id == customer_id).order_by(CustomerContactRecord.id.desc()).all()
+    addresses = db.query(CustomerAddressRecord).filter(CustomerAddressRecord.customer_id == customer_id).order_by(CustomerAddressRecord.id.desc()).all()
+    kyc_record = db.query(CustomerKYCRecord).filter(CustomerKYCRecord.customer_id == customer_id).first()
+    bank_accounts = db.query(CustomerBankAccountRecord).filter(CustomerBankAccountRecord.customer_id == customer_id).order_by(CustomerBankAccountRecord.id.desc()).all()
+    consents = db.query(CustomerConsentRecord).filter(CustomerConsentRecord.customer_id == customer_id).order_by(CustomerConsentRecord.id.desc()).all()
+    preferences = db.query(CustomerPreferenceRecord).filter(CustomerPreferenceRecord.customer_id == customer_id).first()
+    risk_profile = db.query(CustomerRiskProfileRecord).filter(CustomerRiskProfileRecord.customer_id == customer_id).first()
+    events = db.query(CustomerEventRecord).filter(CustomerEventRecord.customer_id == customer_id).order_by(CustomerEventRecord.id.desc()).limit(100).all()
     sanctioned = sum(x.sanctioned_amount or 0 for x in loans)
     outstanding = sum(x.outstanding_amount or 0 for x in loans)
     paid = sum(x.paid_amount or 0 for x in repayments)
@@ -66,7 +75,7 @@ def profile_payload(customer_id: int, db: Session) -> dict:
     else:
         risk = {"total_score": None,"max_score":125,"source":"scorecard_not_configured","risk_tier":"Not assessed","decision":"Not assessed","approval_percent":None,"reasons":[],"hard_rejects":[],"factor_scores":{},"credit_score":c.cibil_score,"monthly_income":c.monthly_income,"foir":c.foir,"existing_emi":c.existing_emi}
 
-    customer={k:getattr(c,k) for k in ["id","name","pan","mobile","email","address","permanent_address","current_city","gender","business_name","business_type","date_of_birth","aadhaar_masked","marital_status","customer_type","occupation","monthly_income","work_experience_years","years_in_business","average_bank_balance","primary_bank","cibil_score","foir","existing_emi","dependents","residence_ownership","residence_since","ownership_proof_name","ownership_proof_status","kyc_status","email_verified","selfie_status"]}
+    customer={k:getattr(c,k) for k in ["id","customer_code","login_id","name","pan","mobile","email","address","permanent_address","current_city","gender","business_name","business_type","date_of_birth","aadhaar_masked","marital_status","customer_type","occupation","monthly_income","work_experience_years","years_in_business","average_bank_balance","primary_bank","cibil_score","foir","existing_emi","dependents","residence_ownership","residence_since","ownership_proof_name","ownership_proof_status","kyc_status","email_verified","selfie_status"]}
     loan_rows=[]
     for x in loans:
         try: disbursement_details = json.loads(x.disbursement_details) if x.disbursement_details else None
