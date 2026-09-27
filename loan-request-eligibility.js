@@ -212,15 +212,12 @@
     view.innerHTML='<div class="live-empty">Loading application data…</div>';
     try{
       const [source,id]=key.split(':');
-      if(source==='demo'){
-        data=window.DirectCreditData.demoCustomer(Number(id));
-      }else{
-        data=await window.DirectCreditData.customer(Number(id),{source:'live',strictLive:true});
-      }
+      if(source!=='live') throw new Error('Only live database records are available in this workspace.');
+      data=await window.DirectCreditData.customer(Number(id),{source:'live',strictLive:true});
       const c=data.customer||{};
       document.getElementById('contextCustomer').textContent=val(c.name,'Customer');
-      document.getElementById('contextId').textContent=`${source==='demo'?'Demo':'Live'} • Customer ID ${val(c.id,id)} • ${val(c.customer_code,'No customer code')}`;
-      document.getElementById('contextStatus').textContent=source==='demo'?'Demo customer':'Live database';
+      document.getElementById('contextId').textContent=`Live • Customer ID ${val(c.id,id)} • ${val(c.customer_code,'No customer code')}`;
+      document.getElementById('contextStatus').textContent='Live database';
       render(document.querySelector('.application-tab.active')?.dataset.view||'profile');
     }catch(e){
       data=null;
