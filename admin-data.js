@@ -102,7 +102,7 @@ function demoReporting(){
 
 window.DirectCreditData = (() => {
   const DEMO_MODE = false;
-  const DEMO_FALLBACK = true;
+  const DEMO_FALLBACK = false;
   const base = (window.DIRECTCREDIT_API_URL || localStorage.getItem('directcredit_api_url') || '/api').replace(/\/$/, '');
   const headers = () => { const token=localStorage.getItem('directcredit_admin_token') || window.DIRECTCREDIT_ADMIN_TOKEN; return token ? {Accept:'application/json',Authorization:`Bearer ${token}`} : {Accept:'application/json'}; };
   async function get(path){const r=await fetch(`${base}${path}`,{headers:headers()});if(!r.ok)throw new Error(`API ${r.status}`);return r.json()}
