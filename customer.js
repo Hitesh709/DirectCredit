@@ -9,9 +9,49 @@ function renderJourney(rows){const h=document.getElementById('journey');if(!rows
 function renderLatest(ls){const x=ls[0],h=document.getElementById('latest');h.innerHTML=x?['Loan ID|'+x.id,'Product|'+x.product,'Sanctioned|'+money(x.sanctioned_amount),'Outstanding|'+money(x.outstanding_amount),'EMI|'+money(x.monthly_emi),'Status|'+stat(x.status)].map(v=>{const[a,b]=v.split('|');return '<div><span>'+esc(a)+'</span><b>'+esc(b)+'</b></div>'}).join(''):'<div class="notice">No loan records yet.</div>'}
 function renderRepayments(rs){const p=rs.reduce((s,x)=>s+Number(x.paid_amount||0),0),u=rs.reduce((s,x)=>s+Math.max(Number(x.due_amount||0)-Number(x.paid_amount||0),0),0);document.getElementById('paid').textContent=money(p);document.getElementById('unpaid').textContent=money(u);const n=rs.filter(x=>Number(x.due_amount||0)>Number(x.paid_amount||0)).sort((a,b)=>String(a.due_date).localeCompare(String(b.due_date)))[0];document.getElementById('repNext').textContent=n?money(Math.max(Number(n.due_amount||0)-Number(n.paid_amount||0),0)):'—';document.getElementById('repNextDate').textContent=n?txt(n.due_date):'—';document.getElementById('repRows').innerHTML=rs.length?rs.map(x=>'<tr><td>'+esc(txt(x.due_date))+'</td><td>'+esc(txt(x.loan_id))+'</td><td>'+esc(txt(x.installment))+'</td><td>'+esc(money(x.due_amount))+'</td><td>'+esc(money(x.paid_amount))+'</td><td>'+esc(money(Math.max(Number(x.due_amount||0)-Number(x.paid_amount||0),0)))+'</td><td>'+esc(stat(x.status))+'</td><td>'+esc(txt(x.dpd))+'</td></tr>').join(''):'<tr><td colspan="8">No repayment records found.</td></tr>';document.getElementById('dashRepay').innerHTML=n?'<div class="detail-grid"><div><span>Due Date</span><b>'+esc(txt(n.due_date))+'</b></div><div><span>Amount</span><b>'+esc(money(Math.max(Number(n.due_amount||0)-Number(n.paid_amount||0),0)))+'</b></div><div><span>Loan</span><b>'+esc(txt(n.loan_id))+'</b></div><div><span>Status</span><b>'+esc(stat(n.status))+'</b></div></div>':'<div class="notice">No upcoming repayment recorded.</div>'}
 function renderLoans(ls){const dis=ls.reduce((s,x)=>s+Number(x.disbursed_amount||0),0),out=ls.reduce((s,x)=>s+Number(x.outstanding_amount||0),0);document.getElementById('loanCount').textContent=ls.length;document.getElementById('loanDisbursed').textContent=money(dis);document.getElementById('loanOutstanding').textContent=money(out);document.getElementById('loanRows').innerHTML=ls.length?ls.map(x=>'<tr><td>'+esc(txt(x.id))+'</td><td>'+esc(txt(x.product))+'</td><td>'+esc(money(x.requested_amount))+'</td><td>'+esc(money(x.sanctioned_amount))+'</td><td>'+esc(money(x.disbursed_amount))+'</td><td>'+esc(money(x.outstanding_amount))+'</td><td>'+esc(money(x.monthly_emi))+'</td><td>'+esc(stat(x.status))+'</td><td>'+esc(stat(x.current_stage))+'</td></tr>').join(''):'<tr><td colspan="9">No loan records found.</td></tr>'}
-function renderProfile(c,r){const rows=[['Customer ID',c.customer_code||c.id],['Mobile',c.mobile],['Email',c.email],['Name',c.name],['Address',c.address],['Customer Type',c.customer_type],['Occupation',c.occupation],['Business',c.business_name],['Business Type',c.business_type],['Monthly Income',money(c.monthly_income)]];document.getElementById('profile').innerHTML=rows.map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(txt(x[1]))+'</b></div>').join('');document.getElementById('risk').innerHTML=[['DirectCredit Score',r.total_score],['Max Score',r.max_score],['Decision',r.decision],['Approval',r.approval_percent==null?'—':r.approval_percent+'%'],['Risk Tier',r.risk_tier],['CIBIL',r.credit_score],['FOIR',r.foir==null?'—':r.foir+'%'],['Existing EMI',money(r.existing_emi)]].map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(txt(x[1]))+'</b></div>').join('')}
-function renderBank(c,d){const b=d.bank_analysis||{},k=d.kyc_employment||{};document.getElementById('bankBusiness').innerHTML=[['Bank',c.primary_bank],['Average Balance',money(b.average_eod_balance||c.average_bank_balance)],['Monthly Credit',money(b.average_monthly_credit)],['Monthly Debit',money(b.average_monthly_debit)],['KYC',k.kyc_status||c.kyc_status],['Business Vintage',k.years_in_business==null?'—':k.years_in_business+' years'],['Residence',k.residence_ownership||c.residence_ownership],['Ownership Proof',k.ownership_proof_status||c.ownership_proof_status]].map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(txt(x[1]))+'</b></div>').join('');document.getElementById('supportRef').innerHTML=[['Customer ID',c.customer_code||c.id],['Mobile',c.mobile],['Latest Loan',d.loans?.[0]?.id]].map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(txt(x[1]))+'</b></div>').join('')}
-function renderDocs(ds){document.getElementById('docs').innerHTML=ds.length?ds.map(x=>'<div class="doc"><b>'+esc(stat(x.document_type))+'</b><small>Loan: '+esc(txt(x.loan_id))+'</small><p>'+esc(stat(x.verification_status||'Recorded'))+'</p></div>').join(''):'<div class="panel notice">No document records found.</div>'}
+function renderProfile(c,r){
+ const rows=[
+  ['Customer ID',c.customer_code||c.id],['Customer Code',c.customer_code],['Name',c.name],['Mobile',c.mobile],
+  ['Email',c.email],['Date of Birth',c.date_of_birth],['Gender',c.gender],['Marital Status',c.marital_status],
+  ['PAN',c.pan],['Aadhaar (Masked)',c.aadhaar_masked],['Customer Type',c.customer_type],['Occupation',c.occupation],
+  ['Business',c.business_name],['Business Type',c.business_type],['Monthly Income',money(c.monthly_income)],
+  ['Work Experience',c.work_experience_years==null?'—':c.work_experience_years+' years'],
+  ['Years in Business',c.years_in_business==null?'—':c.years_in_business+' years'],['Dependents',c.dependents],
+  ['Address',c.address],['Permanent Address',c.permanent_address],['City',c.current_city],
+  ['Residence Ownership',c.residence_ownership],['Residence Since',c.residence_since],
+  ['Primary Bank',c.primary_bank],['Average Bank Balance',money(c.average_bank_balance)],
+  ['Existing EMI',money(c.existing_emi)],['KYC Status',c.kyc_status],['Email Verification',c.email_verified],
+  ['Selfie Status',c.selfie_status],['Ownership Proof',c.ownership_proof_status]
+ ];
+ document.getElementById('profile').innerHTML=rows.map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(txt(x[1]))+'</b></div>').join('');
+ const contacts=data.contacts||[],addresses=data.addresses||[],businesses=data.businesses||[],kyc=data.kyc||{};
+ document.getElementById('risk').innerHTML=[
+  ['DirectCredit Score',r.total_score],['Max Score',r.max_score],['Decision',r.decision],
+  ['Approval',r.approval_percent==null?'—':r.approval_percent+'%'],['Risk Tier',r.risk_tier],
+  ['CIBIL',r.credit_score],['FOIR',r.foir==null?'—':r.foir+'%'],['Existing EMI',money(r.existing_emi)],
+  ['KYC Record',kyc.status],['PAN Verification',kyc.pan_status],['Identity Verification',kyc.identity_status],
+  ['Address Verification',kyc.address_status],['Business Verification',kyc.business_status],
+  ['Registered Contacts',contacts.length],['Saved Addresses',addresses.length],['Saved Businesses',businesses.length]
+ ].map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(txt(x[1]))+'</b></div>').join('');
+}
+function renderBank(c,d){
+ const b=d.bank_analysis||{},k=d.kyc_employment||{},accounts=d.bank_accounts||[],businesses=d.businesses||[],addresses=d.addresses||[];
+ const rows=[
+  ['Bank',c.primary_bank],['Average Balance',money(b.average_eod_balance||c.average_bank_balance)],
+  ['Monthly Credit',money(b.average_monthly_credit)],['Monthly Debit',money(b.average_monthly_debit)],
+  ['Total Transactions',b.total_transactions],['Credit Transactions',b.credit_transactions],['Debit Transactions',b.debit_transactions],
+  ['Negative Balance Events',b.negative_balance_count],['Last Balance',money(b.last_balance)],
+  ['Net Cash Flow',b.net_cash_flow==null?'—':money(b.net_cash_flow)],['KYC',k.kyc_status||c.kyc_status],
+  ['Business Vintage',k.years_in_business==null?'—':k.years_in_business+' years'],
+  ['Residence',k.residence_ownership||c.residence_ownership],['Ownership Proof',k.ownership_proof_status||c.ownership_proof_status],
+  ['Bank Accounts',accounts.length],['Businesses',businesses.length],['Addresses',addresses.length]
+ ];
+ document.getElementById('bankBusiness').innerHTML=rows.map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(txt(x[1]))+'</b></div>').join('');
+ document.getElementById('supportRef').innerHTML=[
+  ['Customer ID',c.customer_code||c.id],['Mobile',c.mobile],['Email',c.email],['Latest Loan',d.loans?.[0]?.id],
+  ['Bank Account',accounts[0]?.account_number_masked],['IFSC',accounts[0]?.ifsc],['KYC',k.kyc_status||c.kyc_status]
+ ].map(x=>'<div><span>'+esc(x[0])+'</span><b>'+esc(txt(x[1]))+'</b></div>').join('');
+}function renderDocs(ds){document.getElementById('docs').innerHTML=ds.length?ds.map(x=>'<div class="doc"><b>'+esc(stat(x.document_type))+'</b><small>Loan: '+esc(txt(x.loan_id))+'</small><p>'+esc(stat(x.verification_status||'Recorded'))+'</p></div>').join(''):'<div class="panel notice">No document records found.</div>'}
 function renderAppsInline(){const rows=JSON.parse(sessionStorage.getItem('dc_apps_cache')||'[]');const host=document.getElementById('apps');if(!rows.length){host.innerHTML='<div class="notice">No loan applications yet.</div>';return}host.innerHTML=rows.map(x=>'<div class="detail-grid" style="margin-bottom:8px"><div><span>Application</span><b>#'+esc(x.loan_id)+'</b></div><div><span>Product</span><b>'+esc(txt(x.product))+'</b></div><div><span>Requested</span><b>'+esc(money(x.requested_amount))+'</b></div><div><span>Status</span><b>'+esc(stat(x.status))+'</b></div></div>').join('')}
 async function loadApps(){const id=sessionStorage.getItem(CID);try{const rows=await api('/services/loan-request/'+encodeURIComponent(id));sessionStorage.setItem('dc_apps_cache',JSON.stringify(rows));renderAppsInline()}catch(e){document.getElementById('apps').innerHTML='<div class="notice">Application data could not be loaded.</div>'}}
 async function loadActive(){const id=sessionStorage.getItem(CID);try{const x=await api('/services/loan-request/'+encodeURIComponent(id)+'/active');app=x.application||null;if(app)openWizard(app)}catch(e){}}
