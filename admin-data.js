@@ -32,6 +32,9 @@ function demoReporting(){
   return {
     source:'demo',
     generated_at:new Date().toISOString(),
+    customer_records:DEMO_CUSTOMERS.map(c=>({customer_id:c.id,customer_code:c.customer_code,customer_name:c.name,mobile:c.mobile,email:c.email,business_name:c.business_name,kyc_status:c.kyc_status,city:c.current_city})),
+    loan_records:DEMO_LOANS.map(l=>{const c=DEMO_CUSTOMERS[l.customer_id-1];return {loan_id:l.id,customer_id:c.id,customer_code:c.customer_code,customer_name:c.name,mobile:c.mobile,business_name:c.business_name,loan_amount:l.sanctioned_amount||l.requested_amount,requested_amount:l.requested_amount,eligible_amount:l.eligible_amount,sanctioned_amount:l.sanctioned_amount,disbursed_amount:l.disbursed_amount,outstanding_amount:l.outstanding_amount,status:l.status,stage:l.current_stage,created_at:new Date(Date.now()-(c.id*86400000)).toISOString()};}),
+    repayment_records:DEMO_LOANS.slice(0,8).map((l,i)=>{const c=DEMO_CUSTOMERS[l.customer_id-1],due=Math.round((l.monthly_emi||0)*1.15),paid=Math.round((l.monthly_emi||0)*0.8);return {id:i+1,loan_id:l.id,customer_id:c.id,customer_code:c.customer_code,customer_name:c.name,due_date:'2026-08-'+String(10+i).padStart(2,'0'),due_amount:due,paid_amount:paid,unpaid_amount:Math.max(due-paid,0),status:paid>=due?'paid':l.status==='overdue'?'overdue':'pending',dpd:l.status==='overdue'?18:0};}),
     customers:{total:10,active:9,incomplete:2,kyc_verified:8},
     applications:10,unique_users:10,repeat_users:0,pending,rejected:0,disbursed_count:8,active_loans:active,overdue_loans:overdue,repaid_loans:repaid,
     amounts:{disbursed:95000,outstanding:loans.reduce((s,x)=>s+x.outstanding_amount,0),overdue:loans.filter(x=>x.status==='overdue').reduce((s,x)=>s+x.outstanding_amount,0),due:112000,paid:65000,unpaid:47000},
