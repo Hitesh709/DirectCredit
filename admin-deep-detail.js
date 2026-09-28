@@ -39,7 +39,7 @@
   ensure();
   const body=document.getElementById('dcDeepBody');document.getElementById('dcDeepTitle').textContent=(title||key)+' — Detailed Breakdown';body.innerHTML='<div class="dcdeep-empty">Loading detailed breakdown…</div>';document.getElementById('dcDeepModal').hidden=false;
   try{
-   const rows0=window.DirectCreditData?.loans?await window.DirectCreditData.loans():await fetch(base()+'/admin/reports/loan-pipeline',{headers:auth()}).then(x=>x.json());
+   const report=window.DirectCreditData?.reporting?await window.DirectCreditData.reporting():null; const rows0=report?.source==='demo'&&Array.isArray(report.loan_records)?report.loan_records:(window.DirectCreditData?.loans?await window.DirectCreditData.loans():await fetch(base()+'/admin/reports/loan-pipeline',{headers:auth()}).then(x=>x.json()));
    const rows=Array.isArray(rows0)?rows0:(rows0.rows||[]);
    let filtered=rows;
    if(key==='total-disbursed')filtered=rows.filter(x=>Number(x.disbursed_amount||x.amount)>0);
