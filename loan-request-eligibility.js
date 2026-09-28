@@ -212,12 +212,15 @@
     view.innerHTML='<div class="live-empty">Loading application data…</div>';
     try{
       const [source,id]=key.split(':');
-      if(source!=='live') throw new Error('Only live database records are available in this workspace.');
-      data=await window.DirectCreditData.customer(Number(id),{source:'live',strictLive:true});
+      if(source!=='live' && source!=='demo') throw new Error('Unknown application source.');
+      data=await window.DirectCreditData.customer(Number(id),source==='demo'
+        ? {source:'demo'}
+        : {source:'live',strictLive:true});
       const c=data.customer||{};
+      const isDemo=source==='demo';
       document.getElementById('contextCustomer').textContent=val(c.name,'Customer');
-      document.getElementById('contextId').textContent=`Live • Customer ID ${val(c.id,id)} • ${val(c.customer_code,'No customer code')}`;
-      document.getElementById('contextStatus').textContent='Live database';
+      document.getElementById('contextId').textContent=`${isDemo?'Demo Test':'Live'} • Customer ID ${val(c.id,id)} • ${val(c.customer_code,'No customer code')}`;
+      document.getElementById('contextStatus').textContent=isDemo?'Demo test record':'Live database';
       render(document.querySelector('.application-tab.active')?.dataset.view||'profile');
     }catch(e){
       data=null;
@@ -229,30 +232,38 @@
   async function load(){
     view.innerHTML='<div class="live-empty">Loading application list…</div>';
     try{
-      // Applications must come from the real database first. Demo data is only a
-      // visual fallback when the live application API returns no records.
+      // Keep the 10 built-in demo records available for testing, while live
+      // customer/application records remain the primary production source.
       const liveRows=window.DirectCreditData.liveLoans
         ? await window.DirectCreditData.liveLoans()
         : await window.DirectCreditData.loans();
       const live=Array.isArray(liveRows)?liveRows:[];
       const liveCustomers=[...new Map(live.filter(x=>x.customer_id!=null).map(x=>[String(x.customer_id),x])).values()];
-      const options=liveCustomers.map(x=>({
+      const liveOptions=liveCustomers.map(x=>({
         value:'live:'+x.customer_id,
         label:`LIVE • ${x.customer_name||'Customer '+x.customer_id}${x.business_name?' • '+x.business_name:''} • Application #${x.id||x.loan_id||'—'}`
       }));
+      const demoCustomers=window.DirectCreditData.demoCustomers||[];
+      const demoOptions=demoCustomers.map(x=>({
+        value:'demo:'+x.id,
+        label:`DEMO TEST • ${x.name}${x.business_name?' • '+x.business_name:''} • Application #${x.loan?.id||'—'}`
+      }));
+      const options=[...liveOptions,...demoOptions];
       if(!options.length){
-        view.innerHTML='<div class="live-empty">No live application records are available. No sample records are shown.</div>';
+        view.innerHTML='<div class="live-empty">No application records are available.</div>';
         return;
       }
       buildSelector(options);
       const requested=params.get('customer_id');
       const requestedSource=params.get('source');
-      selected=requested && requestedSource==='live' && options.some(o=>o.value==='live:'+requested)
-        ? 'live:'+requested : options[0].value;
+      const requestedKey=requested && (requestedSource==='live' || requestedSource==='demo')
+        ? requestedSource+':'+requested : '';
+      selected=requestedKey && options.some(o=>o.value===requestedKey)
+        ? requestedKey : options[0].value;
       document.getElementById('applicationSelector').value=selected;
       await loadSelected(selected);
     }catch(e){
-      view.innerHTML=`<div class="live-empty">Live application data could not be loaded. No sample records are shown in this workspace. ${esc(e.message||'Please check the database/API connection and refresh.')}</div>`;
+      view.innerHTML=`<div class="live-empty">Application data could not be loaded. ${esc(e.message||'Please check the database/API connection and refresh.')}</div>`;
     }
   }
 
