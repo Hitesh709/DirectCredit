@@ -219,6 +219,7 @@ window.DirectCreditData = (() => {
       // Application workspace can request strict live mode so a live record is never
       // silently replaced by a demo record.
       if(options.strictLive) throw e;
+      try { const rr=await reporting(); if(rr?.source==='demo') return demoCustomer(id); } catch(_) {}
       if(DEMO_FALLBACK) return demoCustomer(id);
       throw e;
     }
