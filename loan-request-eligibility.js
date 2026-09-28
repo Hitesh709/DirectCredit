@@ -234,9 +234,15 @@
     try{
       // Keep the 10 built-in demo records available for testing, while live
       // customer/application records remain the primary production source.
-      const liveRows=window.DirectCreditData.liveLoans
-        ? await window.DirectCreditData.liveLoans()
-        : await window.DirectCreditData.loans();
+      let liveRows=[];
+      try {
+        liveRows=window.DirectCreditData.liveLoans
+          ? await window.DirectCreditData.liveLoans()
+          : await window.DirectCreditData.loans();
+      } catch(_) {
+        // A protected live endpoint may return 401; demo applications must remain testable.
+        liveRows=[];
+      }
       const live=Array.isArray(liveRows)?liveRows:[];
       const liveCustomers=[...new Map(live.filter(x=>x.customer_id!=null).map(x=>[String(x.customer_id),x])).values()];
       const liveOptions=liveCustomers.map(x=>({
