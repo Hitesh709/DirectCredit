@@ -10,7 +10,15 @@
   // direct fetch omitted the admin bearer token, so /admin/reporting returned 401 and
   // the dashboard appeared empty even when the Admin session had valid credentials.
   if(window.DirectCreditData?.reporting){
-    window.DirectCreditData.reporting().then(window.__dcRenderDashboard).catch(()=>{
+    window.DirectCreditData.reporting().then(d=>{
+      // Keep live records primary. If the connected database is genuinely empty,
+      // show the existing 10 explicit demo test records so the dashboard is usable.
+      if(Number(d?.applications||0)===0 && Number(d?.customers?.total||0)===0 && window.DirectCreditData.demoReporting){
+        const demo=window.DirectCreditData.demoReporting(); demo.source='demo'; window.__dcRenderDashboard(demo);
+      }else{
+        window.__dcRenderDashboard(d);
+      }
+    }).catch(()=>{
       // Demo records remain explicitly available for testing, but are clearly labelled.
       if(window.DirectCreditData?.demoReporting){
         const demo=window.DirectCreditData.demoReporting();
