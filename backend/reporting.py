@@ -102,11 +102,50 @@ def reporting(db: Session = Depends(get_db), _admin: dict = Depends(get_current_
     bank_summary={"transactions":len(transactions),"credits":money(sum(t.amount or 0 for t in transactions if str(t.direction).lower()=="credit")),"debits":money(sum(t.amount or 0 for t in transactions if str(t.direction).lower()=="debit")),"negative_balance_events":sum(t.balance is not None and float(t.balance)<0 for t in transactions),"monthly":[{"month":m,**v} for m,v in sorted(bank_monthly.items())],"top_categories":[{"category":k,"count":v} for k,v in bank_categories.most_common(10)]}
     loan_trend=[{"month":m,"applications":v["applications"],"disbursed_count":v["disbursed_count"],"disbursed_amount":v["disbursed_amount"]} for m,v in sorted(monthly.items())]
 
+    customer_map={c.id:c for c in customers}
+    loan_records=[{
+        "loan_id":l.id,"customer_id":l.customer_id,
+        "customer_code":getattr(customer_map.get(l.customer_id),"customer_code",None),
+        "customer_name":getattr(customer_map.get(l.customer_id),"name",None) or "Customer",
+        "mobile":getattr(customer_map.get(l.customer_id),"mobile",None),
+        "business_name":getattr(customer_map.get(l.customer_id),"business_name",None),
+        "loan_amount":money(l.sanctioned_amount or l.requested_amount),
+        "requested_amount":money(l.requested_amount),
+        "eligible_amount":money(l.eligible_amount),
+        "sanctioned_amount":money(l.sanctioned_amount),
+        "disbursed_amount":money(l.disbursed_amount),
+        "outstanding_amount":money(l.outstanding_amount),
+        "status":states[l.id],
+        "stage":l.current_stage,
+        "created_at":str(l.created_at) if l.created_at else None
+    } for l in loans]
+
+    repayment_records=[]
+    for r in repayments:
+        c=customer_map.get(next((l.customer_id for l in loans if l.id==r.loan_id),None))
+        repayment_records.append({
+            "id":r.id,"loan_id":r.loan_id,"customer_id":getattr(c,"id",None),
+            "customer_code":getattr(c,"customer_code",None),
+            "customer_name":getattr(c,"name",None) or "Customer",
+            "due_date":str(r.due_date) if r.due_date else None,
+            "due_amount":money(r.due_amount),"paid_amount":money(r.paid_amount),
+            "unpaid_amount":money(max((r.due_amount or 0)-(r.paid_amount or 0),0)),
+            "status":r.status,"dpd":calculate_dpd(r.due_date,r.paid_amount,r.due_amount)
+        })
+
+    customer_records=[{
+        "customer_id":c.id,"customer_code":c.customer_code,"customer_name":c.name,
+        "mobile":c.mobile,"email":c.email,"business_name":c.business_name,
+        "kyc_status":c.kyc_status,"city":c.current_city
+    } for c in customers]
+
     return {
         "generated_at": datetime.utcnow().isoformat()+"Z", "customers": {"total":len(customers),"active":sum(c.kyc_status!="closed" for c in customers),"incomplete":sum(c.kyc_status!="verified" for c in customers),"kyc_verified":sum(c.kyc_status=="verified" for c in customers)},
         "applications":len(loans), "unique_users":len({l.customer_id for l in loans}), "repeat_users":sum(v>1 for v in Counter(l.customer_id for l in loans).values()),
         "pending":states_count["pending"], "rejected":states_count["rejected"], "disbursed_count":sum(bool(l.disbursed_amount) for l in loans),"active_loans":states_count["active"],"overdue_loans":states_count["overdue"],"repaid_loans":states_count["repaid"],
         "amounts":{"disbursed":money(sum(l.disbursed_amount or 0 for l in loans)),"outstanding":money(sum(l.outstanding_amount or 0 for l in loans if states[l.id] in {"active","overdue"})),"overdue":money(sum(max((r.due_amount or 0)-(r.paid_amount or 0),0) for r in repayments if calculate_dpd(r.due_date,r.paid_amount,r.due_amount)>0)),"due":money(sum(r.due_amount or 0 for r in repayments)),"paid":money(sum(r.paid_amount or 0 for r in repayments)),"unpaid":money(sum(max((r.due_amount or 0)-(r.paid_amount or 0),0) for r in repayments))},
-        "documents":len(documents),"repayments":len(repayments),"recent_loans":[{"id":l.id,"customer_id":l.customer_id,"amount":money(l.sanctioned_amount or l.requested_amount),"status":states[l.id],"created_at":str(l.created_at) if l.created_at else None} for l in loans[:20]],
+        "documents":len(documents),"repayments":len(repayments),
+        "customer_records":customer_records,"loan_records":loan_records,"repayment_records":repayment_records,
+        "recent_loans":[{"id":l.id,"customer_id":l.customer_id,"amount":money(l.sanctioned_amount or l.requested_amount),"status":states[l.id],"created_at":str(l.created_at) if l.created_at else None} for l in loans[:20]],
         "monthly":monthly_rows,"loan_trend":loan_trend,"slabs":slabs,"repayment_status":repayment_status,"due_calendar":due_calendar,"collection":collection,"collection_agent_performance":agent_perf,"bank_analysis":bank_summary,"risk_score":risk_summary
     }
