@@ -220,5 +220,5 @@ window.DirectCreditData = (() => {
       throw e;
     }
   }
-  return {base,headers,reporting,customer,loans,liveLoans,demoCustomer,demoCustomers:DEMO_CUSTOMERS};
+  return {base,headers,reporting,customer,loans,liveLoans,demoCustomer,demoCustomers:DEMO_CUSTOMERS,demoReporting};
 })();
