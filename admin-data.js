@@ -111,7 +111,7 @@ window.DirectCreditData = (() => {
   async function get(path){const r=await fetch(`${base}${path}`,{headers:headers()});if(!r.ok)throw new Error(`API ${r.status}`);return r.json()}
   async function reporting(){if(DEMO_MODE)return demoReporting();try{const d=await get('/admin/reporting');const liveEmpty=Number(d?.applications||0)===0 && Number(d?.customers?.total||0)===0;return liveEmpty?Object.assign(demoReporting(),{source:'demo',live_empty:true}):{...d,source:'live'};}catch(e){if(DEMO_FALLBACK)return demoReporting();throw e}}
   async function liveLoans(){const d=await get('/admin/reports/loan-pipeline');const rows=Array.isArray(d)?d:(d.rows||[]);return rows.map(x=>({...x,id:x.id??x.loan_id,requested_amount:x.requested_amount,eligible_amount:x.eligible_amount,sanctioned_amount:x.sanctioned_amount,disbursed_amount:x.disbursed_amount,outstanding_amount:x.outstanding_amount,monthly_emi:x.monthly_emi,tenure_months:x.tenure_months,interest_rate:x.interest_rate,customer_id:x.customer_id,customer_name:x.customer_name,customer_code:x.customer_code,mobile:x.mobile,business_name:x.business_name,status:x.status,current_stage:x.stage??x.current_stage}))}
-  async function loans(){if(DEMO_MODE)return DEMO_LOANS;try{return await liveLoans()}catch(e){if(DEMO_FALLBACK)return DEMO_LOANS;throw e}}
+  async function loans(){if(DEMO_MODE)return DEMO_LOANS;try{const live=await liveLoans();return live.length?live:(await reporting()).source==='demo'?DEMO_LOANS:live}catch(e){if(DEMO_FALLBACK)return DEMO_LOANS;throw e}}
   const parsed=v=>{if(v==null)return v;if(typeof v!=='string')return v;try{return JSON.parse(v)}catch(_){return v}};
   function demoCustomer(id){
     const demo=DEMO_CUSTOMERS.find(x=>Number(x.id)===Number(id))||DEMO_CUSTOMERS[0];
