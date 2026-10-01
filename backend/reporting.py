@@ -138,10 +138,20 @@ def reporting(response: Response, db: Session = Depends(get_db), _admin: dict = 
     # Journey-based funnel stages are optional: older/live databases may not have
     # journey records for every application. When present, expose the real stage
     # counts; the UI falls back to portfolio metrics when a stage is unavailable.
+    # Only fetch journey rows that can contribute to the four funnel stages.
+    # This avoids materializing unrelated journey events on every cache refresh.
+    journey_keys=sorted({
+        "approval","approval_stage","approvalstage","credit_approval",
+        "esign","e_sign","e-sign","esignature","e_signature",
+        "emandate","e_mandate","e-mandate","mandate","e_mandate_setup",
+        "disbursement","disbursal","disbursed"
+    })
     journey_rows=db.query(CustomerJourneyRecord).options(load_only(
         CustomerJourneyRecord.customer_id, CustomerJourneyRecord.step_key,
         CustomerJourneyRecord.step_label, CustomerJourneyRecord.status
-    )).all()
+    )).filter(
+        func.lower(CustomerJourneyRecord.step_key).in_([x.lower() for x in journey_keys])
+    ).all()
     journey_stage_aliases={
         "approval": {"approval","approval_stage","approvalstage","credit_approval"},
         "e_sign": {"esign","e_sign","e-sign","esignature","e_signature"},
@@ -170,16 +180,36 @@ def reporting(response: Response, db: Session = Depends(get_db), _admin: dict = 
         CollectionAgentRecord.id, CollectionAgentRecord.agent_code,
         CollectionAgentRecord.name, CollectionAgentRecord.active
     )).all()
-    actions=db.query(CollectionActionRecord).options(load_only(
-        CollectionActionRecord.agent_id, CollectionActionRecord.action_type,
-        CollectionActionRecord.amount, CollectionActionRecord.status
-    )).all()
-    actions_by_agent=defaultdict(list)
-    for action in actions: actions_by_agent[action.agent_id].append(action)
+
+    # Aggregate collection actions in SQL instead of loading every action row
+    # into Python. The reporting response only needs per-agent totals.
+    action_agg=db.query(
+        CollectionActionRecord.agent_id,
+        CollectionActionRecord.action_type,
+        CollectionActionRecord.status,
+        func.count(CollectionActionRecord.id).label("action_count"),
+        func.coalesce(func.sum(CollectionActionRecord.amount),0).label("amount_sum")
+    ).group_by(
+        CollectionActionRecord.agent_id,
+        CollectionActionRecord.action_type,
+        CollectionActionRecord.status
+    ).all()
+    action_totals=defaultdict(lambda:{"actions":0,"receipts":0,"collected_amount":0.0,"debit_requests":0,"pending_debit_requests":0})
+    for row in action_agg:
+        x=action_totals[row.agent_id]
+        count=int(row.action_count or 0)
+        x["actions"]+=count
+        if row.action_type=="receipt" and row.status=="posted":
+            x["receipts"]+=count
+            x["collected_amount"]+=float(row.amount_sum or 0)
+        if row.action_type=="debit_request":
+            x["debit_requests"]+=count
+            if row.status=="pending_provider":
+                x["pending_debit_requests"]+=count
     agent_perf=[]
     for a in agents:
-        aa=actions_by_agent.get(a.id,[]); rr=[x for x in aa if x.action_type=="receipt" and x.status=="posted"]
-        agent_perf.append({"agent_id":a.id,"agent_code":a.agent_code,"name":a.name,"active":bool(a.active),"actions":len(aa),"receipts":len(rr),"collected_amount":money(sum(x.amount or 0 for x in rr)),"debit_requests":sum(x.action_type=="debit_request" for x in aa),"pending_debit_requests":sum(x.action_type=="debit_request" and x.status=="pending_provider" for x in aa)})
+        x=action_totals[a.id]
+        agent_perf.append({"agent_id":a.id,"agent_code":a.agent_code,"name":a.name,"active":bool(a.active),"actions":x["actions"],"receipts":x["receipts"],"collected_amount":money(x["collected_amount"]),"debit_requests":x["debit_requests"],"pending_debit_requests":x["pending_debit_requests"]})
     agent_perf.sort(key=lambda x:(-x["collected_amount"],x["agent_id"]))
 
     bank_monthly, bank_categories = _bank_matrix(transactions)
