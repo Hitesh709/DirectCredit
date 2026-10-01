@@ -136,10 +136,81 @@
     if(!data){view.innerHTML='<div class="live-empty">Select an application to load data.</div>';return;}
     const c=data.customer||{}, loans=data.loans||[], l=loans[0]||{}, m=data.metrics||{}, bank=data.bank_analysis||{}, k=data.kyc_employment||{}, risk=data.risk_score||{};
     if(key==='profile'){
-      view.innerHTML=card('Customer Profile',[
-        ['Customer ID',c.id],['Customer Code',c.customer_code],['Name',c.name],['Customer Type',c.customer_type],
-        ['Business',c.business_name],['Business Type',c.business_type],['Occupation',c.occupation],['City',c.current_city]
-      ]);
+      const latest=l||{};
+      const initials=String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
+      const status=String(latest.status||'Not assessed');
+      const statusClass=status==='active'||status==='repaid'?'good':status==='overdue'?'bad':'pending';
+      const totalLoans=Number(m.total_loans??loans.length||0);
+      const totalAmount=Number(m.total_loan_amount??loans.reduce((s,x)=>s+Number(x.sanctioned_amount||x.requested_amount||0),0));
+      const outstanding=Number(m.outstanding_amount??0);
+      const paid=Number(m.amount_paid??0);
+      const score=risk.credit_score??c.cibil_score;
+      const innerTabs=['overview','loans','repayments','documents','communication','alerts','activity'];
+      const renderInner=(inner)=>{
+        const safe=(v)=>val(v,'Not available');
+        if(inner==='loans') return `<div class="cp-section"><div class="cp-section-head"><div><h3>Loans</h3><p>Customer loan portfolio and current exposure.</p></div></div><div class="cp-table-wrap"><table class="cp-table"><thead><tr><th>Loan ID</th><th>Product</th><th>Requested</th><th>Sanctioned</th><th>Outstanding</th><th>EMI</th><th>Tenure</th><th>Status</th></tr></thead><tbody>${loans.length?loans.map(x=>`<tr><td class="primary">${esc(x.id)}</td><td>${esc(x.product||'Not available')}</td><td>${esc(money(x.requested_amount))}</td><td>${esc(money(x.sanctioned_amount))}</td><td class="money">${esc(money(x.outstanding_amount))}</td><td>${esc(money(x.monthly_emi))}</td><td>${x.tenure_months?esc(x.tenure_months+' months'):'—'}</td><td><span class="cp-status cp-${esc(String(x.status||'unknown').toLowerCase())}">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="8">No loan records available.</td></tr>'}</tbody></table></div></div>`;
+        if(inner==='repayments'){
+          const reps=Array.isArray(data.repayments)?data.repayments:Array.isArray(data.repayment_records)?data.repayment_records:[];
+          return `<div class="cp-section"><div class="cp-section-head"><div><h3>Repayment History</h3><p>Payments and repayment obligations returned by the customer record.</p></div></div><div class="cp-table-wrap"><table class="cp-table"><thead><tr><th>Date</th><th>Loan</th><th>Due</th><th>Paid</th><th>Unpaid</th><th>Status</th><th>DPD</th></tr></thead><tbody>${reps.length?reps.map(x=>`<tr><td>${esc(x.due_date||x.paid_at||x.date)}</td><td class="primary">${esc(x.loan_id)}</td><td>${esc(money(x.due_amount))}</td><td class="money">${esc(money(x.paid_amount))}</td><td class="money">${esc(money(x.unpaid_amount))}</td><td>${esc(x.status)}</td><td>${esc(x.dpd??'—')}</td></tr>`).join(''):'<tr><td colspan="7">No repayment history is available in the returned customer record.</td></tr>'}</tbody></table></div></div>`;
+        }
+        if(inner==='documents'){
+          const docs=Array.isArray(data.documents)?data.documents:[];
+          return `<div class="cp-section"><div class="cp-section-head"><div><h3>Documents</h3><p>KYC and supporting documents available for this customer.</p></div></div><div class="cp-doc-grid">${docs.length?docs.map(x=>`<div class="cp-doc"><div class="cp-doc-icon">▣</div><div><strong>${esc(x.document_type||x.type||x.name)}</strong><small>${esc(x.status||'Uploaded')}</small></div></div>`).join(''):'<div class="cp-empty">No document records were returned for this customer.</div>'}</div></div>`;
+        }
+        const events=Array.isArray(data.events)?data.events:[];
+        if(inner==='communication') return `<div class="cp-section"><div class="cp-section-head"><div><h3>Communication</h3><p>Customer communication activity from the source record.</p></div></div>${events.length?'<div class="cp-timeline">'+events.map(x=>`<div class="cp-event"><span></span><div><strong>${esc(x.event_type||x.type||x.channel||'Customer event')}</strong><small>${esc(x.created_at||x.event_at||x.date||'')}</small><p>${esc(x.description||x.purpose||x.message||'Recorded customer activity')}</p></div></div>`).join('')+'</div>':'<div class="cp-empty">No communication history is available in the returned customer record.</div>'}</div>`;
+        if(inner==='alerts') return `<div class="cp-section"><div class="cp-section-head"><div><h3>Notes & Alerts</h3><p>Risk, verification and follow-up items available from the record.</p></div></div><div class="cp-alert-grid"><div class="cp-alert ${statusClass}"><strong>Loan status</strong><span>${esc(status)}</span><small>Latest application</small></div><div class="cp-alert"><strong>KYC status</strong><span>${esc(k.kyc_status||c.kyc_status)}</span><small>Verification state</small></div><div class="cp-alert"><strong>Ownership proof</strong><span>${esc(k.ownership_proof_status||c.ownership_proof_status)}</span><small>Document state</small></div></div></div>`;
+        if(inner==='activity') return `<div class="cp-section"><div class="cp-section-head"><div><h3>Activity Log</h3><p>Recorded customer/application events.</p></div></div>${events.length?'<div class="cp-timeline">'+events.map(x=>`<div class="cp-event"><span></span><div><strong>${esc(x.event_type||x.type||'Activity')}</strong><small>${esc(x.created_at||x.event_at||x.date||'')}</small><p>${esc(x.description||x.purpose||'Recorded activity')}</p></div></div>`).join('')+'</div>':'<div class="cp-empty">No activity log records are available.</div>'}</div>`;
+        return `
+          <div class="cp-main-grid">
+            <div class="cp-section cp-summary"><div class="cp-section-head"><div><h3>Customer Summary</h3><p>Core customer, employment and financial profile.</p></div></div>
+              <div class="cp-field-grid">
+                <div><small>Occupation</small><b>${esc(c.occupation)}</b></div><div><small>Business</small><b>${esc(c.business_name)}</b></div>
+                <div><small>Monthly Income</small><b>${money(c.monthly_income)}</b></div><div><small>Work Experience</small><b>${c.work_experience_years!=null?esc(c.work_experience_years+' Years'):'Not available'}</b></div>
+                <div><small>Years in Business</small><b>${c.years_in_business!=null?esc(c.years_in_business+' Years'):'Not available'}</b></div><div><small>Average Bank Balance</small><b>${money(c.average_bank_balance??bank.average_eod_balance)}</b></div>
+                <div><small>Primary Bank</small><b>${esc(c.primary_bank)}</b></div><div><small>CIBIL Score</small><b class="score">${esc(score)}</b></div>
+                <div><small>FOIR</small><b>${c.foir!=null?esc(c.foir+'%'):'Not available'}</b></div><div><small>Existing EMI</small><b>${money(c.existing_emi)}</b></div>
+                <div><small>Dependents</small><b>${esc(c.dependents??'Not available')}</b></div><div><small>KYC Status</small><b>${esc(k.kyc_status||c.kyc_status)}</b></div>
+              </div>
+            </div>
+            <div class="cp-section"><div class="cp-section-head"><div><h3>Latest Loan Overview</h3><p>Current application and repayment position.</p></div></div>
+              <div class="cp-loan-list">
+                <div><span>Loan Account</span><b>${esc(latest.id)}</b></div><div><span>Loan Product</span><b>${esc(latest.product)}</b></div>
+                <div><span>Requested Amount</span><b>${money(latest.requested_amount)}</b></div><div><span>Sanctioned Amount</span><b>${money(latest.sanctioned_amount)}</b></div>
+                <div><span>Disbursed Amount</span><b>${money(latest.disbursed_amount)}</b></div><div><span>Tenure</span><b>${latest.tenure_months?esc(latest.tenure_months+' Months'):'Not available'}</b></div>
+                <div><span>Interest Rate</span><b>${latest.interest_rate!=null?esc(latest.interest_rate+'% P.A.'):'Not available'}</b></div><div><span>EMI Amount</span><b>${money(latest.monthly_emi)}</b></div>
+                <div><span>Outstanding</span><b class="money">${money(latest.outstanding_amount)}</b></div><div><span>Loan Status</span><b><span class="cp-status cp-${esc(status.toLowerCase())}">${esc(status)}</span></b></div>
+              </div>
+            </div>
+          </div>
+          <div class="cp-section"><div class="cp-section-head"><div><h3>Active Loans</h3><p>Current customer loan exposure.</p></div></div><div class="cp-table-wrap"><table class="cp-table"><thead><tr><th>Loan Account</th><th>Product</th><th>Sanctioned</th><th>Outstanding</th><th>EMI</th><th>Next Due</th><th>Status</th></tr></thead><tbody>${loans.map(x=>`<tr><td class="primary">${esc(x.id)}</td><td>${esc(x.product)}</td><td>${esc(money(x.sanctioned_amount))}</td><td class="money">${esc(money(x.outstanding_amount))}</td><td>${esc(money(x.monthly_emi))}</td><td>${esc(x.next_due_date||'Not available')}</td><td><span class="cp-status cp-${esc(String(x.status||'').toLowerCase())}">${esc(x.status)}</span></td></tr>`).join('')}</tbody></table></div></div>
+        `;
+      };
+      view.innerHTML=`
+        <div class="cp-profile">
+          <aside class="cp-sidebar">
+            <div class="cp-avatar">${esc(initials)}</div><h2>${esc(c.name||'Customer')}</h2><span class="cp-active ${statusClass}">${esc(status)}</span>
+            <div class="cp-id">Customer ID<br><strong>${esc(c.customer_code||c.id)}</strong></div>
+            <div class="cp-side-grid"><div><small>Customer Since</small><b>${esc(c.created_at||c.customer_since||'Not available')}</b></div><div><small>Customer Type</small><b>${esc(c.customer_type)}</b></div></div>
+            <h4>CONTACT INFORMATION</h4>
+            <div class="cp-contact"><div>☎ <span>Mobile</span><b>${esc(c.mobile)}</b></div><div>✉ <span>Email</span><b>${esc(c.email)}</b></div><div>⌖ <span>Address</span><b>${esc(c.address)}</b></div><div>⌂ <span>Current City</span><b>${esc(c.current_city)}</b></div><div>▣ <span>Business</span><b>${esc(c.business_name)}</b></div><div>◉ <span>Business Type</span><b>${esc(c.business_type)}</b></div><div>◷ <span>Date of Birth</span><b>${esc(c.date_of_birth||c.dob)}</b></div><div>▤ <span>PAN</span><b>${esc(c.pan)}</b></div><div>▤ <span>Aadhaar</span><b>${esc(c.aadhaar_masked||c.aadhaar)}</b></div><div>♙ <span>Marital Status</span><b>${esc(c.marital_status)}</b></div></div>
+          </aside>
+          <section class="cp-content">
+            <div class="cp-kpis">
+              <div class="cp-kpi blue"><small>TOTAL LOANS</small><strong>${totalLoans}</strong><span>Customer portfolio</span></div>
+              <div class="cp-kpi green"><small>TOTAL LOAN AMOUNT</small><strong>${money(totalAmount)}</strong><span>Sanctioned / requested</span></div>
+              <div class="cp-kpi purple"><small>OUTSTANDING AMOUNT</small><strong>${money(outstanding)}</strong><span>Current exposure</span></div>
+              <div class="cp-kpi orange"><small>AMOUNT PAID</small><strong>${money(paid)}</strong><span>Repayment position</span></div>
+              <div class="cp-kpi navy"><small>CREDIT SCORE</small><strong>${esc(score)}</strong><span>${esc(risk.risk_tier||'Not assessed')}</span></div>
+            </div>
+            <div class="cp-inner-tabs">${innerTabs.map(t=>`<button class="cp-inner-tab ${t==='overview'?'active':''}" data-cp-view="${t}">${t==='overview'?'Overview':t==='loans'?'Loans':t==='repayments'?'Repayment History':t==='documents'?'Documents':t==='communication'?'Communication':t==='alerts'?'Notes & Alerts':'Activity Log'}</button>`).join('')}</div>
+            <div id="cpInnerBody">${renderInner('overview')}</div>
+          </section>
+        </div>`;
+      const cpBody=document.getElementById('cpInnerBody');
+      view.querySelectorAll('.cp-inner-tab').forEach(btn=>btn.addEventListener('click',()=>{
+        view.querySelectorAll('.cp-inner-tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');cpBody.innerHTML=renderInner(btn.dataset.cpView);
+      }));
     } else if(key==='contact'){
       view.innerHTML=card('Number & Contact Details',[
         ['Mobile',c.mobile],['Email',c.email],['Current Address',c.address],['Permanent Address',c.permanent_address],
