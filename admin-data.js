@@ -108,8 +108,38 @@ window.DirectCreditData = (() => {
   const DEMO_FALLBACK = false;
   const base = (window.DIRECTCREDIT_API_URL || localStorage.getItem('directcredit_api_url') || '/api').replace(/\/$/, '');
   const headers = () => { const token=localStorage.getItem('directcredit_admin_token') || window.DIRECTCREDIT_ADMIN_TOKEN; return token ? {Accept:'application/json',Authorization:`Bearer ${token}`} : {Accept:'application/json'}; };
-  async function get(path){const r=await fetch(`${base}${path}`,{headers:headers()});if(!r.ok)throw new Error(`API ${r.status}`);return r.json()}
-  async function reporting(){if(DEMO_MODE)return demoReporting();try{const d=await get('/admin/reporting');const liveEmpty=Number(d?.applications||0)===0 && Number(d?.customers?.total||0)===0;return liveEmpty?Object.assign(demoReporting(),{source:'demo',live_empty:true}):{...d,source:'live'};}catch(e){const demo=demoReporting();demo.source='demo';demo.live_empty=true;demo.live_error=String(e?.message||e);return demo}}
+  async function get(path){const r=await fetch(`${base}${path}`,{headers:headers(),cache:'default'});if(!r.ok)throw new Error(`API ${r.status}`);return r.json()}
+  // Reporting is the shared hot path for Dashboard, Analytics, Funnel, Accounting,
+  // Collections and Settlement. Reuse the same response briefly and coalesce
+  // concurrent calls so a tab never launches duplicate reporting requests.
+  let reportingCache=null, reportingCacheAt=0, reportingInflight=null;
+  const REPORTING_CACHE_TTL=8000;
+  async function reporting(options={}){
+    const force=options===true || options?.force===true;
+    const age=Date.now()-reportingCacheAt;
+    if(!force && reportingCache && age<REPORTING_CACHE_TTL) return reportingCache;
+    if(!force && reportingInflight) return reportingInflight;
+    reportingInflight=(async()=>{
+      try{
+        if(DEMO_MODE)return demoReporting();
+        try{
+          const d=await get('/admin/reporting');
+          const liveEmpty=Number(d?.applications||0)===0 && Number(d?.customers?.total||0)===0;
+          return liveEmpty?Object.assign(demoReporting(),{source:'demo',live_empty:true}):{...d,source:'live'};
+        }catch(e){
+          const demo=demoReporting();
+          demo.source='demo'; demo.live_empty=true; demo.live_error=String(e?.message||e);
+          return demo;
+        }
+      }catch(e){ if(DEMO_FALLBACK)return demoReporting(); throw e; }
+    })();
+    try{
+      const data=await reportingInflight;
+      reportingCache=data; reportingCacheAt=Date.now();
+      return data;
+    }finally{ reportingInflight=null; }
+  }
+  function clearReportingCache(){reportingCache=null;reportingCacheAt=0;}
   async function liveLoans(){const d=await get('/admin/reports/loan-pipeline');const rows=Array.isArray(d)?d:(d.rows||[]);return rows.map(x=>({...x,id:x.id??x.loan_id,requested_amount:x.requested_amount,eligible_amount:x.eligible_amount,sanctioned_amount:x.sanctioned_amount,disbursed_amount:x.disbursed_amount,outstanding_amount:x.outstanding_amount,monthly_emi:x.monthly_emi,tenure_months:x.tenure_months,interest_rate:x.interest_rate,customer_id:x.customer_id,customer_name:x.customer_name,customer_code:x.customer_code,mobile:x.mobile,business_name:x.business_name,status:x.status,current_stage:x.stage??x.current_stage}))}
   async function loans(){if(DEMO_MODE)return DEMO_LOANS;try{const live=await liveLoans();return live.length?live:(await reporting()).source==='demo'?DEMO_LOANS:live}catch(e){try{const r=await reporting();if(r?.source==='demo')return DEMO_LOANS;}catch(_){} if(DEMO_FALLBACK)return DEMO_LOANS;throw e}}
   const parsed=v=>{if(v==null)return v;if(typeof v!=='string')return v;try{return JSON.parse(v)}catch(_){return v}};
@@ -239,5 +269,5 @@ window.DirectCreditData = (() => {
     try { return await request; }
     finally { customerInflight.delete(cacheKey); }
   }
-  return {base,headers,reporting,customer,loans,liveLoans,demoCustomer,demoCustomers:DEMO_CUSTOMERS,demoReporting};
+  return {base,headers,reporting,clearReportingCache,customer,loans,liveLoans,demoCustomer,demoCustomers:DEMO_CUSTOMERS,demoReporting};
 })();
