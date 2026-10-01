@@ -279,6 +279,5 @@
     render(b.dataset.view);
   }));
   document.getElementById('refreshBtn')?.addEventListener('click',load);
-  document.getElementById('exportBtn')?.addEventListener('click',()=>window.print());
   load();
 })();
