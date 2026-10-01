@@ -150,7 +150,7 @@ function drawWizard(){
   h='<div class="eligibility-card"><div class="verification-badge">AUTO</div><div><h3>Automatic Eligibility Check</h3><p>DirectCredit will evaluate the application using the available customer, banking, bureau and business data.</p></div></div><div id="eligibilityResult" class="eligibility-result"></div>';
  }
  document.getElementById('wBody').innerHTML=h;
- if(wi===7)setupFamilyRows();
+ if(wi===7){setupFamilyRows();document.getElementById('wPin')?.addEventListener('blur',autoFetchAddress)}
  if(wi===3)document.getElementById('wAAConnect')?.addEventListener('click',connectAA);
 }
 
@@ -161,6 +161,21 @@ function setupFamilyRows(){
  document.getElementById('wSameAddress')?.addEventListener('change',e=>{const x=document.getElementById('wCurrentAddress');if(e.target.checked){x.value=document.getElementById('wPermanent').value;x.readOnly=true}else{x.readOnly=false}});
 }
 
+async function autoFetchAddress(){
+ const pin=document.getElementById('wPin')?.value.replace(/\D/g,'').slice(0,6);
+ if(pin?.length!==6)return;
+ try{
+  const r=await providerRequest('geo',{pin_code:pin,purpose:'address_prefill'});
+  const d=r.data||{};
+  const raw=d.raw||d;
+  const city=d.city||d.district||raw.city||raw.district||'';
+  const state=d.state||raw.state||'';
+  if(city)document.getElementById('wCity').value=city;
+  if(state)document.getElementById('wState').value=state;
+  const host=document.getElementById('wState')?.closest('.form-grid');
+  if(host){let note=document.getElementById('geoStatus');if(!note){note=document.createElement('div');note.id='geoStatus';note.className='notice';host.parentElement.appendChild(note)}note.textContent='Address lookup: '+r.status}
+ }catch(e){}
+}
 async function connectAA(){
  try{
   const consent=document.getElementById('wAAConsent');
@@ -198,6 +213,10 @@ async function nextWizard(){
    const method=document.getElementById('wAadhaarMethod').value;
    const af=document.getElementById('wAadhaarFile').files[0],sf=document.getElementById('wSelfieFile').files[0];
    if(!method||!af||!sf)throw Error('Select Aadhaar method and provide Aadhaar document and selfie.');
+   if(method==='DigiLocker'){
+    const dr=await providerRequest('digilocker',{customer_id:id,loan_id:lid,purpose:'aadhaar_verification'});
+    if(dr.status!=='SUCCESS')throw Error('DigiLocker verification is not available from the configured provider: '+dr.status);
+   }
    const docs=[['AADHAAR',af],['SELFIE',sf]];
    for(const [type,file] of docs)await registerDoc(type,file);
    await saveJourneyStep(key,steps[wi][1],{method,aadhaar_file:af.name,selfie_file:sf.name});
@@ -209,7 +228,9 @@ async function nextWizard(){
    await stage('BANKING');
   }else if(wi===4){
    if(!document.getElementById('wCibilConsent').checked)throw Error('Authorize the bureau-check payment step to continue.');
-   await saveJourneyStep(key,steps[wi][1],{payment_status:'authorized',provider_payment:'not_configured'});
+   const payment=await providerRequest('payment',{purpose:'cibil_bureau_check',customer_id:id,loan_id:lid});
+   if(payment.status!=='SUCCESS')throw Error('CIBIL payment provider is not configured or did not complete: '+payment.status);
+   await saveJourneyStep(key,steps[wi][1],{payment_status:'completed',request_id:payment.request_id});
   }else if(wi===5){
    const bureau=document.getElementById('wBureau').value;
    if(!bureau)throw Error('Select CIBIL or CRIF.');
