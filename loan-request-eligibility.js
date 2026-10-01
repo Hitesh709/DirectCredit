@@ -228,7 +228,7 @@
       const fmtDate=v=>v?String(v).replace('T',' ').replace('Z',''): 'Not available';
       const contactStatus=v=>v===true?'Verified':v===false?'Not Verified':val(v,'Not available');
       const contactScore=read(data,['contact_details.contact_score','contact_score']);
-      const contactCard=(title,body,cls='')=>`<div class="ct-card ${cls}"><div class="ct-card-title">${esc(title)}</div>${body}</div>`;
+      const contactCard=(title,body,cls='')=>`<div class="ct-card ${cls}"><div class="ct-card-title">${title}</div>${body}</div>`;
       const mobileRows=contacts.filter(x=>String(x.contact_type||'').toLowerCase().includes('mobile'));
       const commRows=events.slice().sort((a,b)=>String(b.created_at||b.event_at||'').localeCompare(String(a.created_at||a.event_at||''))).slice(0,6);
       const addrLine=primaryAddress.address_line||primaryAddress.address||c.address||'Not available';
