@@ -33,6 +33,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .settlement-table th,.accounting-table th,.collection-page th,.dc-customer-records th{background:#f8fafc!important;color:#667085!important;font-size:8px!important;font-weight:850!important;letter-spacing:.25px!important;padding:9px 8px!important}
 .settlement-table td,.accounting-table td,.collection-page td,.dc-customer-records td{color:#273653!important;font-size:9.5px!important;padding:9px 8px!important;border-bottom:1px solid #edf0f4!important}
 .settlement-table tr:hover,.accounting-table tr:hover,.collection-page tbody tr:hover,.dc-customer-records tbody tr:hover{background:#f8fbff!important}
+.dc-iframe-page-active>.main>.dc-export-bar{display:none!important}
 .dc-export-bar{display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important;margin:0 0 14px!important}
 .dc-export-bar button{height:36px!important;padding:0 14px!important;border:1px solid #d7dfeb!important;border-radius:8px!important;background:#fff!important;color:#162d55!important;font-size:11px!important;font-weight:800!important;box-shadow:0 1px 2px rgba(23,35,58,.04)!important}
 .dc-export-bar button:hover{background:#f3f7fc!important;border-color:#c8d4e4!important}
