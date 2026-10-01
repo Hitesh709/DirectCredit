@@ -216,11 +216,93 @@
         view.querySelectorAll('.cp-inner-tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');cpBody.innerHTML=renderInner(btn.dataset.cpView);
       }));
     } else if(key==='contact'){
-      view.innerHTML=card('Number & Contact Details',[
-        ['Mobile',c.mobile],['Email',c.email],['Current Address',c.address],['Permanent Address',c.permanent_address],
-        ['Email Verification',c.email_verified],['Residence Ownership',c.residence_ownership],['Residence Since',c.residence_since]
-      ]);
-    } else if(key==='bank'){
+      const contacts=Array.isArray(data.contacts)?data.contacts:[];
+      const addresses=Array.isArray(data.addresses)?data.addresses:[];
+      const events=Array.isArray(data.events)?data.events:[];
+      const primaryMobile=read(data,['contact_details.registered_mobile','customer.mobile']);
+      const altMobiles=contacts.filter(x=>String(x.contact_type||'').toLowerCase().includes('mobile')&&!x.is_primary).map(x=>x.contact_value||x.value).filter(Boolean);
+      const emailRows=contacts.filter(x=>String(x.contact_type||'').toLowerCase().includes('email')).map(x=>x);
+      const registeredEmail=read(data,['contact_details.registered_email','customer.email']);
+      const primaryAddress=addresses.find(x=>x.is_primary)||addresses[0]||{};
+      const device=read(data,['contact_details.device_sim'])||{};
+      const fmtDate=v=>v?String(v).replace('T',' ').replace('Z',''): 'Not available';
+      const contactStatus=v=>v===true?'Verified':v===false?'Not Verified':val(v,'Not available');
+      const contactScore=read(data,['contact_details.contact_score','contact_score']);
+      const contactCard=(title,body,cls='')=>`<div class="ct-card ${cls}"><div class="ct-card-title">${esc(title)}</div>${body}</div>`;
+      const mobileRows=contacts.filter(x=>String(x.contact_type||'').toLowerCase().includes('mobile'));
+      const commRows=events.slice().sort((a,b)=>String(b.created_at||b.event_at||'').localeCompare(String(a.created_at||a.event_at||''))).slice(0,6);
+      const addrLine=primaryAddress.address_line||primaryAddress.address||c.address||'Not available';
+      const city=primaryAddress.city||c.current_city||'Not available';
+      const state=primaryAddress.state||c.current_state||'Not available';
+      const pincode=primaryAddress.pincode||primaryAddress.zipcode||c.current_pincode||'Not available';
+      view.innerHTML=`
+        <div class="contact360">
+          <div class="ct-hero">
+            <div class="ct-customer">
+              <div class="ct-avatar">${esc(String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div>
+              <div><h2>${esc(c.name||'Customer')} <span class="ct-pill good">${esc(l.status||'Active')}</span></h2>
+              <small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small>
+              <small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div>
+            </div>
+            <div class="ct-stat phone"><span>☎</span><small>REGISTERED MOBILE<br>NUMBER</small><strong>${esc(primaryMobile)}</strong><em>${contactStatus(c.mobile_verified)}</em></div>
+            <div class="ct-stat alt"><span>◉</span><small>ALTERNATE MOBILE<br>NUMBER</small><strong>${esc(altMobiles[0]||'Not available')}</strong><em>${altMobiles.length?'Available':'Not available'}</em></div>
+            <div class="ct-stat email"><span>✉</span><small>REGISTERED EMAIL ID</small><strong>${esc(registeredEmail)}</strong><em>${contactStatus(c.email_verified)}</em></div>
+            <div class="ct-stat score"><span>✓</span><small>CONTACT SCORE</small><strong>${esc(contactScore??'Not available')}</strong><em>${contactScore!=null?'Verified contact quality':'Not assessed'}</em></div>
+          </div>
+
+          <div class="ct-grid-top">
+            ${contactCard('REGISTERED MOBILE NUMBER',`
+              <div class="ct-primary-line"><b>☎ ${esc(primaryMobile)}</b><span class="ct-pill good">${contactStatus(c.mobile_verified)}</span><span class="ct-pill blue">Primary</span></div>
+              <div class="ct-detail-list">
+                <div><span>Linked To</span><b>Customer • PAN • Loan Account</b></div>
+                <div><span>Verified On</span><b>${fmtDate(read(data,['contact_details.mobile_verified_at','customer.mobile_verified_at']))}</b></div>
+                <div><span>Verification Mode</span><b>${esc(read(data,['contact_details.mobile_verification_mode'])||'Not available')}</b></div>
+                <div><span>Last OTP Sent</span><b>${fmtDate(read(data,['contact_details.last_otp_sent']))}</b></div>
+                <div><span>Status</span><b>${contactStatus(c.mobile_verified)}</b></div>
+              </div>`,'mobile-card')}
+
+            ${contactCard('ALTERNATE MOBILE NUMBERS <span class="ct-add">+ Add Number</span>',`
+              <div class="ct-mini-table"><div class="ct-th"><span>Mobile Number</span><span>Type</span><span>Verified On</span><span>Status</span></div>
+              ${(mobileRows.length?mobileRows:altMobiles.map((x,i)=>({contact_value:x,contact_type:i?'Reference':'Alternate'}))).slice(0,5).map(x=>`<div class="ct-tr"><b>${esc(x.contact_value||x.value)}</b><span>${esc(x.contact_type||'Alternate')}</span><span>${fmtDate(x.verified_at||x.updated_at)}</span><span class="ct-pill ${x.verified?'good':'neutral'}">${x.verified?'Verified':'Not Verified'}</span></div>`).join('')||'<div class="ct-empty">No alternate mobile numbers are available.</div>'}</div>
+              <div class="ct-note">ⓘ At least one verified mobile number is required for communication and OTP based verification.</div>`,'alt-card')}
+
+            ${contactCard('EMAIL ADDRESS DETAILS <span class="ct-add">+ Add Email</span>',`
+              <div class="ct-mini-table email-table"><div class="ct-th"><span>Email Address</span><span>Type</span><span>Verified On</span><span>Status</span></div>
+              ${(emailRows.length?emailRows:[{contact_value:registeredEmail,contact_type:'Primary',verified:c.email_verified}]).slice(0,5).map(x=>`<div class="ct-tr"><b>${esc(x.contact_value||x.value)}</b><span>${esc(x.contact_type||'Email')}</span><span>${fmtDate(x.verified_at||x.updated_at)}</span><span class="ct-pill ${x.verified?'good':'neutral'}">${x.verified?'Verified':'Not Verified'}</span></div>`).join('')}</div>
+              <div class="ct-note">ⓘ Important: All communication and documents will be sent to verified email addresses only.</div>`,'email-card')}
+          </div>
+
+          <div class="ct-grid-bottom">
+            ${contactCard('COMMUNICATION HISTORY',`
+              <div class="ct-comm-table"><div class="ct-th"><span>Date & Time</span><span>Channel</span><span>To</span><span>Purpose</span><span>Status</span></div>
+              ${commRows.map(x=>`<div class="ct-tr"><span>${fmtDate(x.created_at||x.event_at)}</span><span>${esc(x.channel||x.event_type||'Activity')}</span><span>${esc(x.to||x.recipient||primaryMobile)}</span><span>${esc(x.purpose||x.description||x.event_type||'Customer activity')}</span><span class="ct-pill good">${esc(x.status||'Recorded')}</span></div>`).join('')||'<div class="ct-empty">No communication history is available.</div>'}</div>
+              <div class="ct-link">View Full Communication Log →</div>`,'comm-card')}
+
+            ${contactCard('ADDRESS <small>(as per KYC)</small>',`
+              <div class="ct-address-main">${esc(addrLine)}, ${esc(city)}, ${esc(state)} - ${esc(pincode)}</div>
+              <span class="ct-pill good">Verified</span>
+              <div class="ct-detail-list">
+                <div><span>Address Type</span><b>${esc(primaryAddress.address_type||'Current Address')}</b></div>
+                <div><span>Verified On</span><b>${fmtDate(primaryAddress.verified_at||primaryAddress.updated_at)}</b></div>
+                <div><span>Verified Via</span><b>${esc(primaryAddress.verified_via||'Not available')}</b></div>
+                <div><span>Latitude</span><b>${esc(primaryAddress.latitude||'Not available')}</b></div>
+                <div><span>Longitude</span><b>${esc(primaryAddress.longitude||'Not available')}</b></div>
+              </div><div class="ct-link">View on Map ⌖</div>`,'address-card')}
+
+            ${contactCard('DEVICE & SIM INFORMATION <small>(Latest)</small>',`
+              <div class="ct-detail-list device-list">
+                <div><span>Device</span><b>${esc(device.device||device.device_name||'Not available')}</b></div>
+                <div><span>SIM Operator</span><b>${esc(device.sim_operator||device.operator||'Not available')}</b></div>
+                <div><span>SIM Type</span><b>${esc(device.sim_type||'Not available')}</b></div>
+                <div><span>Last Used</span><b>${fmtDate(device.last_used)}</b></div>
+              </div>
+              <div class="ct-risk-box"><span>◆</span><div><small>Device Risk Score</small><strong>${esc(device.risk_status||device.status||'Not available')}</strong></div></div>`,'device-card')}
+
+            ${contactCard('CONTACT NOTES <span class="ct-add">+ Add Note</span>',`
+              <div class="ct-note-box"><b>ⓘ Contact notes</b><p>${esc(read(data,['contact_details.notes','contact_notes','notes'])||'No contact notes are available in the customer record.')}</p><small>Source record</small></div>`,'notes-card')}
+          </div>
+        </div>`;
+    } else if(key==='bank'){    } else if(key==='bank'){
       view.innerHTML=card('Bank Statement Analysis',[
         ['Primary Bank',c.primary_bank],['Average EOD Balance',money(bank.average_eod_balance)],
         ['Avg Monthly Credit',money(bank.average_monthly_credit)],['Avg Monthly Debit',money(bank.average_monthly_debit)],
