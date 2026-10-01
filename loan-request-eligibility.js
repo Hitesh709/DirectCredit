@@ -140,7 +140,7 @@
       const initials=String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
       const status=String(latest.status||'Not assessed');
       const statusClass=status==='active'||status==='repaid'?'good':status==='overdue'?'bad':'pending';
-      const totalLoans=Number(m.total_loans??loans.length||0);
+      const totalLoans=Number(m.total_loans ?? loans.length ?? 0);
       const totalAmount=Number(m.total_loan_amount??loans.reduce((s,x)=>s+Number(x.sanctioned_amount||x.requested_amount||0),0));
       const outstanding=Number(m.outstanding_amount??0);
       const paid=Number(m.amount_paid??0);
