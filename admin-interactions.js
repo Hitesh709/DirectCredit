@@ -70,7 +70,14 @@
     const map=[['total disbursed','total-disbursed'],['total amount','total-disbursed'],['disbursed amount','total-disbursed'],['disbursed count','total-disbursed'],['active loans','active'],['overdue loans','overdue'],['outstanding','outstanding'],['paid amount','paid'],['amount received','paid'],['repaid loans','repaid'],['pending applications','pending'],['total applications','applications'],['applications','applications'],['unpaid','outstanding'],['total due','outstanding']];
     document.querySelectorAll('.dc-kpi,.fr-kpi,.slab-kpi,.dm-kpi,.rm-kpi,.dc-cal-kpi,.lp-kpi,.accounting-kpi,.settlement-kpi,.kpi').forEach(card=>{if(card.dataset.drillKey)return;const t=(card.innerText||'').toLowerCase();const hit=map.find(x=>t.includes(x[0]));if(hit){card.dataset.drillKey=hit[1];card.dataset.drillLabel=(card.querySelector('b,.kpi-title,.label,small')?.innerText||hit[0]).trim();card.classList.add('dc-clickable')}});
   }
-  enhance(); new MutationObserver(enhance).observe(document.body,{childList:true,subtree:true});
+  enhance();
+  // Debounce global DOM enhancement so large tab renders trigger one scan per frame.
+  let enhanceQueued=false;
+  new MutationObserver(()=>{
+    if(enhanceQueued)return;
+    enhanceQueued=true;
+    requestAnimationFrame(()=>{enhanceQueued=false;enhance()});
+  }).observe(document.body,{childList:true,subtree:true});
   document.addEventListener('click',e=>{
     const exp=e.target.closest('[data-export]');if(exp){exportPage(exp.dataset.export);return}
     const de=e.target.closest('[data-drill-export]');if(de){const rows=window.__dcDrillData||[];if(!rows.length)return;const cols=Object.keys(rows[0]);if(de.dataset.drillExport==='json')download('directcredit-drilldown.json',JSON.stringify({exported_at:new Date().toISOString(),rows},null,2),'application/json');else download('directcredit-drilldown.csv',[cols.join(','),...rows.map(r=>cols.map(c=>'"'+String(r[c]??'').replace(/"/g,'""')+'"').join(','))].join('\n'),'text/csv;charset=utf-8');return}
