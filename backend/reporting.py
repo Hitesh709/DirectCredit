@@ -12,6 +12,7 @@ from .report_routes import router as report_router
 from .admin_auth import get_current_admin
 from .repayment_contract import calculate_dpd
 import json
+import threading
 
 router = APIRouter(prefix="/api/admin", tags=["reporting"])
 router.include_router(analytics_router)
@@ -86,17 +87,28 @@ def _bank_matrix(transactions):
     return monthly, categories
 
 _REPORT_CACHE = {"at": 0.0, "data": None}
-_REPORT_CACHE_TTL = max(0.0, float(os.getenv("ADMIN_REPORT_CACHE_TTL_SECONDS", "30")))
+_REPORT_CACHE_TTL = max(0.0, float(os.getenv("ADMIN_REPORT_CACHE_TTL_SECONDS", "60")))
+_REPORT_CACHE_LOCK = threading.Lock()
 
 @router.get("/reporting")
 def reporting(response: Response, db: Session = Depends(get_db), _admin: dict = Depends(get_current_admin)):
     now = time.monotonic()
     cached = _REPORT_CACHE["data"]
     if cached is not None and now - _REPORT_CACHE["at"] < _REPORT_CACHE_TTL:
-        response.headers["Cache-Control"] = "private, max-age=15, stale-while-revalidate=15"
+        response.headers["Cache-Control"] = "private, max-age=30, stale-while-revalidate=30"
         response.headers["X-Reporting-Cache"] = "HIT"
         return cached
-    customers, loans, repayments, documents, transactions, by, states = _report_data(db)
+
+    # Single-flight cache refresh: concurrent admin tabs must not all execute
+    # the same expensive reporting queries when the cache expires.
+    with _REPORT_CACHE_LOCK:
+        now = time.monotonic()
+        cached = _REPORT_CACHE["data"]
+        if cached is not None and now - _REPORT_CACHE["at"] < _REPORT_CACHE_TTL:
+            response.headers["Cache-Control"] = "private, max-age=30, stale-while-revalidate=30"
+            response.headers["X-Reporting-Cache"] = "HIT-AFTER-WAIT"
+            return cached
+        customers, loans, repayments, documents, transactions, by, states = _report_data(db)
     monthly=defaultdict(lambda:{"applications":0,"disbursed_count":0,"disbursed_amount":0.0})
     for l in loans:
         key=str(l.created_at)[:7] if l.created_at else "unknown"
@@ -230,6 +242,6 @@ def reporting(response: Response, db: Session = Depends(get_db), _admin: dict = 
     }
     _REPORT_CACHE["data"] = result
     _REPORT_CACHE["at"] = time.monotonic()
-    response.headers["Cache-Control"] = "private, max-age=3, stale-while-revalidate=2"
+    response.headers["Cache-Control"] = "private, max-age=30, stale-while-revalidate=30"
     response.headers["X-Reporting-Cache"] = "MISS"
     return result
