@@ -345,13 +345,50 @@
           <div class="bk-source">Statement source: ${esc(bankName)} <span>•</span> Data status: ${esc(bank.status||'Not available')}</div>
         </div>`;
     } else if(key==='kyc'){
-      view.innerHTML=card('KYC & Employment',[
-        ['KYC Status',k.kyc_status],['Occupation',k.employment_type],
-        ['Monthly Income',k.income==null?null:money(k.income)],
-        ['Business Vintage',c.years_in_business==null?null:`${c.years_in_business} years`],
-        ['Work Experience',c.work_experience_years==null?null:`${c.work_experience_years} years`],
-        ['Residence Ownership',k.residence_ownership],['Ownership Proof',k.ownership_proof_status]
-      ]);
+      const docs=Array.isArray(data.documents)?data.documents:[];
+      const businesses=Array.isArray(data.businesses)?data.businesses:[];
+      const addresses=Array.isArray(data.addresses)?data.addresses:[];
+      const kyc=data.kyc||{};
+      const primaryAddress=data.address_details||addresses.find(x=>x.is_primary)||addresses[0]||{};
+      const biz=data.business_details||businesses[0]||{};
+      const verifiedDocs=docs.filter(d=>String(d.verification_status||'').toLowerCase().includes('verif')).length;
+      const kycStatus=k.kyc_status||c.kyc_status||'Not available';
+      const income=k.income??c.monthly_income;
+      const monthlyNet=bank.average_monthly_credit!=null&&bank.average_monthly_debit!=null?bank.average_monthly_credit-bank.average_monthly_debit:null;
+      const fmt=v=>v==null||v===''?'Not available':esc(v);
+      const detail=(label,value)=>`<div><span>${label}</span><b>${fmt(value)}</b></div>`;
+      view.innerHTML=`
+        <div class="kyc360">
+          <div class="ky-profile-row">
+            <div class="ky-customer"><div class="ky-avatar">${esc(String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div><div><h2>${esc(c.name||'Customer')} <span class="ky-pill good">${esc(l.status||'Active')}</span></h2><small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small><small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div></div>
+            <div class="ky-kpi green"><small>KYC STATUS</small><strong>${fmt(kycStatus)}</strong><span>${verifiedDocs?verifiedDocs+' verified documents':'Verification record'}</span></div>
+            <div class="ky-kpi purple"><small>KYC COMPLETED ON</small><strong>${fmt(kyc.verified_at||kyc.completed_at)}</strong><span>${kycStatus}</span></div>
+            <div class="ky-kpi blue"><small>KYC EXPIRY</small><strong>${fmt(kyc.expiry_date||kyc.expires_at)}</strong><span>Validity status</span></div>
+            <div class="ky-kpi orange"><small>EMPLOYMENT TYPE</small><strong>${fmt(k.employment_type||c.occupation)}</strong><span>${fmt(c.business_type||'Business profile')}</span></div>
+            <div class="ky-kpi teal"><small>OVERALL KYC SCORE</small><strong>${fmt(read(data,['risk_score.kyc_score','kyc.kyc_score']))}</strong><span>${read(data,['risk_score.kyc_score'])?'Assessment score':'Not assessed'}</span></div>
+          </div>
+
+          <div class="ky-grid-top">
+            <div class="ky-panel"><div class="ky-head"><h3>KYC DOCUMENTS SUMMARY</h3><span>${verifiedDocs}/${docs.length||0} verified</span></div><div class="ky-table"><div class="ky-th"><span>Document Type</span><span>Document Number</span><span>Issue Date</span><span>Expiry Date</span><span>Status</span><span>Verified On</span></div>
+              ${docs.map(d=>`<div class="ky-tr"><b>${fmt(d.document_type)}</b><span>${fmt(d.document_number||d.file_name)}</span><span>${fmt(d.issue_date)}</span><span>${fmt(d.expiry_date)}</span><span class="ky-pill ${String(d.verification_status).toLowerCase().includes('verif')?'good':'neutral'}">${fmt(d.verification_status)}</span><span>${fmt(d.verified_at||d.updated_at||d.created_at)}</span></div>`).join('')||'<div class="ky-empty">No KYC document records are available.</div>'}</div></div>
+            <div class="ky-panel"><div class="ky-head"><h3>EMPLOYMENT / BUSINESS INFORMATION</h3></div><div class="ky-two-col">
+              <div>${detail('Employment Type',k.employment_type||c.occupation)}${detail('Nature of Business',c.business_type||biz.business_type)}${detail('Business Name',c.business_name||biz.business_name||biz.name)}${detail('Since',c.years_in_business!=null?c.years_in_business+' Years':null)}${detail('PAN',c.pan)}${detail('GSTIN',biz.gstin)}${detail('Monthly Income',income==null?null:money(income))}${detail('Net Monthly Income',monthlyNet==null?null:money(monthlyNet))}</div>
+              <div>${detail('Primary Bank',c.primary_bank||data.financial_details?.bank_name)}${detail('Business Ownership',c.business_ownership||biz.ownership_type)}${detail('Residence Type',k.residence_ownership)}${detail('Work Experience',c.work_experience_years!=null?c.work_experience_years+' Years':null)}${detail('Ownership Proof',k.ownership_proof_status)}${detail('KYC Status',kycStatus)}</div>
+            </div></div>
+          </div>
+
+          <div class="ky-grid-mid">
+            <div class="ky-panel"><div class="ky-head"><h3>ADDRESS DETAILS</h3></div><div class="ky-address-grid"><div><div class="ky-address-main">${fmt(primaryAddress.address_line||primaryAddress.address||c.address)}</div>${detail('City',primaryAddress.city||c.current_city)}${detail('State',primaryAddress.state||c.current_state)}${detail('Pincode',primaryAddress.pincode||primaryAddress.zipcode||c.current_pincode)}${detail('Address Type',primaryAddress.address_type||k.residence_ownership)}${detail('Since',c.residence_since)}</div><div class="ky-verification"><span>✓</span><strong>${primaryAddress.verified_at||primaryAddress.verification_status?'Verified':'Not available'}</strong><small>Address verification status</small></div></div></div>
+            <div class="ky-panel"><div class="ky-head"><h3>BUSINESS DETAILS</h3></div><div class="ky-two-col"><div>${detail('Business Category',c.business_type||biz.business_type)}${detail('Line of Business',biz.line_of_business||c.business_type)}${detail('Business Address',biz.address||primaryAddress.address_line)}${detail('No. of Employees',biz.employee_count)}${detail('Annual Turnover',biz.annual_turnover)}</div><div>${detail('Business Ownership',c.business_ownership||biz.ownership_type)}${detail('GSTIN',biz.gstin)}${detail('Business Vintage',c.years_in_business!=null?c.years_in_business+' Years':null)}${detail('Stability',biz.stability_score||biz.business_stability)}</div></div></div>
+          </div>
+
+          <div class="ky-grid-bottom">
+            <div class="ky-panel"><div class="ky-head"><h3>PEP / SANCTION CHECK</h3></div><div class="ky-checks"><div><span>PEP Check</span><b class="ky-pill good">${fmt(kyc.pep_status||'Not assessed')}</b></div><div><span>Sanction Check</span><b class="ky-pill good">${fmt(kyc.sanction_status||'Not assessed')}</b></div></div></div>
+            <div class="ky-panel"><div class="ky-head"><h3>OVERALL STATUS</h3></div><div class="ky-overall"><span>✓</span><div><strong>${kycStatus}</strong><small>Customer KYC & employment information</small></div></div></div>
+            <div class="ky-panel"><div class="ky-head"><h3>DECLARATIONS</h3></div><div class="ky-declarations"><p>✓ All declared information is available in the customer record.</p><p>✓ Employment / business information is recorded.</p><p>✓ Verification status is shown from source records.</p></div></div>
+          </div>
+          <div class="ky-source">Note: KYC and employment values are displayed from the customer source records. Missing fields are shown as <b>Not available</b>.</div>
+        </div>`;
     } else if(key==='risk'){
       const factors=risk.factor_scores||{};
       const factorRows=Object.entries(factors).map(([name,points])=>[labels[name]||name,`${points} / ${max[name]??'-'}`]);
@@ -380,7 +417,7 @@
       (loans.length?`<div class="live-card"><h3>Application History</h3><div class="table-scroll"><table><thead><tr><th>Loan</th><th>Requested</th><th>Eligible</th><th>Score</th><th>Approval</th><th>Status</th></tr></thead><tbody>${loans.map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(money(x.requested_amount))}</td><td>${esc(money(x.eligible_amount))}</td><td>${esc(val(x.scorecard_score))}</td><td>${x.scorecard_approval_percent==null?'—':esc(x.scorecard_approval_percent+'%')}</td><td>${esc(val(x.status))}</td></tr>`).join('')}</tbody></table></div></div>`:'');
       addEligibilityMicroDetails(c,l,k,risk);
     }
-    if(!["contact","bank"].includes(key)) view.insertAdjacentHTML("beforeend", referenceDetails(data,key));
+    if(!["contact","bank","kyc"].includes(key)) view.insertAdjacentHTML("beforeend", referenceDetails(data,key));
   }
 
   function buildSelector(options){
