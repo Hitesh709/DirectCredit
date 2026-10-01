@@ -42,18 +42,18 @@ iframe{display:block;width:100%;border:0;border-radius:10px;background:#fff;min-
 #dashboard .dc-exec-kpi small{font-size:9px!important;line-height:12px!important}
 #dashboard .dc-exec-kpi strong{font-size:22px!important;line-height:26px!important;margin-top:7px!important}
 #dashboard .dc-exec-grid{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr))!important;gap:16px!important;margin-bottom:16px!important;align-items:stretch!important}
-#dashboard .dc-exec-grid:first-of-type>.dc-exec-card:nth-child(1){grid-column:span 4!important}
-#dashboard .dc-exec-grid:first-of-type>.dc-exec-card:nth-child(2){grid-column:span 5!important}
-#dashboard .dc-exec-grid:first-of-type>.dc-exec-card:nth-child(3){grid-column:span 3!important}
-#dashboard .dc-exec-grid:first-of-type>.dc-exec-card{min-height:300px!important}
-#dashboard .dc-exec-grid.bottom:nth-of-type(1)>.dc-exec-card:nth-child(1){grid-column:span 5!important}
-#dashboard .dc-exec-grid.bottom:nth-of-type(1)>.dc-exec-card:nth-child(2){grid-column:span 3!important}
-#dashboard .dc-exec-grid.bottom:nth-of-type(1)>.dc-exec-card:nth-child(3){grid-column:span 4!important}
-#dashboard .dc-exec-grid.bottom:nth-of-type(1)>.dc-exec-card{min-height:236px!important}
+#dashboard .dc-exec-grid:nth-child(4)>.dc-exec-card:nth-child(1){grid-column:span 4!important}
+#dashboard .dc-exec-grid:nth-child(4)>.dc-exec-card:nth-child(2){grid-column:span 5!important}
+#dashboard .dc-exec-grid:nth-child(4)>.dc-exec-card:nth-child(3){grid-column:span 3!important}
+#dashboard .dc-exec-grid:nth-child(4)>.dc-exec-card{min-height:300px!important}
+#dashboard .dc-exec-grid:nth-child(5)>.dc-exec-card:nth-child(1){grid-column:span 5!important}
+#dashboard .dc-exec-grid:nth-child(5)>.dc-exec-card:nth-child(2){grid-column:span 3!important}
+#dashboard .dc-exec-grid:nth-child(5)>.dc-exec-card:nth-child(3){grid-column:span 4!important}
+#dashboard .dc-exec-grid:nth-child(5)>.dc-exec-card{min-height:236px!important}
 #dashboard .dc-exec-grid.bottom:nth-of-type(2){grid-template-columns:repeat(12,minmax(0,1fr))!important}
-#dashboard .dc-exec-grid.bottom:nth-of-type(2)>.dc-exec-card:nth-child(1){grid-column:span 7!important}
-#dashboard .dc-exec-grid.bottom:nth-of-type(2)>.dc-exec-card:nth-child(2){grid-column:span 5!important}
-#dashboard .dc-exec-grid.bottom:nth-of-type(2)>.dc-exec-card:nth-child(3){grid-column:1 / -1!important;min-height:150px!important}
+#dashboard .dc-exec-grid:nth-child(6)>.dc-exec-card:nth-child(1){grid-column:span 7!important}
+#dashboard .dc-exec-grid:nth-child(6)>.dc-exec-card:nth-child(2){grid-column:span 5!important}
+#dashboard .dc-exec-grid:nth-child(6)>.dc-exec-card:nth-child(3){grid-column:1 / -1!important;min-height:150px!important}
 #dashboard .dc-exec-card{height:100%!important;min-width:0!important;border-radius:12px!important}
 #dashboard .dc-exec-cardhead{min-height:58px!important;padding:16px 18px 10px!important}
 #dashboard .dc-exec-card h3{font-size:13px!important;line-height:18px!important}
@@ -93,12 +93,12 @@ iframe{display:block;width:100%;border:0;border-radius:10px;background:#fff;min-
 
 @media(max-width:1250px){
   #dashboard .dc-exec-kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-  #dashboard .dc-exec-grid:first-of-type>.dc-exec-card:nth-child(n),
-  #dashboard .dc-exec-grid.bottom:nth-of-type(1)>.dc-exec-card:nth-child(n),
-  #dashboard .dc-exec-grid.bottom:nth-of-type(2)>.dc-exec-card:nth-child(n){grid-column:span 6!important}
-  #dashboard .dc-exec-grid:first-of-type>.dc-exec-card:nth-child(3),
-  #dashboard .dc-exec-grid.bottom:nth-of-type(1)>.dc-exec-card:nth-child(3),
-  #dashboard .dc-exec-grid.bottom:nth-of-type(2)>.dc-exec-card:nth-child(3){grid-column:1 / -1!important}
+  #dashboard .dc-exec-grid:nth-child(4)>.dc-exec-card:nth-child(n),
+  #dashboard .dc-exec-grid:nth-child(5)>.dc-exec-card:nth-child(n),
+  #dashboard .dc-exec-grid:nth-child(6)>.dc-exec-card:nth-child(n){grid-column:span 6!important}
+  #dashboard .dc-exec-grid:nth-child(4)>.dc-exec-card:nth-child(3),
+  #dashboard .dc-exec-grid:nth-child(5)>.dc-exec-card:nth-child(3),
+  #dashboard .dc-exec-grid:nth-child(6)>.dc-exec-card:nth-child(3){grid-column:1 / -1!important}
 }
 @media(max-width:850px){
   #dashboard .dc-exec-head{align-items:flex-start!important;flex-direction:column!important}
@@ -106,9 +106,9 @@ iframe{display:block;width:100%;border:0;border-radius:10px;background:#fff;min-
   #dashboard .dc-exec-search{width:100%!important;flex:1 1 100%!important}
   #dashboard .dc-exec-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   #dashboard .dc-exec-grid{grid-template-columns:1fr!important}
-  #dashboard .dc-exec-grid:first-of-type>.dc-exec-card:nth-child(n),
-  #dashboard .dc-exec-grid.bottom:nth-of-type(1)>.dc-exec-card:nth-child(n),
-  #dashboard .dc-exec-grid.bottom:nth-of-type(2)>.dc-exec-card:nth-child(n){grid-column:1!important}
+  #dashboard .dc-exec-grid:nth-child(4)>.dc-exec-card:nth-child(n),
+  #dashboard .dc-exec-grid:nth-child(5)>.dc-exec-card:nth-child(n),
+  #dashboard .dc-exec-grid:nth-child(6)>.dc-exec-card:nth-child(n){grid-column:1!important}
   #dashboard .dc-exec-card{min-height:0!important}
 }
 @media(max-width:560px){
