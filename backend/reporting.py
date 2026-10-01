@@ -86,14 +86,14 @@ def _bank_matrix(transactions):
     return monthly, categories
 
 _REPORT_CACHE = {"at": 0.0, "data": None}
-_REPORT_CACHE_TTL = max(0.0, float(os.getenv("ADMIN_REPORT_CACHE_TTL_SECONDS", "5")))
+_REPORT_CACHE_TTL = max(0.0, float(os.getenv("ADMIN_REPORT_CACHE_TTL_SECONDS", "30")))
 
 @router.get("/reporting")
 def reporting(response: Response, db: Session = Depends(get_db), _admin: dict = Depends(get_current_admin)):
     now = time.monotonic()
     cached = _REPORT_CACHE["data"]
     if cached is not None and now - _REPORT_CACHE["at"] < _REPORT_CACHE_TTL:
-        response.headers["Cache-Control"] = "private, max-age=3, stale-while-revalidate=2"
+        response.headers["Cache-Control"] = "private, max-age=15, stale-while-revalidate=15"
         response.headers["X-Reporting-Cache"] = "HIT"
         return cached
     customers, loans, repayments, documents, transactions, by, states = _report_data(db)
