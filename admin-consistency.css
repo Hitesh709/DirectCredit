@@ -39,3 +39,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .dc-export-bar button:hover{background:#f3f7fc!important;border-color:#c8d4e4!important}
 @media(max-width:900px){.settlement-page,.collection-page,.accounting-page{padding:16px!important}.settlement-kpis,.accounting-kpis,.kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
 @media(max-width:620px){.settlement-head,.head,.accounting-head{flex-direction:column!important}.settlement-kpis,.accounting-kpis,.kpis{grid-template-columns:1fr 1fr!important}.dc-export-bar{justify-content:flex-start!important}}
+
+/* Shared workspace header and tab navigation */
+.content{font-family:var(--dc-font)!important;color:var(--dc-text)}
+.page-head{display:flex!important;justify-content:space-between!important;align-items:flex-start!important;gap:18px!important;margin:0 0 16px!important}
+.page-head h1{margin:0!important;color:#102a57!important;font-size:22px!important;line-height:1.2!important;font-weight:800!important;letter-spacing:-.35px!important}
+.page-head p{margin:6px 0 0!important;color:#667085!important;font-size:11px!important;line-height:1.45!important;font-weight:600!important}
+.head-actions{display:flex!important;align-items:center!important;gap:8px!important}
+.head-actions button{height:36px!important;padding:0 14px!important;border:1px solid #d7dfeb!important;border-radius:8px!important;background:#fff!important;color:#19335f!important;font-size:11px!important;font-weight:800!important;box-shadow:0 1px 2px rgba(23,35,58,.04)!important}
+.head-actions button:hover{background:#f3f7fc!important;border-color:#c8d4e4!important}
+.application-tabs{gap:8px!important;padding:4px!important;border:1px solid #e3e8ef!important;border-radius:10px!important;background:#fff!important;box-shadow:0 1px 4px rgba(23,35,58,.04)!important}
+.application-tab{min-height:40px!important;border-radius:8px!important;font-family:var(--dc-font)!important;font-size:10px!important;font-weight:800!important;color:#526174!important}
+.application-tab.active{color:#fff!important;background:#1768ed!important;box-shadow:0 2px 6px rgba(23,104,237,.18)!important}
+.application-context{border:1px solid #e3e8ef!important;border-radius:10px!important;background:#fff!important;box-shadow:var(--dc-shadow)!important}
