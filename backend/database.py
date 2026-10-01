@@ -13,7 +13,17 @@ elif DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-engine = create_engine(DATABASE_URL, pool_pre_ping=True, connect_args=connect_args)
+engine_options = {"pool_pre_ping": True, "connect_args": connect_args}
+if DATABASE_URL.startswith(("postgresql://", "postgresql+psycopg2://")):
+    # Reuse warm connections instead of opening a new database connection for
+    # every reporting/customer request under concurrent admin traffic.
+    engine_options.update(
+        pool_size=int(settings.database_pool_size or 5),
+        max_overflow=int(settings.database_max_overflow or 10),
+        pool_recycle=int(settings.database_pool_recycle_seconds or 1800),
+        pool_timeout=30,
+    )
+engine = create_engine(DATABASE_URL, **engine_options)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
