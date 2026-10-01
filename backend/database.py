@@ -1,4 +1,5 @@
 from typing import Generator
+import os
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -18,9 +19,9 @@ if DATABASE_URL.startswith(("postgresql://", "postgresql+psycopg2://")):
     # Reuse warm connections instead of opening a new database connection for
     # every reporting/customer request under concurrent admin traffic.
     engine_options.update(
-        pool_size=int(settings.database_pool_size or 5),
-        max_overflow=int(settings.database_max_overflow or 10),
-        pool_recycle=int(settings.database_pool_recycle_seconds or 1800),
+        pool_size=int(os.getenv("DB_POOL_SIZE", "5")),
+        max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "10")),
+        pool_recycle=int(os.getenv("DB_POOL_RECYCLE_SECONDS", "1800")),
         pool_timeout=30,
     )
 engine = create_engine(DATABASE_URL, **engine_options)
