@@ -1,7 +1,10 @@
 from collections import defaultdict, Counter
 from datetime import datetime
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, Response
+from sqlalchemy.orm import Session, load_only
+from sqlalchemy import func
+import os
+import time
 from .database import get_db
 from .db_models import CustomerRecord, LoanRecord, RepaymentRecord, DocumentRecord, CollectionAgentRecord, CollectionActionRecord, BankTransactionRecord, CustomerJourneyRecord
 from .analytics_routes import router as analytics_router
@@ -24,15 +27,34 @@ def loan_state(loan, repayment_rows):
 def money(v): return round(float(v or 0), 2)
 
 def _report_data(db):
-    customers = db.query(CustomerRecord).all()
-    loans = db.query(LoanRecord).order_by(LoanRecord.id.desc()).all()
-    repayments = db.query(RepaymentRecord).all()
-    documents = db.query(DocumentRecord).all()
-    transactions = db.query(BankTransactionRecord).all()
+    customers = db.query(CustomerRecord).options(load_only(
+        CustomerRecord.id, CustomerRecord.customer_code, CustomerRecord.name,
+        CustomerRecord.mobile, CustomerRecord.email, CustomerRecord.business_name,
+        CustomerRecord.kyc_status, CustomerRecord.current_city, CustomerRecord.primary_bank
+    )).all()
+    loans = db.query(LoanRecord).options(load_only(
+        LoanRecord.id, LoanRecord.customer_id, LoanRecord.requested_amount,
+        LoanRecord.eligible_amount, LoanRecord.monthly_emi, LoanRecord.sanctioned_amount,
+        LoanRecord.disbursed_amount, LoanRecord.outstanding_amount, LoanRecord.interest_rate,
+        LoanRecord.tenure_months, LoanRecord.status, LoanRecord.current_stage,
+        LoanRecord.product, LoanRecord.scorecard_score, LoanRecord.scorecard_decision,
+        LoanRecord.scorecard_approval_percent, LoanRecord.created_at
+    )).order_by(LoanRecord.id.desc()).all()
+    repayments = db.query(RepaymentRecord).options(load_only(
+        RepaymentRecord.id, RepaymentRecord.loan_id, RepaymentRecord.installment,
+        RepaymentRecord.due_date, RepaymentRecord.due_amount, RepaymentRecord.paid_amount,
+        RepaymentRecord.status
+    )).all()
+    documents_count = db.query(func.count(DocumentRecord.id)).scalar() or 0
+    transactions = db.query(BankTransactionRecord).options(load_only(
+        BankTransactionRecord.transaction_date, BankTransactionRecord.amount,
+        BankTransactionRecord.direction, BankTransactionRecord.category,
+        BankTransactionRecord.balance
+    )).all()
     by = defaultdict(list)
     for r in repayments: by[r.loan_id].append(r)
     states = {l.id: loan_state(l, by[l.id]) for l in loans}
-    return customers, loans, repayments, documents, transactions, by, states
+    return customers, loans, repayments, documents_count, transactions, by, states
 
 def _collection_rows(customers, loans, by, states):
     names={c.id:c.name for c in customers}; banks={c.id:c.primary_bank for c in customers}
@@ -62,8 +84,17 @@ def _bank_matrix(transactions):
         row["credits"]=money(row["credits"]); row["debits"]=money(row["debits"])
     return monthly, categories
 
+_REPORT_CACHE = {"at": 0.0, "data": None}
+_REPORT_CACHE_TTL = max(0.0, float(os.getenv("ADMIN_REPORT_CACHE_TTL_SECONDS", "5")))
+
 @router.get("/reporting")
-def reporting(db: Session = Depends(get_db), _admin: dict = Depends(get_current_admin)):
+def reporting(response: Response, db: Session = Depends(get_db), _admin: dict = Depends(get_current_admin)):
+    now = time.monotonic()
+    cached = _REPORT_CACHE["data"]
+    if cached is not None and now - _REPORT_CACHE["at"] < _REPORT_CACHE_TTL:
+        response.headers["Cache-Control"] = "private, max-age=3, stale-while-revalidate=2"
+        response.headers["X-Reporting-Cache"] = "HIT"
+        return cached
     customers, loans, repayments, documents, transactions, by, states = _report_data(db)
     monthly=defaultdict(lambda:{"applications":0,"disbursed_count":0,"disbursed_amount":0.0})
     for l in loans:
@@ -94,7 +125,10 @@ def reporting(db: Session = Depends(get_db), _admin: dict = Depends(get_current_
     # Journey-based funnel stages are optional: older/live databases may not have
     # journey records for every application. When present, expose the real stage
     # counts; the UI falls back to portfolio metrics when a stage is unavailable.
-    journey_rows=db.query(CustomerJourneyRecord).all()
+    journey_rows=db.query(CustomerJourneyRecord).options(load_only(
+        CustomerJourneyRecord.customer_id, CustomerJourneyRecord.step_key,
+        CustomerJourneyRecord.step_label, CustomerJourneyRecord.status
+    )).all()
     journey_stage_aliases={
         "approval": {"approval","approval_stage","approvalstage","credit_approval"},
         "e_sign": {"esign","e_sign","e-sign","esignature","e_signature"},
@@ -102,8 +136,15 @@ def reporting(db: Session = Depends(get_db), _admin: dict = Depends(get_current_
         "disbursement": {"disbursement","disbursal","disbursed"}
     }
     journey_funnel={}
-    for stage, aliases in journey_stage_aliases.items():
-        rows=[x for x in journey_rows if str(x.step_key or "").strip().lower().replace(" ","_") in aliases or str(x.step_label or "").strip().lower().replace(" ","_") in aliases]
+    alias_to_stage={alias:stage for stage,aliases in journey_stage_aliases.items() for alias in aliases}
+    journey_by_stage=defaultdict(list)
+    for row in journey_rows:
+        key=str(row.step_key or "").strip().lower().replace(" ","_")
+        label=str(row.step_label or "").strip().lower().replace(" ","_")
+        stage=alias_to_stage.get(key) or alias_to_stage.get(label)
+        if stage: journey_by_stage[stage].append(row)
+    for stage in journey_stage_aliases:
+        rows=journey_by_stage.get(stage,[])
         if rows:
             unique_ids={x.customer_id for x in rows if x.customer_id is not None}
             repeat_counts=Counter(x.customer_id for x in rows if x.customer_id is not None)
@@ -112,10 +153,19 @@ def reporting(db: Session = Depends(get_db), _admin: dict = Depends(get_current_
             pending=max(len(rows)-completed-dropped,0)
             journey_funnel[stage]={"applications":len(rows),"unique_users":len(unique_ids),"repeat_users":sum(max(v-1,0) for v in repeat_counts.values()),"completed":completed,"pending":pending,"dropped":dropped}
     collection=_collection_rows(customers,loans,by,states)
-    agents=db.query(CollectionAgentRecord).all(); actions=db.query(CollectionActionRecord).all()
+    agents=db.query(CollectionAgentRecord).options(load_only(
+        CollectionAgentRecord.id, CollectionAgentRecord.agent_code,
+        CollectionAgentRecord.name, CollectionAgentRecord.active
+    )).all()
+    actions=db.query(CollectionActionRecord).options(load_only(
+        CollectionActionRecord.agent_id, CollectionActionRecord.action_type,
+        CollectionActionRecord.amount, CollectionActionRecord.status
+    )).all()
+    actions_by_agent=defaultdict(list)
+    for action in actions: actions_by_agent[action.agent_id].append(action)
     agent_perf=[]
     for a in agents:
-        aa=[x for x in actions if x.agent_id==a.id]; rr=[x for x in aa if x.action_type=="receipt" and x.status=="posted"]
+        aa=actions_by_agent.get(a.id,[]); rr=[x for x in aa if x.action_type=="receipt" and x.status=="posted"]
         agent_perf.append({"agent_id":a.id,"agent_code":a.agent_code,"name":a.name,"active":bool(a.active),"actions":len(aa),"receipts":len(rr),"collected_amount":money(sum(x.amount or 0 for x in rr)),"debit_requests":sum(x.action_type=="debit_request" for x in aa),"pending_debit_requests":sum(x.action_type=="debit_request" and x.status=="pending_provider" for x in aa)})
     agent_perf.sort(key=lambda x:(-x["collected_amount"],x["agent_id"]))
 
@@ -145,9 +195,10 @@ def reporting(db: Session = Depends(get_db), _admin: dict = Depends(get_current_
         "created_at":str(l.created_at) if l.created_at else None
     } for l in loans]
 
+    loan_customer_map={l.id:l.customer_id for l in loans}
     repayment_records=[]
     for r in repayments:
-        c=customer_map.get(next((l.customer_id for l in loans if l.id==r.loan_id),None))
+        c=customer_map.get(loan_customer_map.get(r.loan_id))
         repayment_records.append({
             "id":r.id,"loan_id":r.loan_id,"customer_id":getattr(c,"id",None),
             "customer_code":getattr(c,"customer_code",None),
@@ -164,15 +215,20 @@ def reporting(db: Session = Depends(get_db), _admin: dict = Depends(get_current_
         "kyc_status":c.kyc_status,"city":c.current_city
     } for c in customers]
 
-    return {
+    result = {
         "generated_at": datetime.utcnow().isoformat()+"Z", "customers": {"total":len(customers),"active":sum(c.kyc_status!="closed" for c in customers),"incomplete":sum(c.kyc_status!="verified" for c in customers),"kyc_verified":sum(c.kyc_status=="verified" for c in customers)},
         "applications":len(loans), "unique_users":len({l.customer_id for l in loans}), "repeat_users":sum(v>1 for v in Counter(l.customer_id for l in loans).values()),
         "pending":states_count["pending"], "rejected":states_count["rejected"], "disbursed_count":sum(bool(l.disbursed_amount) for l in loans),"active_loans":states_count["active"],"overdue_loans":states_count["overdue"],"repaid_loans":states_count["repaid"],
         "amounts":{"disbursed":money(sum(l.disbursed_amount or 0 for l in loans)),"outstanding":money(sum(l.outstanding_amount or 0 for l in loans if states[l.id] in {"active","overdue"})),"overdue":money(sum(max((r.due_amount or 0)-(r.paid_amount or 0),0) for r in repayments if calculate_dpd(r.due_date,r.paid_amount,r.due_amount)>0)),"due":money(sum(r.due_amount or 0 for r in repayments)),"paid":money(sum(r.paid_amount or 0 for r in repayments)),"unpaid":money(sum(max((r.due_amount or 0)-(r.paid_amount or 0),0) for r in repayments))},
-        "documents":len(documents),"repayments":len(repayments),
+        "documents":documents_count,"repayments":len(repayments),
         "customer_records":customer_records,"loan_records":loan_records,"repayment_records":repayment_records,
         "analytics_cards":{"unique_applicants":len({l.customer_id for l in loans}),"total_applications":len(loans),"rejected_loans":states_count["rejected"],"repaid_lms":states_count["repaid"],"overdue_lms":states_count["overdue"],"upcoming_lms":upcoming_lms,"due_today_lms":due_today_lms},
         "analytics_funnel":journey_funnel,
         "recent_loans":[{"id":l.id,"customer_id":l.customer_id,"amount":money(l.sanctioned_amount or l.requested_amount),"status":states[l.id],"created_at":str(l.created_at) if l.created_at else None} for l in loans[:20]],
         "monthly":monthly_rows,"loan_trend":loan_trend,"slabs":slabs,"repayment_status":repayment_status,"due_calendar":due_calendar,"collection":collection,"collection_agent_performance":agent_perf,"bank_analysis":bank_summary,"risk_score":risk_summary
     }
+    _REPORT_CACHE["data"] = result
+    _REPORT_CACHE["at"] = time.monotonic()
+    response.headers["Cache-Control"] = "private, max-age=3, stale-while-revalidate=2"
+    response.headers["X-Reporting-Cache"] = "MISS"
+    return result
