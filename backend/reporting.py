@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from .database import get_db
-from .db_models import CustomerRecord, LoanRecord, RepaymentRecord, DocumentRecord, CollectionAgentRecord, CollectionActionRecord, BankTransactionRecord
+from .db_models import CustomerRecord, LoanRecord, RepaymentRecord, DocumentRecord, CollectionAgentRecord, CollectionActionRecord, BankTransactionRecord, CustomerJourneyRecord
 from .analytics_routes import router as analytics_router
 from .report_routes import router as report_router
 from .admin_auth import get_current_admin
@@ -86,7 +86,32 @@ def reporting(db: Session = Depends(get_db), _admin: dict = Depends(get_current_
     for r in repayments:
         x=due[str(r.due_date)[:10]];x["count"]+=1;x["due"]+=r.due_amount or 0;x["paid"]+=r.paid_amount or 0
     due_calendar=[{"date":k,"count":v["count"],"due":money(v["due"]),"paid":money(v["paid"]),"unpaid":money(v["due"]-v["paid"])} for k,v in sorted(due.items())]
-    states_count=Counter(states.values()); collection=_collection_rows(customers,loans,by,states)
+    states_count=Counter(states.values())
+    today=datetime.utcnow().date()
+    upcoming_lms=sum(1 for r in repayments if r.due_date and str(r.due_date)[:10] > today.isoformat() and money(r.due_amount)>money(r.paid_amount))
+    due_today_lms=sum(1 for r in repayments if r.due_date and str(r.due_date)[:10] == today.isoformat() and money(r.due_amount)>money(r.paid_amount))
+
+    # Journey-based funnel stages are optional: older/live databases may not have
+    # journey records for every application. When present, expose the real stage
+    # counts; the UI falls back to portfolio metrics when a stage is unavailable.
+    journey_rows=db.query(CustomerJourneyRecord).all()
+    journey_stage_aliases={
+        "approval": {"approval","approval_stage","approvalstage","credit_approval"},
+        "e_sign": {"esign","e_sign","e-sign","esignature","e_signature"},
+        "e_mandate": {"emandate","e_mandate","e-mandate","mandate","e_mandate_setup"},
+        "disbursement": {"disbursement","disbursal","disbursed"}
+    }
+    journey_funnel={}
+    for stage, aliases in journey_stage_aliases.items():
+        rows=[x for x in journey_rows if str(x.step_key or "").strip().lower().replace(" ","_") in aliases or str(x.step_label or "").strip().lower().replace(" ","_") in aliases]
+        if rows:
+            unique_ids={x.customer_id for x in rows if x.customer_id is not None}
+            repeat_counts=Counter(x.customer_id for x in rows if x.customer_id is not None)
+            completed=sum(str(x.status or "").lower() in {"completed","complete","done","success","successful"} for x in rows)
+            dropped=sum(str(x.status or "").lower() in {"dropped","rejected","failed","cancelled"} for x in rows)
+            pending=max(len(rows)-completed-dropped,0)
+            journey_funnel[stage]={"applications":len(rows),"unique_users":len(unique_ids),"repeat_users":sum(max(v-1,0) for v in repeat_counts.values()),"completed":completed,"pending":pending,"dropped":dropped}
+    collection=_collection_rows(customers,loans,by,states)
     agents=db.query(CollectionAgentRecord).all(); actions=db.query(CollectionActionRecord).all()
     agent_perf=[]
     for a in agents:
@@ -146,6 +171,8 @@ def reporting(db: Session = Depends(get_db), _admin: dict = Depends(get_current_
         "amounts":{"disbursed":money(sum(l.disbursed_amount or 0 for l in loans)),"outstanding":money(sum(l.outstanding_amount or 0 for l in loans if states[l.id] in {"active","overdue"})),"overdue":money(sum(max((r.due_amount or 0)-(r.paid_amount or 0),0) for r in repayments if calculate_dpd(r.due_date,r.paid_amount,r.due_amount)>0)),"due":money(sum(r.due_amount or 0 for r in repayments)),"paid":money(sum(r.paid_amount or 0 for r in repayments)),"unpaid":money(sum(max((r.due_amount or 0)-(r.paid_amount or 0),0) for r in repayments))},
         "documents":len(documents),"repayments":len(repayments),
         "customer_records":customer_records,"loan_records":loan_records,"repayment_records":repayment_records,
+        "analytics_cards":{"unique_applicants":len({l.customer_id for l in loans}),"total_applications":len(loans),"rejected_loans":states_count["rejected"],"repaid_lms":states_count["repaid"],"overdue_lms":states_count["overdue"],"upcoming_lms":upcoming_lms,"due_today_lms":due_today_lms},
+        "analytics_funnel":journey_funnel,
         "recent_loans":[{"id":l.id,"customer_id":l.customer_id,"amount":money(l.sanctioned_amount or l.requested_amount),"status":states[l.id],"created_at":str(l.created_at) if l.created_at else None} for l in loans[:20]],
         "monthly":monthly_rows,"loan_trend":loan_trend,"slabs":slabs,"repayment_status":repayment_status,"due_calendar":due_calendar,"collection":collection,"collection_agent_performance":agent_perf,"bank_analysis":bank_summary,"risk_score":risk_summary
     }
