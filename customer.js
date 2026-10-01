@@ -219,7 +219,7 @@ async function nextWizard(){
    if(result.status!=='SUCCESS')throw Error('Bureau check did not return an approved provider result. Current status: '+result.status);
    const bureauData=result.data||{};
    const score=Number(bureauData.score);
-   const approved=Number.isFinite(score)?score>=650:String(bureauData.decision||bureauData.status||'').toUpperCase()==='APPROVED';
+   const approved=bureauData.approved===true||String(bureauData.decision||bureauData.status||'').toUpperCase()==='APPROVED';
    if(!approved)throw Error('Bureau result is not approved. Processing stops at this step.');
    await saveJourneyStep(key,steps[wi][1],{bureau,status:result.status,score:Number.isFinite(score)?score:null});
   }else if(wi===6){
@@ -271,7 +271,7 @@ async function nextWizard(){
 function custMobile(){return data?.customer?.mobile||''}
 async function registerDoc(type,file){
  const id=sessionStorage.getItem(CID),lid=app?.loan_id;
- return api('/api/services/documents/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+ return api('/services/documents/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
   customer_id:Number(id),loan_id:Number(lid),document_type:type,file_name:file.name,mime_type:file.type||'application/octet-stream',file_size:file.size||0,source:'customer_portal',required:true,verification_status:'pending'
  })});
 }
