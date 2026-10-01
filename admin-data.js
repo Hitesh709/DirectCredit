@@ -160,18 +160,29 @@ window.DirectCreditData = (() => {
       source:'demo'
     };
   }
+  const customerCache = new Map();
+  const customerInflight = new Map();
+  const CUSTOMER_CACHE_TTL = 30000;
+
   async function customer(id, options={}){
     if(options.source==='demo') return demoCustomer(id);
-    // Customer detail is live-first and uses the protected Customer 360 aggregation.
-    try {
-      const profile=await get(`/admin/reports/customer/${encodeURIComponent(id)}/profile`);
-      if(profile && (profile.customer || profile.loans || profile.metrics || profile.tabs)){
-        return {...profile,source:'live'};
+    const cacheKey=String(id);
+    const cached=customerCache.get(cacheKey);
+    if(cached && (Date.now()-cached.at)<CUSTOMER_CACHE_TTL) return cached.data;
+    if(customerInflight.has(cacheKey)) return customerInflight.get(cacheKey);
+    const request=(async()=>{
+      // Customer detail is live-first and uses the protected Customer 360 aggregation.
+      try {
+        const profile=await get(`/admin/reports/customer/${encodeURIComponent(id)}/profile`);
+        if(profile && (profile.customer || profile.loans || profile.metrics || profile.tabs)){
+          const data={...profile,source:'live'};
+          customerCache.set(cacheKey,{at:Date.now(),data});
+          return data;
+        }
+      } catch(e) {
+        // Fall through to the backward-compatible live routes.
       }
-    } catch(e) {
-      // Fall through to the backward-compatible live routes.
-    }
-    try {
+      try {
       const [cr,lr]=await Promise.all([get(`/customers/${encodeURIComponent(id)}`),loans()]);
       const rows=lr.filter(x=>Number(x.customer_id)===Number(id));
       const outstanding=rows.reduce((s,x)=>s+Number(x.outstanding_amount||0),0);
@@ -222,7 +233,11 @@ window.DirectCreditData = (() => {
       try { const rr=await reporting(); if(rr?.source==='demo') return demoCustomer(id); } catch(_) {}
       if(DEMO_FALLBACK) return demoCustomer(id);
       throw e;
-    }
+      }
+    })();
+    customerInflight.set(cacheKey,request);
+    try { return await request; }
+    finally { customerInflight.delete(cacheKey); }
   }
   return {base,headers,reporting,customer,loans,liveLoans,demoCustomer,demoCustomers:DEMO_CUSTOMERS,demoReporting};
 })();
