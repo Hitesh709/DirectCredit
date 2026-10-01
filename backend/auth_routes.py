@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from .database import get_db
 from .db_models import CustomerRecord
 from .auth import hash_password, verify_password, issue_token, decode_token, get_current_customer
-from .schemas import RegisterRequest, CustomerRegistrationRequest, LoginRequest, RefreshRequest, PasswordRequest, EmailTokenRequest\nfrom .phase2c_provider_gateway import request_provider
+from .schemas import RegisterRequest, CustomerRegistrationRequest, LoginRequest, RefreshRequest, PasswordRequest, EmailTokenRequest
+from .phase2c_provider_gateway import request_provider
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
