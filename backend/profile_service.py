@@ -13,7 +13,9 @@ def profile_payload(customer_id: int, db: Session) -> dict:
     repayments = db.query(RepaymentRecord).filter(RepaymentRecord.loan_id.in_(ids)).order_by(RepaymentRecord.id.desc()).all() if ids else []
     docs = db.query(DocumentRecord).filter(DocumentRecord.customer_id == customer_id).order_by(DocumentRecord.id.desc()).all()
     journey = db.query(CustomerJourneyRecord).filter(CustomerJourneyRecord.customer_id == customer_id).order_by(CustomerJourneyRecord.step_number).all()
-    transactions = db.query(BankTransactionRecord).filter(BankTransactionRecord.customer_id == customer_id).order_by(BankTransactionRecord.transaction_date.desc(), BankTransactionRecord.id.desc()).all()
+    # The Admin Customer 360 UI renders at most 200 bank transactions.
+    # Limit the query as well to reduce DB work and response size for large statements.
+    transactions = db.query(BankTransactionRecord).filter(BankTransactionRecord.customer_id == customer_id).order_by(BankTransactionRecord.transaction_date.desc(), BankTransactionRecord.id.desc()).limit(200).all()
     businesses = db.query(CustomerBusinessRecord).filter(CustomerBusinessRecord.customer_id == customer_id).order_by(CustomerBusinessRecord.id.desc()).all()
     contacts = db.query(CustomerContactRecord).filter(CustomerContactRecord.customer_id == customer_id).order_by(CustomerContactRecord.id.desc()).all()
     addresses = db.query(CustomerAddressRecord).filter(CustomerAddressRecord.customer_id == customer_id).order_by(CustomerAddressRecord.id.desc()).all()
