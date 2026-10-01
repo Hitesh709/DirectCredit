@@ -2,7 +2,7 @@
 const el=document.getElementById('pipeline');if(!el)return;
 const num=v=>Number(v||0).toLocaleString('en-IN');
 const pct=(a,b)=>Number(b)?((Number(a||0)/Number(b))*100).toFixed(1)+'%':'0.0%';
-const get=async()=>{if(!window.DirectCreditData){await new Promise((ok,no)=>{const s=document.createElement('script');s.src='admin-data.js?v=20261001.15';s.onload=ok;s.onerror=no;document.head.appendChild(s)});}return DirectCreditData.reporting()};
+const get=async()=>{if(!window.DirectCreditData){await new Promise((ok,no)=>{const s=document.createElement('script');s.src='admin-data.js?v=20261001.16';s.onload=ok;s.onerror=no;document.head.appendChild(s)});}return DirectCreditData.reporting()};
 try{
 const d=await get(), a=Number(d.applications||0),u=Number(d.unique_users||0),r=Number(d.repeat_users||0),dis=Number(d.disbursed_count||0);
 const jf=d.analytics_funnel||{}, ap=jf.approval||{completed:Math.max(a-Number(d.pending||0)-Number(d.rejected||0),0),pending:d.pending||0,dropped:d.rejected||0};
