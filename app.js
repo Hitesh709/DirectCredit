@@ -1,3 +1,24 @@
+(function(){
+  const SIDEBAR_KEY='directcredit_sidebar_collapsed';
+  const sidebar=document.getElementById('adminSidebar');
+  const toggle=document.getElementById('sidebarToggle');
+  const iconMap={dashboard:'⌂',reports:'▤',loanRequest:'▣',funnelMatrix:'▦',accounting:'$',collection:'⌖',settlement:'↔',documents:'▤',alerts:'!',settings:'⚙',support:'☎'};
+  const setCollapsed=(collapsed,persist=true)=>{
+    if(!sidebar||!toggle)return;
+    document.body.classList.toggle('sidebar-collapsed',collapsed);
+    toggle.setAttribute('aria-expanded',String(!collapsed));
+    toggle.setAttribute('aria-label',collapsed?'Expand navigation':'Minimize navigation');
+    toggle.title=collapsed?'Expand navigation':'Minimize navigation';
+    toggle.querySelector('span').textContent=collapsed?'›':'‹';
+    if(persist) localStorage.setItem(SIDEBAR_KEY,collapsed?'1':'0');
+  };
+  document.querySelectorAll('.nav[data-page]').forEach(n=>{n.dataset.icon=iconMap[n.dataset.page]||'•'});
+  const saved=localStorage.getItem(SIDEBAR_KEY);
+  setCollapsed(saved==='1',false);
+  toggle?.addEventListener('click',()=>setCollapsed(!document.body.classList.contains('sidebar-collapsed')));
+  window.DCAdminSidebar={setCollapsed,isCollapsed:()=>document.body.classList.contains('sidebar-collapsed')};
+})();
+
 const pages=[...document.querySelectorAll('.page')];
 const navs=[...document.querySelectorAll('.nav')];
 const titles={
