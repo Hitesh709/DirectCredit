@@ -60,7 +60,6 @@
     }
   }
   function addBar(){
-    if(window.top!==window)return;
     if(document.querySelector('.dc-export-bar'))return;
     const host=document.querySelector('.main')||document.body, bar=document.createElement('div');bar.className='dc-export-bar';
     bar.innerHTML='<button type="button" data-export="csv">Export CSV</button><button type="button" data-export="json">Export JSON</button><button type="button" data-export="print">Print / PDF</button>';
