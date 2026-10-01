@@ -424,17 +424,60 @@
           <div class="rk-source">Scores are calculated from available customer risk and scorecard records. Missing fields are shown as <b>Not available</b>.</div>
         </div>`;
     } else {
-      view.innerHTML=card('Loan Request & Eligibility',[
-        ['Latest Loan ID',l.id],['Requested Amount',l.requested_amount==null?null:money(l.requested_amount)],
-        ['Eligible Amount',l.eligible_amount==null?null:money(l.eligible_amount)],
-        ['Sanctioned Amount',l.sanctioned_amount==null?null:money(l.sanctioned_amount)],
-        ['Disbursed Amount',l.disbursed_amount==null?null:money(l.disbursed_amount)],
-        ['Monthly EMI',l.monthly_emi==null?null:money(l.monthly_emi)],
-        ['Tenure',l.tenure_months?`${l.tenure_months} months`:null],['Interest Rate',l.interest_rate==null?null:l.interest_rate+'%'],
-        ['Status',l.status],['Current Stage',l.current_stage]
-      ])+
-      (loans.length?`<div class="live-card"><h3>Application History</h3><div class="table-scroll"><table><thead><tr><th>Loan</th><th>Requested</th><th>Eligible</th><th>Score</th><th>Approval</th><th>Status</th></tr></thead><tbody>${loans.map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(money(x.requested_amount))}</td><td>${esc(money(x.eligible_amount))}</td><td>${esc(val(x.scorecard_score))}</td><td>${x.scorecard_approval_percent==null?'—':esc(x.scorecard_approval_percent+'%')}</td><td>${esc(val(x.status))}</td></tr>`).join('')}</tbody></table></div></div>`:'');
+      const requested=l.requested_amount, eligible=l.eligible_amount, sanctioned=l.sanctioned_amount;
+      const score=l.scorecard_score??data.directcredit_score??risk.total_score;
+      const approval=l.scorecard_approval_percent??risk.approval_percent;
+      const rate=l.interest_rate, tenure=l.tenure_months, emi=l.monthly_emi;
+      const purpose=l.purpose||l.loan_purpose||'Not available';
+      const process=[
+        ['Application Submitted',l.created_at||l.application_date,'done'],
+        ['KYC Verified',data.kyc?.verified_at||data.kyc_employment?.kyc_verified_at,'done'],
+        ['Document Verification',data.documents?.[0]?.verified_at||data.documents?.[0]?.updated_at,'done'],
+        ['Credit Assessment',risk.assessed_at||risk.updated_at,'done'],
+        ['Eligibility Approved',l.approved_at||l.sanctioned_at,'done'],
+        ['Sanction Generated',l.sanctioned_at||l.updated_at,'done'],
+        ['Disbursement Pending',l.disbursed_at,'current']
+      ];
+      const docRows=(Array.isArray(data.documents)?data.documents:[]).slice(0,7);
+      const factorRows=Object.entries(risk.factor_scores||{}).slice(0,8);
+      const factorLabels={business_profile:'Business Profile',bank_statement_analysis:'Bank Statement',cash_flow_turnover:'Cash Flow',credit_history:'Credit History',repayment_track:'Repayment Track',existing_obligations:'Existing Obligations',stability_vintage:'Stability & Vintage',gst_it_compliance:'GST & ITR Compliance',enquiries_behaviour:'Enquiries & Behaviour',collateral_security:'Collateral / Security'};
+      const factorMax={business_profile:10,bank_statement_analysis:15,cash_flow_turnover:15,credit_history:20,repayment_track:10,existing_obligations:10,stability_vintage:10,gst_it_compliance:5,enquiries_behaviour:5,collateral_security:5};
+      const offerDecision=risk.decision||l.status||'Not available';
+      const fmtDate=v=>v?esc(String(v).slice(0,16).replace('T',' ')):'Not available';
+      view.innerHTML=`
+        <div class="elig360">
+          <div class="el-profile-row">
+            <div class="el-customer"><div class="el-avatar">${esc(String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div><div><h2>${esc(c.name||'Customer')} <span class="el-pill good">${esc(l.status||'Active')}</span></h2><small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small><small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div></div>
+            <div class="el-kpi blue"><small>LOAN AMOUNT REQUESTED</small><strong>${requested==null?'Not available':money(requested)}</strong><span>Customer request</span></div>
+            <div class="el-kpi green"><small>ELIGIBLE AMOUNT</small><strong>${eligible==null?'Not available':money(eligible)}</strong><span>${requested&&eligible!=null?Math.round(eligible/requested*100)+'% of requested':'Eligibility result'}</span></div>
+            <div class="el-kpi purple"><small>ELIGIBILITY SCORE</small><strong>${score==null?'Not available':esc(score+' / '+(risk.max_score||110))}</strong><span>${score!=null?(Number(score)>=90?'Excellent':Number(score)>=70?'Good':'Review'):'Not assessed'}</span></div>
+            <div class="el-kpi orange"><small>RECOMMENDED TENOR</small><strong>${tenure?esc(tenure+' Months'):'Not available'}</strong><span>Maximum eligible</span></div>
+            <div class="el-kpi teal"><small>AUTO DECISION</small><strong>✓ ${esc(offerDecision)}</strong><span>Interest ${rate==null?'Not available':esc(rate+'% P.A.')}</span></div>
+          </div>
+          <div class="el-grid-top">
+            <div class="el-panel"><div class="el-head"><h3>LOAN REQUEST DETAILS</h3></div><div class="el-detail-grid">
+              <div>Application / Loan ID<b>${esc(l.id||'Not available')}</b></div><div>Application Date<b>${fmtDate(l.created_at||l.application_date)}</b></div>
+              <div>Customer ID<b>${esc(c.customer_code||c.id)}</b></div><div>Customer Name<b>${esc(c.name||'Not available')}</b></div>
+              <div>Loan Product<b>${esc(l.product||l.loan_product||'Not available')}</b></div><div>Purpose<b>${esc(purpose)}</b></div>
+              <div>Requested Amount<b>${requested==null?'Not available':money(requested)}</b></div><div>Tenor Requested<b>${tenure?tenure+' Months':'Not available'}</b></div>
+              <div>EMI (Approx.)<b>${emi==null?'Not available':money(emi)}</b></div><div>Preferred Disbursement<b>${fmtDate(l.preferred_disbursement_date)}</b></div>
+            </div></div>
+            <div class="el-panel"><div class="el-head"><h3>ELIGIBILITY FACTORS SUMMARY</h3><span>${score==null?'Not assessed':esc(score+' points')}</span></div><div class="el-factor-chart">
+              ${factorRows.map(([key,v])=>{const max=Number(factorMax[key]||10);return `<div><span>${esc(factorLabels[key]||key)}</span><b>${Number(v).toFixed(1)} / ${max}</b><i><em style="width:${Math.min(100,Number(v)/max*100)}%"></em></i></div>`}).join('')||'<div class="el-empty">Eligibility factor details are not available.</div>'}
+            </div></div>
+            <div class="el-panel"><div class="el-head"><h3>RECOMMENDED OFFER</h3><span class="el-pill good">Best Offer</span></div><div class="el-offer"><div><span>Sanction Amount</span><b>${sanctioned==null?(eligible==null?'Not available':money(eligible)):money(sanctioned)}</b></div><div><span>Interest Rate</span><b>${rate==null?'Not available':rate+'% P.A.'}</b></div><div><span>Processing Fee</span><b>${l.processing_fee==null?'Not available':money(l.processing_fee)}</b></div><div><span>Tenor</span><b>${tenure?tenure+' Months':'Not available'}</b></div><div><span>EMI</span><b>${emi==null?'Not available':money(emi)}</b></div><div><span>Decision</span><b class="good-text">${esc(offerDecision)}</b></div></div></div>
+          </div>
+          <div class="el-grid-mid">
+            <div class="el-panel"><div class="el-head"><h3>REQUIRED DOCUMENTS</h3></div><div class="el-docs">${docRows.map(d=>`<div><span>▣ ${esc(d.document_type||d.file_name||'Document')}</span><b class="${String(d.verification_status||'').toLowerCase().includes('verif')?'verified':'review'}">${esc(d.verification_status||'Not available')}</b></div>`).join('')||'<div class="el-empty">No document records are available.</div>'}</div></div>
+            <div class="el-panel"><div class="el-head"><h3>LOAN PURPOSE & TENOR</h3></div><div class="el-two-col"><div><span>Purpose of Loan</span><b>${esc(purpose)}</b></div><div><span>Max Eligible Tenor</span><b>${tenure?tenure+' Months':'Not available'}</b></div><div><span>Preferred Purpose</span><b>${esc(purpose)}</b></div><div><span>Repayment Type</span><b>${esc(l.repayment_type||'EMI - Monthly')}</b></div></div></div>
+            <div class="el-panel"><div class="el-head"><h3>REPAYMENT CAPACITY (FOR ANALYSIS)</h3></div><div class="el-two-col"><div><span>Monthly Net Income</span><b>${c.monthly_income==null?'Not available':money(c.monthly_income)}</b></div><div><span>Existing EMI</span><b>${c.existing_emi==null?'Not available':money(c.existing_emi)}</b></div><div><span>Proposed EMI</span><b>${emi==null?'Not available':money(emi)}</b></div><div><span>FOIR</span><b>${risk.foir==null?'Not available':risk.foir+'%'}</b></div></div></div>
+            <div class="el-panel"><div class="el-head"><h3>RISK INDICATORS</h3></div><div class="el-risk"><div><span>Probability of Default</span><b>${risk.probability_of_default==null?'Not available':risk.probability_of_default+'%'}</b></div><div><span>Loss Given Default</span><b>${risk.loss_given_default==null?'Not available':risk.loss_given_default+'%'}</b></div><div><span>Exposure at Default</span><b>${sanctioned==null?'Not available':money(sanctioned)}</b></div><div><span>Risk Grade</span><b>${esc(risk.risk_grade||risk.risk_tier||'Not assessed')}</b></div></div></div>
+          </div>
+          <div class="el-panel el-tracker"><div class="el-head"><h3>LOAN PROCESS TRACKER</h3></div><div class="el-process">${process.map((p,i)=>`<div class="el-step ${p[2]}"><i>${p[2]==='done'?'✓':i+1}</i><strong>${esc(p[0])}</strong><small>${fmtDate(p[1])}</small></div>`).join('')}</div></div>
+          <div class="el-source">Eligibility is calculated from available customer, loan, KYC, banking and risk records. Missing fields are shown as <b>Not available</b>.</div>
+        </div>`;
       addEligibilityMicroDetails(c,l,k,risk);
+
     }
     if(!["contact","bank","kyc","risk"].includes(key)) view.insertAdjacentHTML("beforeend", referenceDetails(data,key));
   }
