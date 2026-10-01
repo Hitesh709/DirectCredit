@@ -10,7 +10,6 @@
   const initial=(location.hash||'#loan').slice(1);
   open(tabs.some(x=>x.dataset.view===initial)?initial:'loan');
   document.getElementById('fmRefresh')?.addEventListener('click',()=>location.reload());
-  document.getElementById('fmPrint')?.addEventListener('click',()=>window.print());
 
   const host=document.getElementById('registrationUsers');
   async function loadReporting(){
