@@ -16,7 +16,7 @@
   const money=v=>'₹'+Number(v||0).toLocaleString('en-IN',{maximumFractionDigits:0});
   async function loadReporting(){
     if(!window.DirectCreditData){
-      await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='admin-data.js?v=20261001.4';s.onload=resolve;s.onerror=reject;document.head.appendChild(s);});
+      await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='admin-data.js?v=20261001.16';s.onload=resolve;s.onerror=reject;document.head.appendChild(s);});
     }
     return window.DirectCreditData.reporting();
   }
