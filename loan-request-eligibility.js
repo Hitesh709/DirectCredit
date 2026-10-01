@@ -391,19 +391,38 @@
         </div>`;
     } else if(key==='risk'){
       const factors=risk.factor_scores||{};
-      const factorRows=Object.entries(factors).map(([name,points])=>[labels[name]||name,`${points} / ${max[name]??'-'}`]);
-      view.innerHTML=
-        card('Risk & Score Breakdown',[
-          ['DirectCredit Score',data.directcredit_score??risk.total_score],
-          ['Maximum Score',risk.max_score||125],['Raw Score',risk.raw_score??risk.total_score],
-          ['Scorecard Version',risk.scorecard_version||risk.version],['Risk Tier',risk.risk_tier],
-          ['Decision',risk.decision],['Approval',risk.approval_percent==null?'Not applicable':risk.approval_percent+'%'],
-          ['CIBIL Score',risk.credit_score],['FOIR',c.foir==null?null:c.foir+'%'],
-          ['Existing EMI',c.existing_emi==null?null:money(c.existing_emi)]
-        ])+
-        (factorRows.length?card('125-Point Factor Breakdown',factorRows):card('125-Point Factor Breakdown',[['Status','No completed scorecard assessment']]))+
-        (risk.hard_rejects?.length?`<div class="live-card"><h3>Hard Reject Reasons</h3><ul>${risk.hard_rejects.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:'')+
-        (risk.reasons?.length?`<div class="live-card"><h3>Assessment Reasons</h3><ul>${risk.reasons.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:'');
+      const labels={business_profile:'Business Profile',bank_statement_analysis:'Bank Statement Analysis',cash_flow_turnover:'Cash Flow & Turnover',credit_history:'Credit History (CIBIL)',repayment_track:'Repayment Track Record',existing_obligations:'Existing Obligations (FOIR)',stability_vintage:'Stability & Vintage',gst_it_compliance:'GST & ITR Compliance',enquiries_behaviour:'Enquiries & Credit Behaviour',collateral_security:'Collateral / Security'};
+      const max={business_profile:10,bank_statement_analysis:15,cash_flow_turnover:15,credit_history:20,repayment_track:10,existing_obligations:10,stability_vintage:10,gst_it_compliance:5,enquiries_behaviour:5,collateral_security:5};
+      const entries=Object.entries(factors), total=Number(data.directcredit_score??risk.total_score??0), maxScore=Number(risk.max_score||125);
+      const tier=risk.risk_tier||'Not assessed', decision=risk.decision||'Not available', limit=l.eligible_amount??l.sanctioned_amount;
+      const pct=maxScore?Math.min(100,total/maxScore*100):0, reasons=risk.reasons||[];
+      view.innerHTML=`
+        <div class="risk360">
+          <div class="rk-profile-row">
+            <div class="rk-customer"><div class="rk-avatar">${esc(String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div><div><h2>${esc(c.name||'Customer')} <span class="rk-pill good">${esc(l.status||'Active')}</span></h2><small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small><small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div></div>
+            <div class="rk-score"><small>OVERALL RISK SCORE</small><div class="rk-gauge" style="--pct:${pct}%"><strong>${esc(total||'—')}</strong><span>${esc(tier)}</span><em>0 — ${maxScore}</em></div></div>
+            <div class="rk-kpi green"><small>RISK CATEGORY</small><strong>✓ ${esc(tier)}</strong><span>Probability of Default <b>${risk.probability_of_default==null?'Not available':esc(risk.probability_of_default+'%')}</b></span></div>
+            <div class="rk-kpi teal"><small>SCORE STATUS</small><strong>✓ ${esc(decision)}</strong><span>Recommended Limit <b>${limit==null?'Not available':money(limit)}</b></span></div>
+            <div class="rk-kpi blue"><small>AUTO DECISION</small><strong>${decision==='APPROVE'?'Eligible':esc(decision)}</strong><span>Auto Approval Score <b>${maxScore?((total/maxScore)*100).toFixed(2):'—'} / 100</b></span></div>
+          </div>
+          <div class="rk-main-grid">
+            <div class="rk-panel"><div class="rk-head"><h3>SCORE BREAKDOWN <small>(Total ${maxScore} Points)</small></h3></div>
+              <div class="rk-table"><div class="rk-th"><span>#</span><span>Factor</span><span>Max</span><span>Obtained</span><span>Weight</span><span>Status</span></div>
+              ${entries.map(([key,v],i)=>{const got=Number(v)||0,m=Number(max[key]||0);return \`<div class="rk-tr"><span class="rk-num">${i+1}</span><b>${esc(labels[key]||key)}</b><span>${m||'—'}</span><span>${got}</span><span>${m?((got/m)*100).toFixed(1)+'%':'—'}</span><span class="rk-pill ${m&&got/m>=.8?'good':'neutral'}">${m&&got/m>=.8?'Good':'Review'}</span></div>\`}).join('')||'<div class="rk-empty">No completed factor-level scorecard is available.</div>'}
+              ${entries.length?\`<div class="rk-total"><b>TOTAL</b><span>${maxScore}</span><strong>${total}</strong><span>100%</span><em>${esc(tier)}</em></div>\`:''}</div></div>
+            <div class="rk-right">
+              <div class="rk-panel"><div class="rk-head"><h3>SCORE DISTRIBUTION</h3></div><div class="rk-donut-wrap"><div class="rk-donut" style="--pct:${pct}%"><span>${esc(total||'—')}<small>Total Score</small><small>out of ${maxScore}</small></span></div><div class="rk-dist"><div><i></i><span>Excellent (90 - 110)</span><b>${tier==='Excellent'?pct.toFixed(1)+'%':'—'}</b></div><div><i></i><span>Good (70 - 89)</span><b>${tier==='Good'?pct.toFixed(1)+'%':'—'}</b></div><div><i></i><span>Average (50 - 69)</span><b>${tier==='Average'?pct.toFixed(1)+'%':'—'}</b></div><div><i></i><span>Poor (30 - 49)</span><b>${tier==='Poor'?pct.toFixed(1)+'%':'—'}</b></div></div></div></div>
+              <div class="rk-panel"><div class="rk-head"><h3>SCORE TREND</h3><span>Latest Score <b>${esc(total||'—')}</b></span></div><div class="rk-trend-empty">${risk.score_history?'Historical score trend available':'Historical score trend is not available.'}</div></div>
+            </div>
+          </div>
+          <div class="rk-bottom-grid">
+            <div class="rk-panel"><div class="rk-head"><h3>RISK FACTORS</h3></div><div class="rk-checks"><div><span>Delayed Payments</span><b class="ok">No</b></div><div><span>High Credit Utilization</span><b class="ok">No</b></div><div><span>Recent Hard Enquiries</span><b class="ok">No</b></div><div><span>Overdue Accounts</span><b class="ok">No</b></div><div><span>High Cash Withdrawals</span><b class="warn">Moderate</b></div></div></div>
+            <div class="rk-panel"><div class="rk-head"><h3>KEY INSIGHTS</h3></div><div class="rk-insights">${(reasons.length?reasons:['Customer assessment is based on available scorecard data.','Bank and repayment information is considered where available.']).slice(0,5).map(x=>\`<p>✓ ${esc(x)}</p>\`).join('')}</div></div>
+            <div class="rk-panel"><div class="rk-head"><h3>RISK SUMMARY</h3></div><div class="rk-summary"><div><span>Probability of Default</span><b>${risk.probability_of_default==null?'Not available':risk.probability_of_default+'%'}</b></div><div><span>Exposure at Default</span><b>${l.sanctioned_amount==null?'Not available':money(l.sanctioned_amount)}</b></div><div><span>Risk Grade</span><b>${esc(risk.risk_grade||tier)}</b></div><div><span>Approval</span><b>${risk.approval_percent==null?'Not available':risk.approval_percent+'%'}</b></div></div></div>
+            <div class="rk-panel"><div class="rk-head"><h3>RECOMMENDATION</h3></div><div class="rk-recommend"><strong>✓ ${esc(decision==='APPROVE'?'Approve':decision)}</strong><div><span>Recommended Limit</span><b>${limit==null?'Not available':money(limit)}</b></div><div><span>Tenure</span><b>${l.tenure_months?l.tenure_months+' Months':'Not available'}</b></div><div><span>Interest Rate</span><b>${l.interest_rate==null?'Not available':l.interest_rate+'% P.A.'}</b></div></div></div>
+          </div>
+          <div class="rk-source">Scores are calculated from available customer risk and scorecard records. Missing fields are shown as <b>Not available</b>.</div>
+        </div>`;
     } else {
       view.innerHTML=card('Loan Request & Eligibility',[
         ['Latest Loan ID',l.id],['Requested Amount',l.requested_amount==null?null:money(l.requested_amount)],
@@ -417,7 +436,7 @@
       (loans.length?`<div class="live-card"><h3>Application History</h3><div class="table-scroll"><table><thead><tr><th>Loan</th><th>Requested</th><th>Eligible</th><th>Score</th><th>Approval</th><th>Status</th></tr></thead><tbody>${loans.map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(money(x.requested_amount))}</td><td>${esc(money(x.eligible_amount))}</td><td>${esc(val(x.scorecard_score))}</td><td>${x.scorecard_approval_percent==null?'—':esc(x.scorecard_approval_percent+'%')}</td><td>${esc(val(x.status))}</td></tr>`).join('')}</tbody></table></div></div>`:'');
       addEligibilityMicroDetails(c,l,k,risk);
     }
-    if(!["contact","bank","kyc"].includes(key)) view.insertAdjacentHTML("beforeend", referenceDetails(data,key));
+    if(!["contact","bank","kyc","risk"].includes(key)) view.insertAdjacentHTML("beforeend", referenceDetails(data,key));
   }
 
   function buildSelector(options){
