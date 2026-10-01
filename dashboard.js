@@ -59,7 +59,7 @@
       else dash.innerHTML='<div class="dc-panel"><h3>Dashboard unavailable</h3><p>Unable to load dashboard data. Verify the Admin API connection.</p></div>';
     });
   }else{
-    const base=(localStorage.getItem('directcredit_api_url')||window.DIRECTCREDIT_API_URL||'/api').replace(//$/,'');
+    const base=(localStorage.getItem('directcredit_api_url')||window.DIRECTCREDIT_API_URL||'/api').replace(/\/$/,'');
     const token=localStorage.getItem('directcredit_admin_token')||window.DIRECTCREDIT_ADMIN_TOKEN;
     fetch(base+'/admin/reporting',{headers:token?{Authorization:'Bearer '+token,Accept:'application/json'}:{Accept:'application/json'}}).then(r=>{if(!r.ok)throw Error(r.status);return r.json()}).then(window.__dcRenderDashboard).catch(function(){dash.innerHTML='<div class="dc-panel"><h3>Dashboard unavailable</h3><p>Unable to load dashboard data. Verify the Admin API connection.</p></div>'});
   }
