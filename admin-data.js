@@ -113,7 +113,7 @@ window.DirectCreditData = (() => {
   // Collections and Settlement. Reuse the same response briefly and coalesce
   // concurrent calls so a tab never launches duplicate reporting requests.
   let reportingCache=null, reportingCacheAt=0, reportingInflight=null;
-  const REPORTING_CACHE_TTL=8000;
+  const REPORTING_CACHE_TTL=30000;
   async function reporting(options={}){
     const force=options===true || options?.force===true;
     const age=Date.now()-reportingCacheAt;
