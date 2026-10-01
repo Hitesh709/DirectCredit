@@ -55,12 +55,231 @@ function renderBank(c,d){
 function renderAppsInline(){const rows=JSON.parse(sessionStorage.getItem('dc_apps_cache')||'[]');const host=document.getElementById('apps');if(!rows.length){host.innerHTML='<div class="notice">No loan applications yet.</div>';return}host.innerHTML=rows.map(x=>'<div class="detail-grid" style="margin-bottom:8px"><div><span>Application</span><b>#'+esc(x.loan_id)+'</b></div><div><span>Product</span><b>'+esc(txt(x.product))+'</b></div><div><span>Requested</span><b>'+esc(money(x.requested_amount))+'</b></div><div><span>Status</span><b>'+esc(stat(x.status))+'</b></div></div>').join('')}
 async function loadApps(){const id=sessionStorage.getItem(CID);try{const rows=await api('/services/loan-request/'+encodeURIComponent(id));sessionStorage.setItem('dc_apps_cache',JSON.stringify(rows));renderAppsInline()}catch(e){document.getElementById('apps').innerHTML='<div class="notice">Application data could not be loaded.</div>'}}
 async function loadActive(){const id=sessionStorage.getItem(CID);try{const x=await api('/services/loan-request/'+encodeURIComponent(id)+'/active');app=x.application||null;if(app)openWizard(app)}catch(e){}}
-const steps=[['PAN','PAN & Aadhaar','Enter your identity details.'],['PERSONAL','Personal & Address','Complete your personal and residence details.'],['BUSINESS','Business & Banking','Complete business and bank details.'],['DOCUMENTS','Documents','Confirm the required evidence.'],['REVIEW','Final Review','Review before assessment.']];
-function openWizard(x){app=x;wi={PAN:0,AADHAAR:0,PERSONAL:1,ADDRESS:1,BUSINESS:2,BANKING:2,DOCUMENTS:3,REVIEW:4,ASSESSMENT:4}[String(x.current_stage||'PAN').toUpperCase()]??0;document.getElementById('applyStart').classList.add('hidden');document.getElementById('wizard').classList.remove('hidden');document.getElementById('wRef').textContent='#'+x.loan_id+' · '+money(x.requested_amount)+' · '+x.tenure_months+' months';drawWizard()}
-function drawWizard(){const s=steps[wi];document.getElementById('wTitle').textContent=s[1];document.getElementById('wDesc').textContent=s[2];document.getElementById('wProgress').innerHTML=steps.map((x,i)=>'<div class="wstep '+(i<wi?'done ':'')+(i===wi?'current':'')+'"><b>'+(i+1)+'. '+esc(x[1])+'</b></div>').join('');let h='';if(wi===0)h='<div class="form-grid"><label>PAN<input id="wPan" maxlength="10" placeholder="ABCDE1234F"></label><label>Aadhaar<input id="wAadhaar" maxlength="12" inputmode="numeric" placeholder="12-digit Aadhaar"></label></div>';if(wi===1)h='<div class="form-grid"><label>Date of Birth<input id="wDob" type="date"></label><label>Gender<select id="wGender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></label><label>Marital Status<select id="wMarital"><option value="">Select</option><option>Single</option><option>Married</option><option>Other</option></select></label><label>City<input id="wCity"></label><label>Current Address<textarea id="wAddress"></textarea></label><label>Permanent Address<textarea id="wPermanent"></textarea></label><label>Residence Ownership<select id="wOwn"><option value="">Select</option><option>Own</option><option>Rented</option><option>Family Owned</option></select></label><label>Residence Since<input id="wSince"></label></div>';if(wi===2)h='<div class="form-grid"><label>Occupation<input id="wOccupation"></label><label>Business Name<input id="wBusiness"></label><label>Business Type<input id="wType"></label><label>Monthly Income<input id="wIncome" type="number"></label><label>Years in Business<input id="wVintage" type="number"></label><label>Existing EMI<input id="wEmi" type="number"></label><label>Dependents<input id="wDependents" type="number" min="0" step="1" value="0"></label><label>Primary Bank<input id="wBank"></label><label>Account Holder<input id="wHolder"></label><label>Masked Account<input id="wAccount"></label><label>IFSC<input id="wIfsc"></label><label>Account Type<input id="wAccountType" value="Savings"></label></div>';if(wi===3)h='<div class="process">'+['PAN Card','Aadhaar','Bank Statement','Business Proof','Address Proof','Selfie'].map((x,i)=>'<label style="display:block;border:1px solid #e4eaf2;border-radius:8px;padding:10px"><input type="checkbox" id="doc'+i+'" '+(i<4?'checked':'')+'> '+esc(x)+'</label>').join('')+'</div>';if(wi===4)h='<div class="notice">Please confirm that the information and documents submitted in this application are correct and belong to you.</div><label style="display:block;margin-top:14px"><input type="checkbox" id="confirm"> I confirm the application details.</label>';document.getElementById('wBody').innerHTML=h}
-async function nextWizard(){const id=sessionStorage.getItem(CID),lid=app?.loan_id;if(!id||!lid)return;try{if(wi===0){const pan=document.getElementById('wPan').value.trim().toUpperCase(),aad=document.getElementById('wAadhaar').value.replace(/\D/g,'');if(!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)||aad.length!==12)throw Error('Enter valid PAN and 12-digit Aadhaar.');await api('/services/loan-request/'+id+'/'+lid+'/kyc',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({pan,aadhaar:aad})});await stage('PERSONAL')}else if(wi===1){const p={date_of_birth:document.getElementById('wDob').value,gender:document.getElementById('wGender').value,marital_status:document.getElementById('wMarital').value,current_city:document.getElementById('wCity').value,address:document.getElementById('wAddress').value,permanent_address:document.getElementById('wPermanent').value,residence_ownership:document.getElementById('wOwn').value,residence_since:document.getElementById('wSince').value};
-const alt=document.getElementById('wAltMobile')?.value.replace(/\D/g,'').slice(0,10);if(Object.values(p).some(v=>!v))throw Error('Complete all personal and address fields.');await api('/services/customer-profile/'+id+'/personal',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});if(alt){await api('/services/api/v1/customers/'+id+'/contacts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contact_type:'mobile_alternate',contact_value:alt,is_primary:false})});}await stage('BUSINESS')}else if(wi===2){const p={occupation:document.getElementById('wOccupation').value,customer_type:'Individual',business_name:document.getElementById('wBusiness').value,business_type:document.getElementById('wType').value,monthly_income:Number(document.getElementById('wIncome').value||0),years_in_business:Number(document.getElementById('wVintage').value||0),existing_emi:Number(document.getElementById('wEmi').value||0),dependents:Number(document.getElementById('wDependents')?.value||0),primary_bank:document.getElementById('wBank').value};if(!p.business_name||!p.business_type||!p.monthly_income||!p.years_in_business||!p.primary_bank)throw Error('Complete required business and bank fields.');await api('/services/customer-profile/'+id+'/employment-business',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});await api('/services/loan-request/'+id+'/'+lid+'/bank-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bank_name:p.primary_bank,account_holder_name:document.getElementById('wHolder').value,account_number_masked:document.getElementById('wAccount').value,ifsc:document.getElementById('wIfsc').value,account_type:document.getElementById('wAccountType').value})});await stage('DOCUMENTS')}else if(wi===3){const docs=[['PAN Card',0],['Aadhaar',1],['Bank Statement',2],['Business Proof',3],['Address Proof',4],['Selfie',5]].filter(x=>document.getElementById('doc'+x[1]).checked);if(docs.length<4)throw Error('Confirm at least four required documents.');for(const x of docs)await api('/services/loan-request/'+id+'/'+lid+'/document',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document_type:x[0].toUpperCase().replaceAll(' ','_'),file_name:x[0].replaceAll(' ','_')+'_customer_submission'})});await stage('REVIEW')}else{if(!document.getElementById('confirm').checked)throw Error('Please confirm the application details.');await stage('ASSESSMENT');msg('wMsg','Application submitted for assessment.');document.getElementById('wNext').disabled=true;await load()}if(wi<4){wi++;drawWizard()}else await load()}catch(e){msg('wMsg',e.message,true)}}
-async function stage(s){const id=sessionStorage.getItem(CID),lid=app.loan_id;await api('/services/loan-request/'+id+'/'+lid+'/stage',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage:s})});app.current_stage=s}
+const steps=[
+ ['MOBILE_OTP','Mobile Number OTP','Verify your registered mobile number with OTP.'],
+ ['PAN_GST','PAN & GST Verification','Enter PAN and, where applicable, verify GST details through the configured provider.'],
+ ['AADHAAR_SELFIE','Aadhaar & Selfie','Complete Aadhaar verification by manual document upload or DigiLocker, then submit selfie.'],
+ ['BANK_AA','Bank Account Aggregator','Give consent and connect your bank data through Account Aggregator.'],
+ ['CIBIL_PAYMENT','CIBIL Payment','Review the bureau-check charge and continue to bureau verification.'],
+ ['BUREAU','Bureau Check','CIBIL / CRIF check. Processing continues only after an approved bureau result.'],
+ ['BASIC','Basic Details','Confirm auto-filled identity details and complete the remaining personal information.'],
+ ['ADDRESS','Permanent & Current Address','Confirm permanent address and complete current address and family-member details.'],
+ ['BUSINESS','Business Details','Complete business type, ownership, stability, stock, machinery and trade references.'],
+ ['DOCUMENTS','Upload Documents','Upload additional bank, GST/business bills, business board and other business photographs.'],
+ ['SUBMIT','Submit','Review and submit the completed application.'],
+ ['ELIGIBILITY','Auto Eligibility Check','DirectCredit automatically evaluates eligibility and displays the decision.']
+];
+
+const wizardData={};
+async function saveJourneyStep(key,label,details,status='completed'){
+ const id=sessionStorage.getItem(CID);
+ if(!id)return;
+ try{
+  await api('/services/customers/'+id+'/journey',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({loan:{id:app?.loan_id},steps:[{key,step_number:steps.findIndex(x=>x[0]===key)+1,label,status,details:details||{}}]})
+  });
+ }catch(e){console.warn('Journey save failed',e.message)}
+}
+async function providerRequest(provider,payload={}){
+ const id=sessionStorage.getItem(CID);
+ return api('/api/v1/providers/'+encodeURIComponent(id)+'/'+encodeURIComponent(provider)+'/request',{
+  method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({payload,idempotency_key:'PORTAL-'+id+'-'+provider+'-'+Date.now()})
+ });
+}
+async function recordConsent(provider,purpose){
+ const id=sessionStorage.getItem(CID);
+ return api('/api/v1/providers/'+encodeURIComponent(id)+'/consent',{
+  method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({provider,purpose,accepted:true,consent_version:'CUSTOMER-PORTAL-1.0'})
+ });
+}
+function openWizard(x){
+ app=x;
+ const stageMap={PAN:1,AADHAAR:2,PERSONAL:7,ADDRESS:8,BUSINESS:9,BANKING:9,DOCUMENTS:10,REVIEW:11,ASSESSMENT:12};
+ const current=String(x.current_stage||'PAN').toUpperCase();
+ wi=Math.max(0,(stageMap[current]||1)-1);
+ document.getElementById('applyStart').classList.add('hidden');
+ document.getElementById('wizard').classList.remove('hidden');
+ document.getElementById('wRef').textContent='#'+x.loan_id+' · '+money(x.requested_amount)+' · '+x.tenure_months+' months';
+ drawWizard();
+}
+
+function field(label,id,type='text',value='',extra=''){
+ return '<label>'+esc(label)+'<input id="'+id+'" type="'+type+'" value="'+esc(value??'')+'" '+extra+'></label>';
+}
+function selectField(label,id,options,value=''){
+ return '<label>'+esc(label)+'<select id="'+id+'"><option value="">Select</option>'+options.map(x=>'<option '+(String(value)===String(x)?'selected':'')+'>'+esc(x)+'</option>').join('')+'</select></label>';
+}
+function fileField(label,id,multiple=false){
+ return '<label class="upload-field">'+esc(label)+'<input id="'+id+'" type="file" '+(multiple?'multiple':'')+' accept="image/*,.pdf,.jpg,.jpeg,.png"></label>';
+}
+function drawWizard(){
+ const s=steps[wi];
+ document.getElementById('wTitle').textContent=s[1];
+ document.getElementById('wDesc').textContent=s[2];
+ document.getElementById('wProgress').innerHTML=steps.map((x,i)=>'<div class="wstep '+(i<wi?'done ':'')+(i===wi?'current':'')+'"><b>'+(i+1)+'. '+esc(x[1])+'</b></div>').join('');
+ const c=data?.customer||{}, b=data?.business_details||{}, bank=data?.bank_accounts?.[0]||{};
+ let h='';
+ if(wi===0){
+  h='<div class="verification-card"><div class="verification-badge">OTP</div><div><b>Mobile number</b><p>'+esc(txt(c.mobile))+'</p></div><span class="pill blue">OTP required</span></div><div class="form-grid">'+field('Enter OTP','wOtp','text','','inputmode="numeric" maxlength="6" placeholder="6-digit OTP"')+'</div><div class="notice">SMS OTP delivery requires the configured OTP provider. This screen does not bypass OTP verification.</div>';
+ }else if(wi===1){
+  h='<div class="form-grid">'+field('PAN Number','wPan','text',c.pan||'','maxlength="10" placeholder="ABCDE1234F"')+field('GST Number','wGst','text',b.gstin||'','maxlength="15" placeholder="15-digit GSTIN"')+'</div><div id="panGstResult" class="verification-result"></div>';
+ }else if(wi===2){
+  h='<div class="form-grid">'+selectField('Aadhaar Verification Method','wAadhaarMethod',['Manual Upload','DigiLocker'])+fileField('Aadhaar Document','wAadhaarFile')+fileField('Selfie','wSelfieFile')+'</div><div id="aadhaarResult" class="verification-result"></div>';
+ }else if(wi===3){
+  h='<div class="consent-card"><h3>Bank Account Aggregator</h3><p>Connect your bank data only after giving explicit consent for credit assessment.</p><label><input id="wAAConsent" type="checkbox"> I consent to Account Aggregator data access for credit assessment.</label><button class="outline" type="button" id="wAAConnect">Connect Bank Accounts</button></div><div id="aaResult" class="verification-result"></div>';
+ }else if(wi===4){
+  h='<div class="payment-card"><h3>CIBIL payment</h3><p>The bureau-check payment step is shown here. Payment collection requires a configured payment provider.</p><div class="detail-grid"><div><span>Purpose</span><b>CIBIL / Bureau Check</b></div><div><span>Status</span><b id="cibilPaymentStatus">Pending</b></div></div><label><input id="wCibilConsent" type="checkbox"> I authorize the bureau-check charge and want to continue.</label></div>';
+ }else if(wi===5){
+  h='<div class="bureau-card"><h3>CIBIL / CRIF Bureau Check</h3><p>The configured bureau provider will return the bureau result. Processing continues only when the provider returns an approved result.</p><div class="form-grid">'+selectField('Preferred Bureau','wBureau',['CIBIL','CRIF'])+field('Bureau Reference','wBureauRef','text','','placeholder="Optional provider reference"')+'</div><div id="bureauResult" class="verification-result"></div>';
+ }else if(wi===6){
+  h='<div class="form-grid">'+field('Full Name','wFullName','text',c.name||'','readonly')+selectField('Gender','wGender',['Male','Female','Other'],c.gender)+field('Date of Birth','wDob','date',c.date_of_birth||'','readonly')+field('Father / Spouse Name','wFatherSpouse')+field('Education','wEducation')+field('Caste','wCaste')+selectField('Marital Status','wMarital',['Single','Married','Other'],c.marital_status)+field('Email ID','wEmail','email',c.email||'')+'</div>';
+ }else if(wi===7){
+  const same=String(c.address||'')===String(c.permanent_address||'')&&c.address;
+  h='<div class="form-grid">'+field('Permanent Address','wPermanent', 'text',c.permanent_address||'')+field('PIN','wPin','','','inputmode="numeric" maxlength="6"')+field('City','wCity','text',c.current_city||'')+field('State','wState')+selectField('Residence Type','wResidence',['Owned','Rented'],c.residence_ownership)+field('Residence Since','wResidenceSince','text',c.residence_since||'')+'</div><label class="check-line"><input id="wSameAddress" type="checkbox" '+(same?'checked':'')+'> Current address is same as permanent address</label><div class="form-grid">'+field('Current Address','wCurrentAddress','text',same?(c.permanent_address||''):c.address||'')+'</div><h3>Family Members</h3><div id="familyRows" class="repeat-list"></div><button class="outline small" type="button" id="addFamily">+ Add Family Member</button>';
+ }else if(wi===8){
+  h='<div class="form-grid">'+selectField('Business Type','wBusinessType',['Manufacturing','Retail','Wholesale','Service','Other'],b.business_type||c.business_type)+field('Other Business Type','wOtherBusiness')+field('Name of Business','wBusinessName','text',b.legal_name||c.business_name||'')+field('Business Address','wBusinessAddress')+field('Business PIN','wBusinessPin','','','inputmode="numeric" maxlength="6"')+field('Business Stability / Vintage','wBusinessStability','number',b.business_vintage_years??c.years_in_business||'')+selectField('Business Ownership','wBusinessOwnership',['Own','Rented'],b.ownership_type)+field('Machinery Value','wMachinery','number','','min="0"')+field('Total Stock Value','wStock','number','','min="0"')+'</div><h3>Trade Reference</h3><div class="form-grid">'+field('Reference Name','wTradeName')+field('Reference Number','wTradeNumber','tel')+field('Firm Name','wTradeFirm')+'</div>';
+ }else if(wi===9){
+  h='<div class="upload-grid">'+fileField('Additional Bank Account','wDocBank',true)+fileField('GST / Business Sale-Purchase Bills','wDocBills',true)+fileField('Business Board Photo','wDocBoard')+fileField('Other Business Photos','wDocOther',true)+'</div><div class="notice">Files are registered against the application. Binary storage/upload requires the configured document storage provider.</div><div id="docResult" class="verification-result"></div>';
+ }else if(wi===10){
+  h='<div class="review-grid"><div><h3>Review before submission</h3><p>Confirm that the information and documents provided are accurate and belong to you.</p><label><input id="wConfirm" type="checkbox"> I confirm the application details.</label></div><div class="notice">Submitting moves the application to automated eligibility assessment.</div></div>';
+ }else{
+  h='<div class="eligibility-card"><div class="verification-badge">AUTO</div><div><h3>Automatic Eligibility Check</h3><p>DirectCredit will evaluate the application using the available customer, banking, bureau and business data.</p></div></div><div id="eligibilityResult" class="eligibility-result"></div>';
+ }
+ document.getElementById('wBody').innerHTML=h;
+ if(wi===7)setupFamilyRows();
+ if(wi===3)document.getElementById('wAAConnect')?.addEventListener('click',connectAA);
+}
+
+function setupFamilyRows(){
+ const host=document.getElementById('familyRows'); if(!host)return;
+ const add=()=>{const n=host.children.length+1;const row=document.createElement('div');row.className='repeat-row';row.innerHTML=field('Name','famName'+n)+field('Relation','famRelation'+n)+field('Mobile','famMobile'+n,'tel')+field('Income','famIncome'+n,'number','','min="0"')+'<button class="link remove-family" type="button">Remove</button>';host.appendChild(row)};
+ document.getElementById('addFamily')?.addEventListener('click',add);add();
+ document.getElementById('wSameAddress')?.addEventListener('change',e=>{const x=document.getElementById('wCurrentAddress');if(e.target.checked){x.value=document.getElementById('wPermanent').value;x.readOnly=true}else{x.readOnly=false}});
+}
+
+async function connectAA(){
+ try{
+  const consent=document.getElementById('wAAConsent');
+  if(!consent?.checked)throw Error('Please provide Account Aggregator consent first.');
+  await recordConsent('account_aggregator','credit_assessment');
+  const result=await providerRequest('account_aggregator',{purpose:'credit_assessment'});
+  document.getElementById('aaResult').innerHTML='<div class="notice">Account Aggregator status: <b>'+esc(result.status)+'</b></div>';
+  wizardData.BANK_AA=result;
+ }catch(e){document.getElementById('aaResult').innerHTML='<div class="notice error">Account Aggregator could not be connected: '+esc(e.message)+'</div>'}
+}
+
+async function nextWizard(){
+ const id=sessionStorage.getItem(CID),lid=app?.loan_id;
+ if(!id||!lid)return;
+ try{
+  const key=steps[wi][0];
+  if(wi===0){
+   const otp=(document.getElementById('wOtp')?.value||'').trim();
+   if(!/^\\d{6}$/.test(otp))throw Error('Enter the 6-digit mobile OTP.');
+   await saveJourneyStep(key,steps[wi][1],{mobile:custMobile(),'otp_verified':false},'pending');
+   throw Error('OTP verification service is not configured yet. Configure the SMS/OTP provider before production use.');
+  }else if(wi===1){
+   const pan=(document.getElementById('wPan').value||'').trim().toUpperCase();
+   const gst=(document.getElementById('wGst').value||'').trim().toUpperCase();
+   if(!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan))throw Error('Enter a valid PAN.');
+   const pv=await api('/services/pan/validate?pan='+encodeURIComponent(pan),{method:'POST'});
+   if(!pv.valid_format)throw Error('PAN format validation failed.');
+   await api('/services/loan-request/'+id+'/'+lid+'/kyc',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({pan})});
+   let gv=null;
+   if(gst){gv=await providerRequest('gst',{pan,gstin:gst});if(gv.status==='SUCCESS'&&gv.data?.gstin&&String(gv.data.gstin).toUpperCase()!==gst)throw Error('GST verification response did not match the submitted GST number.');}
+   wizardData.PAN_GST={pan_status:pv.verification_status,gst_status:gv?.status||'NOT_PROVIDED'};
+   await saveJourneyStep(key,steps[wi][1],wizardData.PAN_GST);
+   await stage('AADHAAR');
+  }else if(wi===2){
+   const method=document.getElementById('wAadhaarMethod').value;
+   const af=document.getElementById('wAadhaarFile').files[0],sf=document.getElementById('wSelfieFile').files[0];
+   if(!method||!af||!sf)throw Error('Select Aadhaar method and provide Aadhaar document and selfie.');
+   const docs=[['AADHAAR',af],['SELFIE',sf]];
+   for(const [type,file] of docs)await registerDoc(type,file);
+   await saveJourneyStep(key,steps[wi][1],{method,aadhaar_file:af.name,selfie_file:sf.name});
+   await stage('PERSONAL');
+  }else if(wi===3){
+   const result=wizardData.BANK_AA;
+   if(!result||result.status!=='SUCCESS')throw Error('Connect Account Aggregator successfully before continuing.');
+   await saveJourneyStep(key,steps[wi][1],{provider_status:result.status,request_id:result.request_id});
+   await stage('BANKING');
+  }else if(wi===4){
+   if(!document.getElementById('wCibilConsent').checked)throw Error('Authorize the bureau-check payment step to continue.');
+   await saveJourneyStep(key,steps[wi][1],{payment_status:'authorized',provider_payment:'not_configured'});
+  }else if(wi===5){
+   const bureau=document.getElementById('wBureau').value;
+   if(!bureau)throw Error('Select CIBIL or CRIF.');
+   const result=await providerRequest('bureau',{bureau,loan_id:lid});
+   wizardData.BUREAU=result;
+   document.getElementById('bureauResult').innerHTML='<div class="notice">Bureau provider status: <b>'+esc(result.status)+'</b></div>';
+   if(result.status!=='SUCCESS')throw Error('Bureau check did not return an approved provider result. Current status: '+result.status);
+   const bureauData=result.data||{};
+   const score=Number(bureauData.score);
+   const approved=Number.isFinite(score)?score>=650:String(bureauData.decision||bureauData.status||'').toUpperCase()==='APPROVED';
+   if(!approved)throw Error('Bureau result is not approved. Processing stops at this step.');
+   await saveJourneyStep(key,steps[wi][1],{bureau,status:result.status,score:Number.isFinite(score)?score:null});
+  }else if(wi===6){
+   const p={name:document.getElementById('wFullName').value,gender:document.getElementById('wGender').value,date_of_birth:document.getElementById('wDob').value,marital_status:document.getElementById('wMarital').value,email:document.getElementById('wEmail').value};
+   const father=document.getElementById('wFatherSpouse').value,education=document.getElementById('wEducation').value,caste=document.getElementById('wCaste').value;
+   if(!p.name||!p.gender||!p.date_of_birth||!p.marital_status||!p.email||!father||!education||!caste)throw Error('Complete all Basic Details.');
+   await api('/services/customer-profile/'+id+'/personal',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+   await saveJourneyStep(key,steps[wi][1],{father_spouse_name:father,education,caste,email:p.email});
+   await stage('ADDRESS');
+  }else if(wi===7){
+   const p={permanent_address:document.getElementById('wPermanent').value,current_city:document.getElementById('wCity').value,address:document.getElementById('wCurrentAddress').value,residence_ownership:document.getElementById('wResidence').value,residence_since:document.getElementById('wResidenceSince').value};
+   if(!Object.values(p).every(Boolean))throw Error('Complete all address and residence fields.');
+   const family=[...document.querySelectorAll('.repeat-row')].map(row=>({name:row.querySelector('[id^="famName"]')?.value,relation:row.querySelector('[id^="famRelation"]')?.value,mobile:row.querySelector('[id^="famMobile"]')?.value,income:Number(row.querySelector('[id^="famIncome"]')?.value||0)})).filter(x=>x.name||x.mobile);
+   await api('/services/customer-profile/'+id+'/address-residence',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+   await saveJourneyStep(key,steps[wi][1],{...p,pin:document.getElementById('wPin').value,state:document.getElementById('wState').value,family_members:family});
+   await stage('BUSINESS');
+  }else if(wi===8){
+   let type=document.getElementById('wBusinessType').value;
+   if(type==='Other')type=document.getElementById('wOtherBusiness').value.trim();
+   const p={customer_type:'Individual',business_name:document.getElementById('wBusinessName').value,business_type:type,monthly_income:Number(document.getElementById('wIncome')?.value||0),years_in_business:Number(document.getElementById('wBusinessStability').value||0),primary_bank:data?.customer?.primary_bank||''};
+   if(!p.business_name||!type)throw Error('Enter business name and business type.');
+   await api('/services/customer-profile/'+id+'/employment-business',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+   const extra={business_address:document.getElementById('wBusinessAddress').value,business_pin:document.getElementById('wBusinessPin').value,business_stability_years:p.years_in_business,business_ownership:document.getElementById('wBusinessOwnership').value,machinery_value:Number(document.getElementById('wMachinery').value||0),total_stock_value:Number(document.getElementById('wStock').value||0),trade_reference:{name:document.getElementById('wTradeName').value,number:document.getElementById('wTradeNumber').value,firm_name:document.getElementById('wTradeFirm').value}};
+   await saveJourneyStep(key,steps[wi][1],{...p,...extra});
+   await stage('DOCUMENTS');
+  }else if(wi===9){
+   const groups=[['ADDITIONAL_BANK_ACCOUNT','wDocBank'],['GST_BUSINESS_BILLS','wDocBills'],['BUSINESS_BOARD_PHOTO','wDocBoard'],['OTHER_BUSINESS_PHOTO','wDocOther']];
+   let count=0;for(const [type,idf] of groups){for(const file of [...(document.getElementById(idf)?.files||[])]){await registerDoc(type,file);count++}}
+   if(!count)throw Error('Select at least one document to upload.');
+   await saveJourneyStep(key,steps[wi][1],{document_count:count,documents:'registered'});
+   await stage('REVIEW');
+  }else if(wi===10){
+   if(!document.getElementById('wConfirm').checked)throw Error('Please confirm the application details.');
+   await saveJourneyStep(key,steps[wi][1],{confirmed:true});
+   await stage('ASSESSMENT');
+  }else{
+   const result=await api('/api/v1/credit/'+id+'/assess',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({loan_id:lid})});
+   wizardData.ELIGIBILITY=result;
+   document.getElementById('eligibilityResult').innerHTML='<div class="eligibility-summary"><div><span>Decision</span><b>'+esc(stat(result.decision))+'</b></div><div><span>Score</span><b>'+esc(txt(result.score))+'</b></div><div><span>Eligible Amount</span><b>'+esc(money(result.eligible_amount))+'</b></div><div><span>Approval</span><b>'+esc(result.approval_percent==null?'—':result.approval_percent+'%')+'</b></div></div>';
+   await saveJourneyStep(key,steps[wi][1],result,result.decision==='REJECT'?'rejected':'completed');
+   msg('wMsg','Eligibility check completed.');
+   document.getElementById('wNext').disabled=true;
+   await load();
+   return;
+  }
+  if(wi<steps.length-1){wi++;drawWizard()}else await load();
+ }catch(e){msg('wMsg',e.message,true)}
+}
+function custMobile(){return data?.customer?.mobile||''}
+async function registerDoc(type,file){
+ const id=sessionStorage.getItem(CID),lid=app?.loan_id;
+ return api('/api/services/documents/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+  customer_id:Number(id),loan_id:Number(lid),document_type:type,file_name:file.name,mime_type:file.type||'application/octet-stream',file_size:file.size||0,source:'customer_portal',required:true,verification_status:'pending'
+ })});
+}
+async function stage(s){
+ const id=sessionStorage.getItem(CID),lid=app.loan_id;
+ await api('/services/loan-request/'+id+'/'+lid+'/stage',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage:s})});
+ app.current_stage=s;
+}
 async function apply(){const id=sessionStorage.getItem(CID),amount=Number(document.getElementById('amount').value),tenure=Number(document.getElementById('tenure').value);if(app){openWizard(app);return}if(amount<5000||amount>15000||![3,6,9,12].includes(tenure)){msg('applyMsg','Enter a valid amount (₹5,000–₹15,000) and tenure.',true);return}try{const x=await api('/services/loan-request/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product:'Micro Business Loan',requested_amount:amount,tenure_months:tenure})});app={loan_id:x.loan_id,requested_amount:x.requested_amount,tenure_months:x.tenure_months,product:x.product,status:x.status,current_stage:x.current_stage};openWizard(app);await loadApps()}catch(e){msg('applyMsg',e.message,true)}}
 async function login(){const mobile=document.getElementById('mobile').value.replace(/\D/g,'').slice(0,10);if(mobile.length!==10){msg('accessMsg','Enter a valid 10-digit mobile number.',true);return}try{let x;try{x=await api('/auth/customer-mobile-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile})})}catch(e){x=await api('/services/api/auth/customer-mobile-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile})})}sessionStorage.setItem(TOKEN,x.access_token);sessionStorage.setItem(CID,String(x.customer.id));document.getElementById('access').classList.add('hidden');document.getElementById('app').classList.remove('hidden');await load();go('dashboard')}catch(e){msg('accessMsg',e.message,true)}}
 async function signup(){const name=document.getElementById('signupName').value.trim(),mobile=document.getElementById('signupMobile').value.replace(/\D/g,'').slice(0,10);if(name.length<2||mobile.length!==10){msg('accessMsg','Enter a valid name and 10-digit mobile.',true);return}try{const x=await api('/services/api/auth/customer-register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,mobile})});sessionStorage.setItem(TOKEN,x.access_token);sessionStorage.setItem(CID,String(x.customer.id));document.getElementById('access').classList.add('hidden');document.getElementById('app').classList.remove('hidden');await load();go('dashboard')}catch(e){msg('accessMsg',e.message,true)}}
