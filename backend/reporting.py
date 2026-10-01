@@ -38,7 +38,8 @@ def _report_data(db):
         LoanRecord.disbursed_amount, LoanRecord.outstanding_amount, LoanRecord.interest_rate,
         LoanRecord.tenure_months, LoanRecord.status, LoanRecord.current_stage,
         LoanRecord.product, LoanRecord.scorecard_score, LoanRecord.scorecard_decision,
-        LoanRecord.scorecard_approval_percent, LoanRecord.created_at
+        LoanRecord.scorecard_approval_percent, LoanRecord.scorecard_hard_rejects,
+        LoanRecord.created_at
     )).order_by(LoanRecord.id.desc()).all()
     repayments = db.query(RepaymentRecord).options(load_only(
         RepaymentRecord.id, RepaymentRecord.loan_id, RepaymentRecord.installment,
