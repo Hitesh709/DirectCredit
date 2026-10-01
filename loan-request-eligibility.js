@@ -303,12 +303,47 @@
           </div>
         </div>`;
     } else if(key==='bank'){
-      view.innerHTML=card('Bank Statement Analysis',[
-        ['Primary Bank',c.primary_bank],['Average EOD Balance',money(bank.average_eod_balance)],
-        ['Avg Monthly Credit',money(bank.average_monthly_credit)],['Avg Monthly Debit',money(bank.average_monthly_debit)],
-        ['Transactions',bank.total_transactions],['Negative Balance Events',bank.negative_balance_count],
-        ['Outstanding',money(m.outstanding_amount)],['Overdue',money(m.overdue_amount)],['Data Status',bank.status]
-      ]);
+      const tx=Array.isArray(data.bank_transactions)?data.bank_transactions:[];
+      const categories={};
+      let credits=0,debits=0;
+      tx.forEach(t=>{const a=Math.abs(Number(t.amount||0)); if(String(t.direction||'').toLowerCase()==='credit')credits+=a; else if(String(t.direction||'').toLowerCase()==='debit')debits+=a; const k=t.category||'Other'; categories[k]=(categories[k]||0)+a;});
+      const bankName=c.primary_bank||data.financial_details?.bank_name||'Not available';
+      const avgBal=bank.average_eod_balance ?? c.average_bank_balance;
+      const txRows=tx.slice(0,12);
+      const monthRows=Array.isArray(bank.monthly_breakdown)?bank.monthly_breakdown.slice(-6):[];
+      const catRows=Object.entries(categories).sort((a,b)=>b[1]-a[1]).slice(0,6);
+      const totalCat=catRows.reduce((s,x)=>s+x[1],0);
+      const maxMonth=Math.max(1,...monthRows.map(x=>Math.max(Number(x.credit||x.credits||0),Number(x.debit||x.debits||0))));
+      const monthChart=monthRows.length?monthRows.map(x=>`<div class="bk-bar-col"><div class="bk-bars"><i style="height:${Math.max(6,Math.round(Number(x.credit||x.credits||0)/maxMonth*100))}%"></i><b style="height:${Math.max(6,Math.round(Number(x.debit||x.debits||0)/maxMonth*100))}%"></b></div><small>${esc(x.month||x.label||'')}</small></div>`).join(''):'<div class="bk-empty">Monthly transaction history is not available.</div>';
+      const donut=catRows.length?`conic-gradient(#1768ed 0 ${(catRows[0][1]/totalCat*100).toFixed(1)}%,#12a05a 0 ${((catRows[0][1]+(catRows[1]?.[1]||0))/totalCat*100).toFixed(1)}%,#f59b12 0 ${((catRows[0][1]+(catRows[1]?.[1]||0)+(catRows[2]?.[1]||0))/totalCat*100).toFixed(1)}%,#7540d8 0 ${((catRows[0][1]+(catRows[1]?.[1]||0)+(catRows[2]?.[1]||0)+(catRows[3]?.[1]||0))/totalCat*100).toFixed(1)}%,#e34a5b 0 100%)`:'none';
+      const moneyOrNA=v=>v==null?'Not available':money(v);
+      view.innerHTML=`
+        <div class="bank360">
+          <div class="bk-profile-row">
+            <div class="bk-customer"><div class="bk-avatar">${esc(String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div><div><h2>${esc(c.name||'Customer')} <span class="bk-pill good">${esc(l.status||'Active')}</span></h2><small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small><small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div></div>
+            <div class="bk-kpi blue"><small>TOTAL CREDITS</small><strong>${moneyOrNA(bank.average_monthly_credit)}</strong><span>${bank.credit_transactions??'—'} credit transactions</span></div>
+            <div class="bk-kpi red"><small>TOTAL DEBITS</small><strong>${moneyOrNA(bank.average_monthly_debit)}</strong><span>${bank.debit_transactions??'—'} debit transactions</span></div>
+            <div class="bk-kpi green"><small>NET CASH FLOW</small><strong>${bank.average_monthly_credit!=null&&bank.average_monthly_debit!=null?money(bank.average_monthly_credit-bank.average_monthly_debit):'Not available'}</strong><span>${bank.status||'Bank data'}</span></div>
+            <div class="bk-kpi purple"><small>AVG. MONTHLY BALANCE</small><strong>${moneyOrNA(avgBal)}</strong><span>Average EOD balance</span></div>
+            <div class="bk-kpi teal"><small>STATEMENT PERIOD</small><strong>${monthRows.length?esc(monthRows.length+' Months'):'Not available'}</strong><span>${tx.length?esc(tx.length+' transactions'):'No transaction ledger'}</span></div>
+          </div>
+
+          <div class="bk-chart-grid">
+            <div class="bk-panel"><div class="bk-head"><div><h3>CASH FLOW OVERVIEW</h3><p>Monthly credit and debit movement</p></div><span class="bk-legend"><i></i>Credits <b></b>Debits</span></div><div class="bk-chart">${monthChart}</div></div>
+            <div class="bk-panel"><div class="bk-head"><div><h3>TRANSACTION CATEGORIZATION</h3><p>Distribution by transaction amount</p></div></div><div class="bk-donut-row"><div class="bk-donut" style="background:${donut}"><span>${catRows.length?money(totalCat):'—'}<small>Total</small></span></div><div class="bk-cat-list">${catRows.map((x,i)=>`<div><i class="c${i}"></i><span>${esc(x[0])}</span><b>${money(x[1])}</b></div>`).join('')||'<div class="bk-empty">No categorized transactions available.</div>'}</div></div></div>
+          </div>
+
+          <div class="bk-bottom-grid">
+            <div class="bk-panel"><div class="bk-head"><h3>TRANSACTION SUMMARY</h3></div><div class="bk-summary">
+              <div><span>Primary Bank</span><b>${esc(bankName)}</b></div><div><span>Total Transactions</span><b>${bank.total_transactions??tx.length}</b></div><div><span>Total Credits</span><b class="credit">${tx.length?money(credits):moneyOrNA(bank.average_monthly_credit)}</b></div><div><span>Total Debits</span><b class="debit">${tx.length?money(debits):moneyOrNA(bank.average_monthly_debit)}</b></div><div><span>Last Balance</span><b>${moneyOrNA(bank.last_balance)}</b></div><div><span>Negative Balance Events</span><b>${bank.negative_balance_count??'—'}</b></div>
+            </div></div>
+            <div class="bk-panel"><div class="bk-head"><h3>AVERAGE BALANCE DETAILS</h3></div><div class="bk-balance-cards"><div><small>MINIMUM</small><b>${moneyOrNA(bank.minimum_balance)}</b></div><div><small>AVERAGE</small><b>${moneyOrNA(avgBal)}</b></div><div><small>MAXIMUM</small><b>${moneyOrNA(bank.maximum_balance)}</b></div></div><div class="bk-balance-note">${esc(bank.status||'Bank statement status')}</div></div>
+            <div class="bk-panel"><div class="bk-head"><h3>TOP TRANSACTIONS</h3></div><div class="bk-top-list">${tx.slice().sort((a,b)=>Math.abs(Number(b.amount||0))-Math.abs(Number(a.amount||0))).slice(0,6).map(t=>`<div><span>${esc(t.description||t.category||'Transaction')}</span><b class="${String(t.direction).toLowerCase()==='credit'?'credit':'debit'}">${String(t.direction).toLowerCase()==='credit'?'+':'-'}${money(Math.abs(Number(t.amount||0)))}</b></div>`).join('')||'<div class="bk-empty">No transaction records are available.</div>'}</div></div>
+          </div>
+
+          <div class="bk-panel bk-ledger"><div class="bk-head"><div><h3>BANK TRANSACTION LEDGER</h3><p>Customer-level transactions returned by the banking data source</p></div></div><div class="bk-table-wrap"><table class="bk-table"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Direction</th><th>Amount</th><th>Balance</th></tr></thead><tbody>${txRows.map(t=>`<tr><td>${esc(t.transaction_date||'—')}</td><td class="primary">${esc(t.description||'—')}</td><td>${esc(t.category||'Other')}</td><td><span class="bk-dir ${String(t.direction).toLowerCase()==='credit'?'credit':'debit'}">${esc(t.direction||'—')}</span></td><td class="money">${money(t.amount)}</td><td>${moneyOrNA(t.balance)}</td></tr>`).join('')||'<tr><td colspan="6" class="bk-empty">No bank transaction records are available for this customer.</td></tr>'}</tbody></table></div></div>
+          <div class="bk-source">Statement source: ${esc(bankName)} <span>•</span> Data status: ${esc(bank.status||'Not available')}</div>
+        </div>`;
     } else if(key==='kyc'){
       view.innerHTML=card('KYC & Employment',[
         ['KYC Status',k.kyc_status],['Occupation',k.employment_type],
@@ -345,7 +380,7 @@
       (loans.length?`<div class="live-card"><h3>Application History</h3><div class="table-scroll"><table><thead><tr><th>Loan</th><th>Requested</th><th>Eligible</th><th>Score</th><th>Approval</th><th>Status</th></tr></thead><tbody>${loans.map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(money(x.requested_amount))}</td><td>${esc(money(x.eligible_amount))}</td><td>${esc(val(x.scorecard_score))}</td><td>${x.scorecard_approval_percent==null?'—':esc(x.scorecard_approval_percent+'%')}</td><td>${esc(val(x.status))}</td></tr>`).join('')}</tbody></table></div></div>`:'');
       addEligibilityMicroDetails(c,l,k,risk);
     }
-    if(key!=="contact") view.insertAdjacentHTML("beforeend", referenceDetails(data,key));
+    if(!["contact","bank"].includes(key)) view.insertAdjacentHTML("beforeend", referenceDetails(data,key));
   }
 
   function buildSelector(options){
