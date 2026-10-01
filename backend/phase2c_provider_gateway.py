@@ -17,7 +17,7 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-PROVIDER_KINDS = ("account_aggregator", "bureau", "gst", "itr", "trade", "geo", "otp")
+PROVIDER_KINDS = ("account_aggregator", "bureau", "gst", "itr", "trade", "geo", "otp", "payment", "digilocker")
 
 
 def _env(kind: str, suffix: str, default: str = "") -> str:
