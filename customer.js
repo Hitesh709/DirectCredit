@@ -282,7 +282,7 @@ async function stage(s){
 }
 async function apply(){const id=sessionStorage.getItem(CID),amount=Number(document.getElementById('amount').value),tenure=Number(document.getElementById('tenure').value);if(app){openWizard(app);return}if(amount<5000||amount>15000||![3,6,9,12].includes(tenure)){msg('applyMsg','Enter a valid amount (₹5,000–₹15,000) and tenure.',true);return}try{const x=await api('/services/loan-request/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product:'Micro Business Loan',requested_amount:amount,tenure_months:tenure})});app={loan_id:x.loan_id,requested_amount:x.requested_amount,tenure_months:x.tenure_months,product:x.product,status:x.status,current_stage:x.current_stage};openWizard(app);await loadApps()}catch(e){msg('applyMsg',e.message,true)}}
 async function login(){
- const mobile=document.getElementById('mobile').value.replace(/\\D/g,'').slice(0,10);
+ const mobile=document.getElementById('mobile').value.replace(/\D/g,'').slice(0,10);
  if(mobile.length!==10){msg('accessMsg','Enter a valid 10-digit mobile number.',true);return}
  try{
   const x=await api('/auth/customer-mobile-otp/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile})});
@@ -292,7 +292,7 @@ async function login(){
  }catch(e){msg('accessMsg',e.message,true)}
 }
 async function verifyOtp(){
- const mobile=document.getElementById('mobile').value.replace(/\\D/g,'').slice(0,10),otp=document.getElementById('loginOtp').value.replace(/\\D/g,'').slice(0,6);
+ const mobile=document.getElementById('mobile').value.replace(/\D/g,'').slice(0,10),otp=document.getElementById('loginOtp').value.replace(/\D/g,'').slice(0,6);
  if(mobile.length!==10||otp.length!==6||!otpRequestId){msg('accessMsg','Request a valid OTP first.',true);return}
  try{
   const x=await api('/auth/customer-mobile-otp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile,otp,request_id:otpRequestId})});
