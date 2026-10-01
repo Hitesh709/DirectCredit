@@ -183,6 +183,10 @@
               </div>
             </div>
           </div>
+          <div class="cp-overview-grid">
+            <div class="cp-section cp-score-card"><div class="cp-section-head"><div><h3>Credit Score Gauge</h3><p>Current bureau score returned for this customer.</p></div></div><div class="cp-gauge"><div class="cp-gauge-arc"></div><strong>${esc(score??'—')}</strong><span>${esc(risk.risk_tier||'Not assessed')}</span><small>Credit / CIBIL Score</small></div></div>
+            <div class="cp-section"><div class="cp-section-head"><div><h3>Latest Repayment Activity</h3><p>Most recent repayment records available.</p></div></div><div class="cp-mini-list">${(Array.isArray(data.repayments)?data.repayments:Array.isArray(data.repayment_records)?data.repayment_records:[]).slice(0,5).map(x=>`<div><span>${esc(x.paid_at||x.due_date||x.date||'—')}</span><b>${money(x.paid_amount)}</b><small>${esc(x.status||'Recorded')}</small></div>`).join('')||'<div class="cp-empty">No repayment history is available.</div>'}</div></div>
+          </div>
           <div class="cp-section"><div class="cp-section-head"><div><h3>Active Loans</h3><p>Current customer loan exposure.</p></div></div><div class="cp-table-wrap"><table class="cp-table"><thead><tr><th>Loan Account</th><th>Product</th><th>Sanctioned</th><th>Outstanding</th><th>EMI</th><th>Next Due</th><th>Status</th></tr></thead><tbody>${loans.map(x=>`<tr><td class="primary">${esc(x.id)}</td><td>${esc(x.product)}</td><td>${esc(money(x.sanctioned_amount))}</td><td class="money">${esc(money(x.outstanding_amount))}</td><td>${esc(money(x.monthly_emi))}</td><td>${esc(x.next_due_date||'Not available')}</td><td><span class="cp-status cp-${esc(String(x.status||'').toLowerCase())}">${esc(x.status)}</span></td></tr>`).join('')}</tbody></table></div></div>
         `;
       };
