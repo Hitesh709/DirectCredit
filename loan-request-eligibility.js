@@ -302,7 +302,7 @@
               <div class="ct-note-box"><b>ⓘ Contact notes</b><p>${esc(read(data,['contact_details.notes','contact_notes','notes'])||'No contact notes are available in the customer record.')}</p><small>Source record</small></div>`,'notes-card')}
           </div>
         </div>`;
-    } else if(key==='bank'){    } else if(key==='bank'){
+    } else if(key==='bank'){
       view.innerHTML=card('Bank Statement Analysis',[
         ['Primary Bank',c.primary_bank],['Average EOD Balance',money(bank.average_eod_balance)],
         ['Avg Monthly Credit',money(bank.average_monthly_credit)],['Avg Monthly Debit',money(bank.average_monthly_debit)],
@@ -345,7 +345,7 @@
       (loans.length?`<div class="live-card"><h3>Application History</h3><div class="table-scroll"><table><thead><tr><th>Loan</th><th>Requested</th><th>Eligible</th><th>Score</th><th>Approval</th><th>Status</th></tr></thead><tbody>${loans.map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(money(x.requested_amount))}</td><td>${esc(money(x.eligible_amount))}</td><td>${esc(val(x.scorecard_score))}</td><td>${x.scorecard_approval_percent==null?'—':esc(x.scorecard_approval_percent+'%')}</td><td>${esc(val(x.status))}</td></tr>`).join('')}</tbody></table></div></div>`:'');
       addEligibilityMicroDetails(c,l,k,risk);
     }
-    view.insertAdjacentHTML("beforeend", referenceDetails(data,key));
+    if(key!=="contact") view.insertAdjacentHTML("beforeend", referenceDetails(data,key));
   }
 
   function buildSelector(options){
