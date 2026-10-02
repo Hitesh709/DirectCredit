@@ -1,14 +1,27 @@
-/* Final admin shell alignment fix */
-html,body{margin:0!important;padding:0!important;min-height:100%!important}
-body{overflow-x:hidden!important}
-.main{position:relative!important;display:block!important;float:none!important;clear:both!important;margin-left:170px!important;padding:16px 20px 28px!important;min-height:100vh!important;top:0!important;transform:none!important;overflow:visible!important}
-.sidebar{position:fixed!important;left:0!important;top:0!important;bottom:auto!important;width:170px!important;height:100vh!important;min-height:100vh!important}
-.page{display:none!important;position:relative!important;float:none!important;clear:both!important;top:0!important;left:0!important;margin:0!important;padding:0!important;transform:none!important}
-.page.activePage{display:block!important}
-#reports{display:block!important;position:relative!important;float:none!important;top:0!important;left:0!important;margin:0!important;padding:0 0 28px!important;min-height:0!important;background:transparent!important}
-#reports .an-shell{display:block!important;width:100%!important;max-width:1440px!important;margin:0 auto!important;padding:0!important}
+/* DirectCredit — deterministic desktop application shell.
+   This file intentionally owns the viewport geometry so page-specific styles cannot
+   push the workspace down the screen. */
+html,body{margin:0!important;padding:0!important;width:100%!important;min-height:100%!important;overflow:hidden!important}
+body{position:relative!important;background:#f5f7fb!important}
+.sidebar{position:fixed!important;left:0!important;top:0!important;bottom:0!important;width:170px!important;height:100vh!important;min-height:100vh!important;z-index:1000!important;box-sizing:border-box!important;overflow-y:auto!important;overflow-x:hidden!important}
+.main{position:fixed!important;left:170px!important;right:0!important;top:0!important;bottom:0!important;width:auto!important;height:100vh!important;margin:0!important;padding:16px 20px 28px!important;box-sizing:border-box!important;display:block!important;float:none!important;clear:none!important;transform:none!important;overflow-x:hidden!important;overflow-y:auto!important}
+.page{display:none!important;position:relative!important;float:none!important;clear:none!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;width:100%!important;max-width:none!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;transform:none!important}
+.page.activePage{display:block!important;visibility:visible!important;opacity:1!important}
+#dashboard.activePage,#reports.activePage{display:block!important}
+#dashboard{width:100%!important;margin:0!important;padding:0!important;min-height:0!important}
+#dashboard .dc-exec{width:100%!important;max-width:1440px!important;margin:0 auto!important;padding:0!important}
+#reports{width:100%!important;min-height:0!important;margin:0!important;padding:18px 20px 30px!important;background:transparent!important;box-sizing:border-box!important}
+#reports .an-shell{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
 #reports .an-head{margin:0 0 14px!important;padding:0!important}
-.dc-export-bar{position:relative!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;width:100%!important;height:auto!important;min-height:36px!important;margin:0 0 12px!important;padding:0!important;top:0!important;left:0!important;transform:none!important;float:none!important}
-.dc-export-bar button{height:36px!important}
-@media(max-width:900px){.main{margin-left:150px!important;padding:14px!important}.sidebar{width:150px!important}}
-@media(max-width:700px){.main{margin-left:0!important;padding:12px!important}.sidebar{position:relative!important;width:100%!important;height:auto!important;min-height:0!important}.dc-export-bar{justify-content:flex-start!important;flex-wrap:wrap!important}}
+.dc-export-bar{position:relative!important;top:auto!important;left:auto!important;right:auto!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important;width:100%!important;height:36px!important;min-height:36px!important;margin:0 0 12px!important;padding:0!important;box-sizing:border-box!important;transform:none!important;float:none!important}
+.dc-export-bar button{height:36px!important;margin:0!important}
+@media(max-width:900px){
+ .sidebar{width:150px!important}
+ .main{left:150px!important;padding:14px!important}
+}
+@media(max-width:700px){
+ html,body{overflow:auto!important}
+ .sidebar{position:relative!important;width:100%!important;height:auto!important;min-height:0!important}
+ .main{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:100%!important;height:auto!important;min-height:0!important;padding:12px!important;overflow:visible!important}
+ .dc-export-bar{justify-content:flex-start!important;flex-wrap:wrap!important}
+}
