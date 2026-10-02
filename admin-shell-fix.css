@@ -1,27 +1,44 @@
-/* DirectCredit admin shell — deterministic viewport layout */
-html,body{margin:0!important;width:100%!important;min-height:100%!important;overflow:hidden!important}
+/* DirectCredit admin shell — hard viewport geometry.
+   Page content is anchored to the viewport so no legacy page CSS can create a large top gap. */
+html,body{margin:0!important;padding:0!important;width:100%!important;height:100%!important;min-height:100%!important;overflow:hidden!important}
 body{position:relative!important;background:#f7f9fc!important}
-.sidebar{position:fixed!important;left:0!important;top:0!important;bottom:0!important;width:170px!important;height:100vh!important;height:100dvh!important;min-height:100vh!important;z-index:1000!important;box-sizing:border-box!important}
-.main{position:fixed!important;left:170px!important;right:0!important;top:0!important;bottom:0!important;width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:16px 20px 28px!important;box-sizing:border-box!important;overflow-x:hidden!important;overflow-y:auto!important;display:block!important;transform:none!important}
-.page{position:relative!important;top:0!important;left:0!important;width:100%!important;margin:0!important;padding:0!important;transform:none!important;min-height:0!important}
-.page.activePage{display:block!important}
-.dc-export-bar{position:relative!important;top:0!important;left:0!important;right:0!important;width:100%!important;box-sizing:border-box!important;margin:0 0 14px!important;padding:0!important}
-#reports{position:relative!important;top:0!important;left:0!important;width:100%!important;min-height:0!important;margin:0!important;padding:0 0 28px!important;transform:none!important;box-sizing:border-box!important}
-#reports .an-shell{width:100%!important;max-width:1440px!important;margin:0 auto!important}
-#reports .an-head{margin:0 0 14px!important}
-#dashboard{position:relative!important;top:0!important;left:0!important;width:100%!important;margin:0!important;padding:0!important}
+.sidebar{position:fixed!important;left:0!important;top:0!important;bottom:0!important;width:170px!important;height:100vh!important;height:100dvh!important;min-height:100vh!important;z-index:10000!important;box-sizing:border-box!important}
+.main{position:fixed!important;left:170px!important;right:0!important;top:0!important;bottom:0!important;width:auto!important;height:100vh!important;height:100dvh!important;margin:0!important;padding:0!important;box-sizing:border-box!important;overflow:hidden!important;display:block!important;transform:none!important}
+/* Every page is independently anchored inside the workspace. */
+.page{display:none!important;position:absolute!important;left:0!important;right:0!important;top:64px!important;bottom:0!important;width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:0 20px 28px!important;box-sizing:border-box!important;overflow:auto!important;transform:none!important;float:none!important;clear:none!important}
+.page.activePage{display:block!important;visibility:visible!important;opacity:1!important}
+#dashboard{top:0!important;padding-top:16px!important}
+#dashboard.activePage{display:block!important}
+#dashboard .dc-exec{width:100%!important;max-width:1440px!important;margin:0 auto!important;padding:0!important}
+#reports{top:0!important;padding:16px 20px 28px!important;background:#f7f9fc!important}
+#reports.activePage{display:block!important}
+#reports .an-shell{width:100%!important;max-width:1440px!important;margin:0 auto!important;padding:0!important}
+#reports .an-head{margin:0 0 14px!important;padding:0!important}
+/* Export controls occupy a fixed header row, never the document flow. */
+.dc-export-bar{position:absolute!important;left:20px!important;right:20px!important;top:14px!important;width:auto!important;height:36px!important;min-height:36px!important;margin:0!important;padding:0!important;box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;z-index:50!important;transform:none!important;float:none!important}
+.dc-export-bar button{height:36px!important;margin:0!important}
+/* Reports content needs room for the export row. */
+#reports{padding-top:62px!important}
+/* Iframes stay inside their page frame. */
+.page iframe{display:block!important;width:100%!important;max-width:none!important;border:0!important;margin:0!important}
 .sidebar-collapsed .sidebar{width:64px!important}
-.sidebar-collapsed .main{left:64px!important;margin-left:0!important}
+.sidebar-collapsed .main{left:64px!important}
 @media(max-width:900px){
-  .sidebar{width:150px!important}
-  .main{left:150px!important}
-  .sidebar-collapsed .sidebar{width:58px!important}
-  .sidebar-collapsed .main{left:58px!important}
+ .sidebar{width:150px!important}
+ .main{left:150px!important}
+ .page{padding-left:14px!important;padding-right:14px!important}
+ .dc-export-bar{left:14px!important;right:14px!important}
+ .sidebar-collapsed .sidebar{width:58px!important}
+ .sidebar-collapsed .main{left:58px!important}
 }
 @media(max-width:700px){
-  html,body{overflow:auto!important}
-  .sidebar{position:relative!important;width:100%!important;height:auto!important;min-height:0!important}
-  .main{position:relative!important;left:0!important;right:auto!important;top:0!important;bottom:auto!important;width:100%!important;height:auto!important;min-height:0!important;overflow:visible!important;padding:12px!important}
-  .sidebar-collapsed .sidebar{width:100%!important}
-  .sidebar-collapsed .main{left:0!important}
+ html,body{overflow:auto!important;height:auto!important}
+ .sidebar{position:relative!important;width:100%!important;height:auto!important;min-height:0!important}
+ .main{position:relative!important;left:0!important;right:auto!important;top:auto!important;bottom:auto!important;width:100%!important;height:auto!important;min-height:0!important;overflow:visible!important;padding:0!important}
+ .page{position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:100%!important;height:auto!important;padding:12px!important;overflow:visible!important}
+ #dashboard{padding-top:12px!important}
+ #reports{padding-top:60px!important}
+ .dc-export-bar{position:absolute!important;left:12px!important;right:12px!important;top:10px!important;justify-content:flex-start!important;flex-wrap:wrap!important;height:auto!important;min-height:36px!important}
+ .sidebar-collapsed .sidebar{width:100%!important}
+ .sidebar-collapsed .main{left:0!important}
 }
