@@ -1,0 +1,27 @@
+/* DirectCredit admin shell — deterministic viewport layout */
+html,body{margin:0!important;width:100%!important;min-height:100%!important;overflow:hidden!important}
+body{position:relative!important;background:#f7f9fc!important}
+.sidebar{position:fixed!important;left:0!important;top:0!important;bottom:0!important;width:170px!important;height:100vh!important;height:100dvh!important;min-height:100vh!important;z-index:1000!important;box-sizing:border-box!important}
+.main{position:fixed!important;left:170px!important;right:0!important;top:0!important;bottom:0!important;width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:16px 20px 28px!important;box-sizing:border-box!important;overflow-x:hidden!important;overflow-y:auto!important;display:block!important;transform:none!important}
+.page{position:relative!important;top:0!important;left:0!important;width:100%!important;margin:0!important;padding:0!important;transform:none!important;min-height:0!important}
+.page.activePage{display:block!important}
+.dc-export-bar{position:relative!important;top:0!important;left:0!important;right:0!important;width:100%!important;box-sizing:border-box!important;margin:0 0 14px!important;padding:0!important}
+#reports{position:relative!important;top:0!important;left:0!important;width:100%!important;min-height:0!important;margin:0!important;padding:0 0 28px!important;transform:none!important;box-sizing:border-box!important}
+#reports .an-shell{width:100%!important;max-width:1440px!important;margin:0 auto!important}
+#reports .an-head{margin:0 0 14px!important}
+#dashboard{position:relative!important;top:0!important;left:0!important;width:100%!important;margin:0!important;padding:0!important}
+.sidebar-collapsed .sidebar{width:64px!important}
+.sidebar-collapsed .main{left:64px!important;margin-left:0!important}
+@media(max-width:900px){
+  .sidebar{width:150px!important}
+  .main{left:150px!important}
+  .sidebar-collapsed .sidebar{width:58px!important}
+  .sidebar-collapsed .main{left:58px!important}
+}
+@media(max-width:700px){
+  html,body{overflow:auto!important}
+  .sidebar{position:relative!important;width:100%!important;height:auto!important;min-height:0!important}
+  .main{position:relative!important;left:0!important;right:auto!important;top:0!important;bottom:auto!important;width:100%!important;height:auto!important;min-height:0!important;overflow:visible!important;padding:12px!important}
+  .sidebar-collapsed .sidebar{width:100%!important}
+  .sidebar-collapsed .main{left:0!important}
+}
