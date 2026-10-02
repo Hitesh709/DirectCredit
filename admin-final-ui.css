@@ -1,0 +1,63 @@
+/* DirectCredit final UI shell: one scrollbar, readable type, full-width workspace. */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0!important;padding:0!important;width:100%!important;min-height:100%!important;background:#f5f7fb!important}
+body{font-family:Inter,Arial,sans-serif;color:#17223a!important;overflow:hidden!important}
+/* Navigation */
+.sidebar{position:fixed!important;left:0!important;top:0!important;bottom:0!important;width:210px!important;height:100dvh!important;min-height:100vh!important;padding:12px 10px!important;background:#08264d!important;z-index:20000!important;overflow-y:auto!important;overflow-x:hidden!important;pointer-events:auto!important}
+.sidebar .brand{width:42px!important;height:42px!important;margin:4px auto 22px!important;border-radius:12px!important;font-size:20px!important}
+.sidebar .nav-group{margin:0 0 16px!important}
+.sidebar .nav-label{display:block!important;margin:0 8px 7px!important;color:#8fa7c7!important;font-size:10px!important;font-weight:800!important;letter-spacing:1.3px!important;text-transform:uppercase!important}
+.sidebar .nav{display:flex!important;align-items:center!important;width:100%!important;height:40px!important;min-height:40px!important;margin:2px 0!important;padding:0 10px!important;border:0!important;border-radius:7px!important;background:transparent!important;color:#f4f7fb!important;font-size:12px!important;font-weight:700!important;line-height:40px!important;text-align:left!important;white-space:nowrap!important;overflow:hidden!important;cursor:pointer!important;position:relative!important;z-index:20001!important}
+.sidebar .nav::before{display:none!important;content:none!important}
+.sidebar .nav:hover,.sidebar .nav.active{background:#1557bd!important;color:#fff!important}
+.sidebar-toggle{z-index:20005!important;pointer-events:auto!important}
+/* Collapsed navigation */
+body.sidebar-collapsed .sidebar{width:72px!important;padding:12px 6px!important}
+body.sidebar-collapsed .sidebar .nav-label{display:none!important}
+body.sidebar-collapsed .sidebar .nav-group{margin-bottom:12px!important}
+body.sidebar-collapsed .sidebar .nav{width:60px!important;height:44px!important;min-height:44px!important;padding:0!important;justify-content:center!important;font-size:0!important;line-height:44px!important}
+body.sidebar-collapsed .sidebar .nav::before{display:block!important;content:attr(data-icon)!important;font-size:19px!important;line-height:44px!important}
+/* Workspace */
+.main{position:fixed!important;left:210px!important;right:0!important;top:0!important;bottom:0!important;width:auto!important;height:100dvh!important;margin:0!important;padding:0!important;overflow-x:hidden!important;overflow-y:auto!important;background:#f5f7fb!important;z-index:1!important}
+body.sidebar-collapsed .main{left:72px!important}
+.page{display:none!important;position:relative!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important;transform:none!important;float:none!important}
+.page.activePage{display:block!important;visibility:visible!important;opacity:1!important}
+#dashboard,#reports{width:100%!important;max-width:none!important;min-height:0!important;margin:0!important;padding:0 20px 24px!important;background:#f5f7fb!important}
+#dashboard .dc-exec{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
+/* Dashboard readable sizing and no artificial blank width */
+#dashboard .dc-exec-head{padding:14px 0!important;min-height:72px!important}
+#dashboard .dc-exec-title small{font-size:11px!important}
+#dashboard .dc-exec-title h1{font-size:28px!important;line-height:34px!important}
+#dashboard .dc-exec-title p{font-size:13px!important;line-height:19px!important}
+#dashboard .dc-exec-search{height:42px!important;width:360px!important}
+#dashboard .dc-exec-search input{font-size:13px!important}
+#dashboard .dc-exec-new{height:42px!important;font-size:12px!important}
+#dashboard .dc-exec-user b{font-size:12px!important}
+#dashboard .dc-exec-user small{font-size:11px!important}
+#dashboard .dc-exec-toolbar{padding:14px 0!important}
+#dashboard .dc-exec-toolbar strong{font-size:17px!important}
+#dashboard .dc-source,#dashboard .dc-sync{font-size:11px!important}
+#dashboard .dc-exec-kpis{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:12px!important}
+#dashboard .dc-exec-kpi{min-height:104px!important;padding:16px!important}
+#dashboard .dc-exec-kpi span{font-size:12px!important}
+#dashboard .dc-exec-kpi small{font-size:10px!important}
+#dashboard .dc-exec-kpi strong{font-size:25px!important}
+#dashboard .dc-exec-grid{gap:16px!important}
+#dashboard .dc-exec-card h3{font-size:15px!important}
+#dashboard .dc-exec-card p{font-size:11px!important}
+#dashboard .dc-legend div,#dashboard .dc-funnel-row span,#dashboard .dc-funnel-row b,#dashboard .dc-funnel-row small{font-size:11px!important}
+#dashboard .dc-alert-row b{font-size:11px!important}
+#dashboard .dc-alert-row small,#dashboard .dc-alert-row time{font-size:10px!important}
+#dashboard .dc-exec-table{font-size:12px!important}
+#dashboard .dc-exec-table th{font-size:10px!important}
+#dashboard .dc-exec-table td,#dashboard .dc-exec-table td b{font-size:12px!important}
+#dashboard .dc-exec-table td small{font-size:10px!important}
+#dashboard .dc-pill{font-size:10px!important}
+/* Embedded pages: no inner scrollbars and no forced viewport-height blanks */
+.page iframe[data-src]{display:block!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;border:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#f5f7fb!important;vertical-align:top!important}
+/* Common embedded typography */
+.page iframe{font-size:12px!important}
+/* Responsive */
+@media(max-width:1250px){#dashboard .dc-exec-kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:900px){.sidebar{width:180px!important}.main{left:180px!important}body.sidebar-collapsed .sidebar{width:64px!important}body.sidebar-collapsed .main{left:64px!important}#dashboard,#reports{padding-left:14px!important;padding-right:14px!important}#dashboard .dc-exec-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:700px){html,body{overflow:auto!important}.sidebar{position:relative!important;width:100%!important;height:auto!important;min-height:0!important}.main{position:relative!important;left:0!important;right:auto!important;top:auto!important;bottom:auto!important;width:100%!important;height:auto!important;min-height:0!important;overflow:visible!important}body.sidebar-collapsed .sidebar{width:100%!important}body.sidebar-collapsed .main{left:0!important}#dashboard,#reports{padding:0 12px 20px!important}#dashboard .dc-exec-kpis{grid-template-columns:1fr!important}#dashboard .dc-exec-head{align-items:flex-start!important;flex-direction:column!important}#dashboard .dc-exec-actions{width:100%!important;flex-wrap:wrap!important}#dashboard .dc-exec-search{width:100%!important;flex-basis:100%!important}.page iframe[data-src]{width:100%!important}}
