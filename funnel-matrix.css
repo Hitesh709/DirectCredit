@@ -34,6 +34,11 @@ body{background:#f6f9fd;color:#10213f;font-family:Inter,Segoe UI,Arial,sans-seri
 /* Every Funnel & Matrix sub-tab is constrained to the single Admin viewport. */
 .fm-content .fm-view>div{max-height:100%;overflow:hidden}
 .fm-content .fm-view table{max-width:100%}
+/* Scroll contract: the Admin shell owns the vertical scrollbar. Each Funnel & Matrix tab must grow only to its real content height. */
+.fm-content{flex:0 0 auto!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+.fm-view,.fm-view.active{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+.fm-content .fm-view>div{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+#slab,#disbursementMatrix,#repayment,#calendar,#pipeline,#registrationUsers{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
 @media(max-width:1000px){.content{padding:10px 12px}.application-tabs.fm-tabs{grid-template-columns:repeat(3,1fr)}.fm-user-kpis{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){html,body{overflow:auto}.content{height:auto;min-height:100vh;padding:10px}.page-head{flex-direction:column}.application-tabs.fm-tabs{grid-template-columns:repeat(2,1fr)}.fm-user-kpis{grid-template-columns:1fr}.fm-context .context-status{display:none}.fm-content{overflow:auto}.fm-view{overflow:auto}}
 @media print{html,body{height:auto;overflow:visible}.head-actions,.application-tabs,.fm-context{display:none}.content{height:auto;min-height:0;padding:0;overflow:visible}.fm-content,.fm-view{overflow:visible;height:auto}.fm-content .fm-view>div{max-height:none;overflow:visible}}
