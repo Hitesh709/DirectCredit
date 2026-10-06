@@ -78,9 +78,27 @@
     search.value='';renderList();picker.classList.add('open');picker.setAttribute('aria-hidden','false');setTimeout(()=>search.focus(),20);
   }
   function closePicker(){picker.classList.remove('open');picker.setAttribute('aria-hidden','true');}
+
+  // Customer selection must work even when the live application selector has not
+  // finished loading. The URL is the canonical selection state used by the
+  // eligibility/customer workspace, so navigate directly instead of polling a
+  // dynamically-created <select>. This also makes switching customers reliable
+  // while already viewing the Eligibility tab.
   function selectCustomer(r){
-    const source=r.source==='demo'?'demo':'live', value=`${source}:${r.customer_id}`;closePicker();let tries=0;
-    const apply=()=>{const select=document.getElementById('applicationSelector');if(select){const option=[...select.options].find(o=>o.value===value);if(option){select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));return;}}if(tries++<30)setTimeout(apply,100);else{const url=new URL(location.href);url.searchParams.set('customer_id',r.customer_id);url.searchParams.set('source',source);location.href=url.toString();}};apply();
+    if(!r || r.customer_id===null || r.customer_id===undefined){
+      console.warn('Applications: selected row has no customer_id',r);
+      return;
+    }
+    const source=r.source==='demo'?'demo':'live';
+    closePicker();
+    const url=new URL(location.href);
+    url.searchParams.set('customer_id',String(r.customer_id));
+    url.searchParams.set('source',source);
+    // Preserve the current customer workspace tab when possible. If the user
+    // is selecting from a summary tab, start the newly selected customer on
+    // Eligibility so the requested credit-decision view is immediately usable.
+    url.searchParams.set('workspace_tab','eligibility');
+    location.assign(url.toString());
   }
 
   async function loadSummary(){
