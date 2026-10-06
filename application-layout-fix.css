@@ -1,0 +1,29 @@
+/* DirectCredit Applications — compact, readable, single-flow layout */
+*{box-sizing:border-box}
+html,body{margin:0!important;min-height:0!important;height:auto!important;overflow:visible!important;background:#f6f9fd!important}
+body{font-size:13px!important;color:#10213f!important}
+.content.application-workspace{min-height:0!important;height:auto!important;padding:0 20px 20px!important}
+.page-head{margin:0 0 10px!important;padding:0!important;min-height:54px!important;align-items:center!important}
+.page-head h1{font-size:24px!important;line-height:30px!important}
+.page-head p{font-size:12px!important;line-height:17px!important;margin-top:3px!important}
+.head-actions button{font-size:12px!important;padding:8px 13px!important}
+.application-tabs{gap:6px!important;margin:0 0 10px!important}
+.application-tab{min-height:42px!important;padding:8px!important;font-size:12px!important;border-radius:9px!important}
+.application-context{margin:0 0 10px!important;padding:9px 12px!important;border-radius:10px!important}
+.application-context strong{font-size:13px!important}
+.application-context small,.context-status span,.context-status b{font-size:10px!important}
+.application-view{min-height:0!important;height:auto!important;display:block!important;gap:0!important}
+.live-card{padding:12px!important;border-radius:10px!important;margin:0 0 10px!important;box-shadow:0 3px 12px rgba(28,52,94,.045)!important}
+.live-card h3{font-size:14px!important;line-height:18px!important;margin:0 0 9px!important}
+.live-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important}
+.live-grid>div{padding:8px!important;border-radius:7px!important;min-width:0!important}
+.live-grid small{font-size:10px!important;line-height:13px!important;margin-bottom:3px!important}
+.live-grid strong{font-size:12px!important;line-height:16px!important}
+.application-view .live-card:has(h3){ }
+.live-micro-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}
+.live-micro-grid .live-card{margin:0!important}
+table{font-size:12px!important}th,td{padding:7px 8px!important}th{font-size:10px!important}
+.table-scroll{overflow:visible!important}
+@media(max-width:1200px){.live-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.live-micro-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:800px){.content.application-workspace{padding:0 12px 14px!important}.live-grid,.live-micro-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:520px){.live-grid,.live-micro-grid{grid-template-columns:1fr!important}.application-tabs{grid-template-columns:repeat(2,1fr)!important}.application-tab{font-size:11px!important}}
