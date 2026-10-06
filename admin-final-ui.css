@@ -24,6 +24,9 @@ body.sidebar-collapsed .main{left:72px!important}
 .page.activePage{display:block!important;visibility:visible!important;opacity:1!important}
 #dashboard,#reports{width:100%!important;max-width:none!important;min-height:0!important;margin:0!important;padding:0 20px 24px!important;background:#f5f7fb!important}
 #dashboard .dc-exec{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
+/* Embedded-page export ownership: embedded pages render their own toolbar. The parent shell must never show a second one. */
+body.dc-iframe-page-active .main>.dc-export-bar{display:none!important;visibility:hidden!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important;pointer-events:none!important}
+body.dc-iframe-page-active .main>.dc-export-bar *{display:none!important}
 /* Dashboard readable sizing and no artificial blank width */
 #dashboard .dc-exec-head{padding:14px 0!important;min-height:72px!important}
 #dashboard .dc-exec-title small{font-size:11px!important}
@@ -55,7 +58,6 @@ body.sidebar-collapsed .main{left:72px!important}
 #dashboard .dc-pill{font-size:10px!important}
 /* Embedded pages: no inner scrollbars and no forced viewport-height blanks */
 .page iframe[data-src]{display:block!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;border:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#f5f7fb!important;vertical-align:top!important}
-/* Common embedded typography */
 .page iframe{font-size:12px!important}
 /* Responsive */
 @media(max-width:1250px){#dashboard .dc-exec-kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
