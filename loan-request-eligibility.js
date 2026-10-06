@@ -27,117 +27,25 @@
   function referenceDetails(d,key){
     const c=d.customer||{}, l=(d.loans||[])[0]||{}, b=d.bank_analysis||{}, k=d.kyc_employment||{}, r=d.risk_score||{};
     const root=Object.assign({},d,{customer:c,loan:l,bank:b,kyc:k,risk:r});
-    const commonCustomer=[
-      ["Customer ID",["customer.id"]],["Customer Code",["customer.customer_code"]],["Customer Name",["customer.name"]],
-      ["Customer Type",["customer.customer_type"]],["Date of Birth",["customer.date_of_birth","customer.dob"]],["Gender",["customer.gender"]],
-      ["Marital Status",["customer.marital_status"]],["Father / Spouse",["customer.father_spouse","customer.father_name","customer.spouse_name"]],
-      ["Email ID",["customer.email"]],["Preferred Language",["customer.preferred_language"]],["Mobile Number",["customer.mobile"]],
-      ["Alternate Mobile Number",["customer.alternate_mobile","customer.alt_mobile"]],["Current Address",["customer.address","customer.current_address"]],
-      ["Residence Type",["customer.residence_ownership","customer.residence_type"]],["Current Pincode",["customer.current_pincode","address_details.pincode"]],
-      ["Current State",["customer.current_state","address_details.state"]],["Current City",["customer.current_city","address_details.city"]],
-      ["Residence Stability",["customer.residence_stability","kyc.residence_stability"]],["Living Since",["customer.residence_since","customer.living_since"]],
-      ["PAN",["customer.pan"]],["Aadhaar",["customer.aadhaar_masked","customer.aadhaar"]],["KYC Status",["customer.kyc_status","kyc.kyc_status"]],
-      ["Occupation",["customer.occupation","kyc.employment_type"]],["Business Name",["customer.business_name","business_details.firm_name"]],
-      ["Business Type",["customer.business_type","business_details.business_type"]],["Business Vintage",["customer.years_in_business","kyc.years_in_business"]],
-      ["Work Experience",["customer.work_experience_years","kyc.work_experience_years"]],["Monthly Income",["customer.monthly_income","kyc.income"]],
-      ["Dependents",["customer.dependents","customer.dependent_count"]],["Primary Bank",["customer.primary_bank","financial_details.bank_name"]],
-      ["CIBIL Score",["customer.cibil_score","risk.credit_score"]],["FOIR",["customer.foir"]],["Existing EMI",["customer.existing_emi"]]
-    ];
-    const contact=[
-      ["Registered Mobile",["contact_details.registered_mobile","customer.mobile"]],["Alternate Mobile",["contact_details.alternate_mobile","customer.alternate_mobile"]],
-      ["Registered Email",["contact_details.registered_email","customer.email"]],["Contact Score",["contact_details.contact_score","contact_score"]],
-      ["Mobile Verification",["contact_details.mobile_verification","customer.mobile_verified"]],["Email Verification",["contact_details.email_verification","customer.email_verified"]],
-      ["Address Type",["address_details.address_type"]],["Address Line 1",["address_details.address_line1","address_details.line1"]],
-      ["Town",["address_details.town"]],["State",["address_details.state"]],["City",["address_details.city"]],
-      ["District",["address_details.district"]],["Landmark",["address_details.landmark"]],["Pincode",["address_details.pincode","address_details.zipcode"]],
-      ["Device",["contact_details.device_sim.device","contact_details.device_sim.device_name"]],["SIM Operator",["contact_details.device_sim.sim_operator","contact_details.device_sim.operator"]],
-      ["SIM Type",["contact_details.device_sim.sim_type"]],["SIM Age",["contact_details.device_sim.sim_age"]],["Device Risk Score",["contact_details.device_sim.risk_score"]],
-      ["Device Risk Status",["contact_details.device_sim.risk_status","contact_details.device_sim.status"]]
-    ];
-    const bank=[
-      ["Account Holder",["bank.account_holder","customer.name"]],["Account Number",["bank.account_number","financial_details.account_number"]],
-      ["IFSC Code",["bank.ifsc_code","financial_details.ifsc_code"]],["Bank Name",["bank.bank_name","customer.primary_bank"]],
-      ["Branch Name",["bank.branch_name","financial_details.branch_name"]],["Account Type",["bank.account_type","financial_details.account_type"]],
-      ["Statement Period",["bank.statement_period","bank.period"]],["Statement Days",["bank.statement_days"]],
-      ["Total Credits",["bank.credits","bank.total_credits"]],["Total Debits",["bank.debits","bank.total_debits"]],
-      ["Net Cash Flow",["bank.net_cash_flow"]],["Average Monthly Balance",["bank.average_monthly_balance","bank.average_eod_balance"]],
-      ["Average Monthly Credit",["bank.average_monthly_credit"]],["Average Monthly Debit",["bank.average_monthly_debit"]],
-      ["Total Transactions",["bank.total_transactions","bank.transactions"]],["Negative Balance Events",["bank.negative_balance_count","bank.negative_balance_events"]],
-      ["Bank Analysis Status",["bank.status","bank.health"]],["Opening Balance",["bank.opening_balance"]],["Closing Balance",["bank.closing_balance"]],
-      ["Average Credit",["bank.average_credit"]],["Average Debit",["bank.average_debit"]],["Highest Credit",["bank.highest_credit"]],["Highest Debit",["bank.highest_debit"]]
-    ];
-    const kyc=[
-      ["KYC Status",["kyc.kyc_status","customer.kyc_status"]],["KYC Completed On",["kyc.kyc_completed_on"]],
-      ["PAN Verification",["kyc.pan_status","kyc.pan_verified"]],["Aadhaar Verification",["kyc.aadhaar_status","kyc.aadhaar_verified"]],
-      ["CKYC Status",["kyc.ckyc_status"]],["CRIF Status",["kyc.crif_status"]],["Overall KYC Score",["kyc.overall_kyc_score"]],
-      ["Employment Type",["kyc.employment_type","customer.occupation"]],["Employer / Business",["kyc.employer_name","customer.business_name"]],
-      ["Designation",["kyc.designation"]],["Net Monthly Income",["kyc.net_monthly_income","kyc.income"]],["Other Income",["kyc.other_income"]],
-      ["No. of Workers",["business_details.no_of_workers","business_details.workers"]],["Total Salary",["business_details.total_salary"]],
-      ["No. of Working Days",["business_details.working_days"]],["Visiting Card",["business_details.visiting_card"]],["Contract Based",["business_details.contract_based"]],
-      ["Seller / Business Number",["business_details.seller_number","business_details.registration_number"]],["Seller Firm Name",["business_details.seller_firm_name","business_details.firm_name"]],
-      ["Ownership",["business_details.ownership","customer.residence_ownership"]],["Products / Machinery / Stock",["business_details.products","business_details.stock"]],
-      ["PD Status",["kyc.pd_status","kyc.pd_verification"]],["Sanction Check",["kyc.sanction_check","kyc.sanction_status"]],
-      ["Ownership Proof",["kyc.ownership_proof_status","customer.ownership_proof_status"]],["Overall Status",["kyc.overall_status"]]
-    ];
-    const risk=[
-      ["Overall Risk Score",["risk.total_score","directcredit_score"]],["Maximum Score",["risk.max_score"]],["Credit / CIBIL Score",["risk.credit_score"]],
-      ["Risk Tier",["risk.risk_tier","risk.risk_grade"]],["Risk Category",["risk.category"]],["Score Status",["risk.score_status"]],
-      ["Auto Decision",["risk.auto_decision","risk.decision"]],["Approval %",["risk.approval_percent"]],["Assessment Date",["risk.assessment_date","assessment_date"]],
-      ["Scorecard Version",["risk.scorecard_version","risk.version"]],["Probability of Default",["risk.probability_default","risk.pd"]],
-      ["Loss Given Default",["risk.loss_given_default","risk.lgd"]],["Expected Loss",["risk.expected_loss"]],["Recommended Limit",["risk.recommended_limit"]],
-      ["Recommended Tenure",["risk.recommended_tenure"]],["Recommended Interest Rate",["risk.recommended_interest_rate"]]
-    ];
-    const eligibility=[
-      ["Application ID",["loan.id","loan.application_id"]],["Application Date",["loan.application_date","loan.created_at"]],
-      ["Loan Product",["loan.product","loan.loan_product"]],["Loan Purpose",["loan.loan_purpose","loan.purpose"]],
-      ["Requested Amount",["loan.requested_amount"]],["Eligible Amount",["loan.eligible_amount","eligible_amount"]],
-      ["Sanctioned Amount",["loan.sanctioned_amount"]],["Disbursed Amount",["loan.disbursed_amount"]],["Outstanding Amount",["loan.outstanding_amount"]],
-      ["Requested Tenure",["loan.requested_tenure_months"]],["Tenure",["loan.tenure_months"]],["Interest Rate",["loan.interest_rate"]],
-      ["Monthly EMI",["loan.monthly_emi"]],["Processing Fee",["loan.processing_fee"]],["Total Interest",["loan.total_interest"]],
-      ["Total Repayment",["loan.total_repayment"]],["Next Due Date",["loan.next_due_date","loan.due_date"]],["Next Due Amount",["loan.next_due_amount"]],
-      ["Eligibility Score",["loan.eligibility_score","risk.approval_percent"]],["Eligibility Status",["eligibility_status","loan.eligibility_status"]],
-      ["Application Stage",["loan.current_stage","loan.stage"]],["Status",["loan.status"]],["Disbursement Date",["loan.disbursement_date"]]
-    ];
+    const commonCustomer=[["Customer ID",["customer.id"]],["Customer Code",["customer.customer_code"]],["Customer Name",["customer.name"]],["Customer Type",["customer.customer_type"]],["Date of Birth",["customer.date_of_birth","customer.dob"]],["Gender",["customer.gender"]],["Marital Status",["customer.marital_status"]],["Father / Spouse",["customer.father_spouse","customer.father_name","customer.spouse_name"]],["Email ID",["customer.email"]],["Preferred Language",["customer.preferred_language"]],["Mobile Number",["customer.mobile"]],["Alternate Mobile Number",["customer.alternate_mobile","customer.alt_mobile"]],["Current Address",["customer.address","customer.current_address"]],["Residence Type",["customer.residence_ownership","customer.residence_type"]],["Current Pincode",["customer.current_pincode","address_details.pincode"]],["Current State",["customer.current_state","address_details.state"]],["Current City",["customer.current_city","address_details.city"]],["Residence Stability",["customer.residence_stability","kyc.residence_stability"]],["Living Since",["customer.residence_since","customer.living_since"]],["PAN",["customer.pan"]],["Aadhaar",["customer.aadhaar_masked","customer.aadhaar"]],["KYC Status",["customer.kyc_status","kyc.kyc_status"]],["Occupation",["customer.occupation","kyc.employment_type"]],["Business Name",["customer.business_name","business_details.firm_name"]],["Business Type",["customer.business_type","business_details.business_type"]],["Business Vintage",["customer.years_in_business","kyc.years_in_business"]],["Work Experience",["customer.work_experience_years","kyc.work_experience_years"]],["Monthly Income",["customer.monthly_income","kyc.income"]],["Dependents",["customer.dependents","customer.dependent_count"]],["Primary Bank",["customer.primary_bank","financial_details.bank_name"]],["CIBIL Score",["customer.cibil_score","risk.credit_score"]],["FOIR",["customer.foir"]],["Existing EMI",["customer.existing_emi"]]];
+    const contact=[["Registered Mobile",["contact_details.registered_mobile","customer.mobile"]],["Alternate Mobile",["contact_details.alternate_mobile","customer.alternate_mobile"]],["Registered Email",["contact_details.registered_email","customer.email"]],["Contact Score",["contact_details.contact_score","contact_score"]],["Mobile Verification",["contact_details.mobile_verification","customer.mobile_verified"]],["Email Verification",["contact_details.email_verification","customer.email_verified"]],["Address Type",["address_details.address_type"]],["Address Line 1",["address_details.address_line1","address_details.line1"]],["Town",["address_details.town"]],["State",["address_details.state"]],["City",["address_details.city"]],["District",["address_details.district"]],["Landmark",["address_details.landmark"]],["Pincode",["address_details.pincode","address_details.zipcode"]],["Device",["contact_details.device_sim.device","contact_details.device_sim.device_name"]],["SIM Operator",["contact_details.device_sim.sim_operator","contact_details.device_sim.operator"]],["SIM Type",["contact_details.device_sim.sim_type"]],["SIM Age",["contact_details.device_sim.sim_age"]],["Device Risk Score",["contact_details.device_sim.risk_score"]],["Device Risk Status",["contact_details.device_sim.risk_status","contact_details.device_sim.status"]]];
+    const bank=[["Account Holder",["bank.account_holder","customer.name"]],["Account Number",["bank.account_number","financial_details.account_number"]],["IFSC Code",["bank.ifsc_code","financial_details.ifsc_code"]],["Bank Name",["bank.bank_name","customer.primary_bank"]],["Branch Name",["bank.branch_name","financial_details.branch_name"]],["Account Type",["bank.account_type","financial_details.account_type"]],["Statement Period",["bank.statement_period","bank.period"]],["Statement Days",["bank.statement_days"]],["Total Credits",["bank.credits","bank.total_credits"]],["Total Debits",["bank.debits","bank.total_debits"]],["Net Cash Flow",["bank.net_cash_flow"]],["Average Monthly Balance",["bank.average_monthly_balance","bank.average_eod_balance"]],["Average Monthly Credit",["bank.average_monthly_credit"]],["Average Monthly Debit",["bank.average_monthly_debit"]],["Total Transactions",["bank.total_transactions","bank.transactions"]],["Negative Balance Events",["bank.negative_balance_count","bank.negative_balance_events"]],["Bank Analysis Status",["bank.status","bank.health"]],["Opening Balance",["bank.opening_balance"]],["Closing Balance",["bank.closing_balance"]],["Average Credit",["bank.average_credit"]],["Average Debit",["bank.average_debit"]],["Highest Credit",["bank.highest_credit"]],["Highest Debit",["bank.highest_debit"]]];
+    const kyc=[["KYC Status",["kyc.kyc_status","customer.kyc_status"]],["KYC Completed On",["kyc.kyc_completed_on"]],["PAN Verification",["kyc.pan_status","kyc.pan_verified"]],["Aadhaar Verification",["kyc.aadhaar_status","kyc.aadhaar_verified"]],["CKYC Status",["kyc.ckyc_status"]],["CRIF Status",["kyc.crif_status"]],["Overall KYC Score",["kyc.overall_kyc_score"]],["Employment Type",["kyc.employment_type","customer.occupation"]],["Employer / Business",["kyc.employer_name","customer.business_name"]],["Designation",["kyc.designation"]],["Net Monthly Income",["kyc.net_monthly_income","kyc.income"]],["Other Income",["kyc.other_income"]],["No. of Workers",["business_details.no_of_workers","business_details.workers"]],["Total Salary",["business_details.total_salary"]],["No. of Working Days",["business_details.working_days"]],["Visiting Card",["business_details.visiting_card"]],["Contract Based",["business_details.contract_based"]],["Seller / Business Number",["business_details.seller_number","business_details.registration_number"]],["Seller Firm Name",["business_details.seller_firm_name","business_details.firm_name"]],["Ownership",["business_details.ownership","customer.residence_ownership"]],["Products / Machinery / Stock",["business_details.products","business_details.stock"]],["PD Status",["kyc.pd_status","kyc.pd_verification"]],["Sanction Check",["kyc.sanction_check","kyc.sanction_status"]],["Ownership Proof",["kyc.ownership_proof_status","customer.ownership_proof_status"]],["Overall Status",["kyc.overall_status"]]];
+    const risk=[["Overall Risk Score",["risk.total_score","directcredit_score"]],["Maximum Score",["risk.max_score"]],["Credit / CIBIL Score",["risk.credit_score"]],["Risk Tier",["risk.risk_tier","risk.risk_grade"]],["Risk Category",["risk.category"]],["Score Status",["risk.score_status"]],["Auto Decision",["risk.auto_decision","risk.decision"]],["Approval %",["risk.approval_percent"]],["Assessment Date",["risk.assessment_date","assessment_date"]],["Scorecard Version",["risk.scorecard_version","risk.version"]],["Probability of Default",["risk.probability_default","risk.pd"]],["Loss Given Default",["risk.loss_given_default","risk.lgd"]],["Expected Loss",["risk.expected_loss"]],["Recommended Limit",["risk.recommended_limit"]],["Recommended Tenure",["risk.recommended_tenure"]],["Recommended Interest Rate",["risk.recommended_interest_rate"]]];
+    const eligibility=[["Application ID",["loan.id","loan.application_id"]],["Application Date",["loan.application_date","loan.created_at"]],["Loan Product",["loan.product","loan.loan_product"]],["Loan Purpose",["loan.loan_purpose","loan.purpose"]],["Requested Amount",["loan.requested_amount"]],["Eligible Amount",["loan.eligible_amount","eligible_amount"]],["Sanctioned Amount",["loan.sanctioned_amount"]],["Disbursed Amount",["loan.disbursed_amount"]],["Outstanding Amount",["loan.outstanding_amount"]],["Requested Tenure",["loan.requested_tenure_months"]],["Tenure",["loan.tenure_months"]],["Interest Rate",["loan.interest_rate"]],["Monthly EMI",["loan.monthly_emi"]],["Processing Fee",["loan.processing_fee"]],["Total Interest",["loan.total_interest"]],["Total Repayment",["loan.total_repayment"]],["Next Due Date",["loan.next_due_date","loan.due_date"]],["Next Due Amount",["loan.next_due_amount"]],["Eligibility Score",["loan.eligibility_score","risk.approval_percent"]],["Eligibility Status",["eligibility_status","loan.eligibility_status"]],["Application Stage",["loan.current_stage","loan.stage"]],["Status",["loan.status"]],["Disbursement Date",["loan.disbursement_date"]]];
     const groups={profile:commonCustomer,contact:contact,bank:bank,kyc:kyc,risk:risk,eligibility:eligibility};
     return refCard("REFERENCE FIELD COVERAGE",groups[key]||[],root);
   }
 
   function addEligibilityMicroDetails(c,l,k,risk){
-    view.insertAdjacentHTML('beforeend',`
-      <div class="live-micro-grid">
-        ${card('RECOMMENDED OFFER',[
-          ['Recommended Limit',money(l.eligible_amount)],
-          ['Interest Rate',l.interest_rate==null?'Policy configured rate':l.interest_rate+'%'],
-          ['Recommended Tenure',l.tenure_months?(l.tenure_months+' months'):'Not available'],
-          ['Processing Fee','As configured by policy']
-        ])}
-        ${card('REQUIRED DOCUMENTS',[
-          ['PAN Card','Required'],['Aadhaar / KYC','Required'],['Bank Statement','Required'],['GST / ITR','As applicable']
-        ])}
-        ${card('REPAYMENT CAPACITY',[
-          ['Monthly Income',money(c.monthly_income)],['Existing EMI',money(c.existing_emi)],
-          ['FOIR',c.foir==null?'Not available':c.foir+'%'],['Proposed EMI',money(l.monthly_emi)]
-        ])}
-        ${card('RISK INDICATORS',[
-          ['CIBIL',risk.credit_score],['Decision',risk.decision],['Risk Tier',risk.risk_tier],
-          ['Hard Rejects',(risk.hard_rejects||[]).length]
-        ])}
-        ${card('PROCESS TRACKER',[
-          ['Application Submitted','Completed'],
-          ['KYC Verification',k.kyc_status||'Pending'],
-          ['Document Verification','Tracked'],
-          ['Credit Assessment',risk.source==='scorecard'?'Completed':'Pending'],
-          ['Eligibility Approval',risk.decision||'Pending'],
-          ['Sanction',l.status||'Pending']
-        ])}
-      </div>`);
+    view.insertAdjacentHTML('beforeend',`<div class="live-micro-grid">${card('RECOMMENDED OFFER',[['Recommended Limit',money(l.eligible_amount)],['Interest Rate',l.interest_rate==null?'Policy configured rate':l.interest_rate+'%'],['Recommended Tenure',l.tenure_months?(l.tenure_months+' months'):'Not available'],['Processing Fee','As configured by policy']])}${card('REQUIRED DOCUMENTS',[['PAN Card','Required'],['Aadhaar / KYC','Required'],['Bank Statement','Required'],['GST / ITR','As applicable']])}${card('REPAYMENT CAPACITY',[['Monthly Income',money(c.monthly_income)],['Existing EMI',money(c.existing_emi)],['FOIR',c.foir==null?'Not available':c.foir+'%'],['Proposed EMI',money(l.monthly_emi)]])}${card('RISK INDICATORS',[['CIBIL',risk.credit_score],['Decision',risk.decision],['Risk Tier',risk.risk_tier],['Hard Rejects',(risk.hard_rejects||[]).length]])}${card('PROCESS TRACKER',[['Application Submitted','Completed'],['KYC Verification',k.kyc_status||'Pending'],['Document Verification','Tracked'],['Credit Assessment',risk.source==='scorecard'?'Completed':'Pending'],['Eligibility Approval',risk.decision||'Pending'],['Sanction',l.status||'Pending']])}</div>`);
   }
   function render(key){
     if(!data){view.innerHTML='<div class="live-empty">Select an application to load data.</div>';return;}
     const c=data.customer||{}, loans=data.loans||[], l=loans[0]||{}, m=data.metrics||{}, bank=data.bank_analysis||{}, k=data.kyc_employment||{}, risk=data.risk_score||{};
     if(key==='profile'){
       const latest=l||{};
-      const initials=String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
+      const initials=String(c.name||'Customer').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase();
       const status=String(latest.status||'Not assessed');
       const statusClass=status==='active'||status==='repaid'?'good':status==='overdue'?'bad':'pending';
       const totalLoans=Number(m.total_loans ?? loans.length ?? 0);
@@ -148,427 +56,113 @@
       const innerTabs=['overview','loans','repayments','documents','communication','alerts','activity'];
       const renderInner=(inner)=>{
         const safe=(v)=>val(v,'Not available');
-        if(inner==='loans') return `<div class="cp-section"><div class="cp-section-head"><div><h3>Loans</h3><p>Customer loan portfolio and current exposure.</p></div></div><div class="cp-table-wrap"><table class="cp-table"><thead><tr><th>Loan ID</th><th>Product</th><th>Requested</th><th>Sanctioned</th><th>Outstanding</th><th>EMI</th><th>Tenure</th><th>Status</th></tr></thead><tbody>${loans.length?loans.map(x=>`<tr><td class="primary">${esc(x.id)}</td><td>${esc(x.product||'Not available')}</td><td>${esc(money(x.requested_amount))}</td><td>${esc(money(x.sanctioned_amount))}</td><td class="money">${esc(money(x.outstanding_amount))}</td><td>${esc(money(x.monthly_emi))}</td><td>${x.tenure_months?esc(x.tenure_months+' months'):'—'}</td><td><span class="cp-status cp-${esc(String(x.status||'unknown').toLowerCase())}">${esc(x.status)}</span></td></tr>`).join(''):'<tr><td colspan="8">No loan records available.</td></tr>'}</tbody></table></div></div>`;
-        if(inner==='repayments'){
-          const reps=Array.isArray(data.repayments)?data.repayments:Array.isArray(data.repayment_records)?data.repayment_records:[];
-          return `<div class="cp-section"><div class="cp-section-head"><div><h3>Repayment History</h3><p>Payments and repayment obligations returned by the customer record.</p></div></div><div class="cp-table-wrap"><table class="cp-table"><thead><tr><th>Date</th><th>Loan</th><th>Due</th><th>Paid</th><th>Unpaid</th><th>Status</th><th>DPD</th></tr></thead><tbody>${reps.length?reps.map(x=>`<tr><td>${esc(x.due_date||x.paid_at||x.date)}</td><td class="primary">${esc(x.loan_id)}</td><td>${esc(money(x.due_amount))}</td><td class="money">${esc(money(x.paid_amount))}</td><td class="money">${esc(money(x.unpaid_amount))}</td><td>${esc(x.status)}</td><td>${esc(x.dpd??'—')}</td></tr>`).join(''):'<tr><td colspan="7">No repayment history is available in the returned customer record.</td></tr>'}</tbody></table></div></div>`;
-        }
-        if(inner==='documents'){
-          const docs=Array.isArray(data.documents)?data.documents:[];
-          return `<div class="cp-section"><div class="cp-section-head"><div><h3>Documents</h3><p>KYC and supporting documents available for this customer.</p></div></div><div class="cp-doc-grid">${docs.length?docs.map(x=>`<div class="cp-doc"><div class="cp-doc-icon">▣</div><div><strong>${esc(x.document_type||x.type||x.name)}</strong><small>${esc(x.status||'Uploaded')}</small></div></div>`).join(''):'<div class="cp-empty">No document records were returned for this customer.</div>'}</div></div>`;
-        }
-        const events=Array.isArray(data.events)?data.events:[];
-        if(inner==='communication') return `<div class="cp-section"><div class="cp-section-head"><div><h3>Communication</h3><p>Customer communication activity from the source record.</p></div></div>${events.length?'<div class="cp-timeline">'+events.map(x=>`<div class="cp-event"><span></span><div><strong>${esc(x.event_type||x.type||x.channel||'Customer event')}</strong><small>${esc(x.created_at||x.event_at||x.date||'')}</small><p>${esc(x.description||x.purpose||x.message||'Recorded customer activity')}</p></div></div>`).join('')+'</div>':'<div class="cp-empty">No communication history is available in the returned customer record.</div>'}</div>`;
-        if(inner==='alerts') return `<div class="cp-section"><div class="cp-section-head"><div><h3>Notes & Alerts</h3><p>Risk, verification and follow-up items available from the record.</p></div></div><div class="cp-alert-grid"><div class="cp-alert ${statusClass}"><strong>Loan status</strong><span>${esc(status)}</span><small>Latest application</small></div><div class="cp-alert"><strong>KYC status</strong><span>${esc(k.kyc_status||c.kyc_status)}</span><small>Verification state</small></div><div class="cp-alert"><strong>Ownership proof</strong><span>${esc(k.ownership_proof_status||c.ownership_proof_status)}</span><small>Document state</small></div></div></div>`;
-        if(inner==='activity') return `<div class="cp-section"><div class="cp-section-head"><div><h3>Activity Log</h3><p>Recorded customer/application events.</p></div></div>${events.length?'<div class="cp-timeline">'+events.map(x=>`<div class="cp-event"><span></span><div><strong>${esc(x.event_type||x.type||'Activity')}</strong><small>${esc(x.created_at||x.event_at||x.date||'')}</small><p>${esc(x.description||x.purpose||'Recorded activity')}</p></div></div>`).join('')+'</div>':'<div class="cp-empty">No activity log records are available.</div>'}</div>`;
-        return `
-          <div class="cp-main-grid">
-            <div class="cp-section cp-summary"><div class="cp-section-head"><div><h3>Customer Summary</h3><p>Core customer, employment and financial profile.</p></div></div>
-              <div class="cp-field-grid">
-                <div><small>Occupation</small><b>${esc(c.occupation)}</b></div><div><small>Business</small><b>${esc(c.business_name)}</b></div>
-                <div><small>Monthly Income</small><b>${money(c.monthly_income)}</b></div><div><small>Work Experience</small><b>${c.work_experience_years!=null?esc(c.work_experience_years+' Years'):'Not available'}</b></div>
-                <div><small>Years in Business</small><b>${c.years_in_business!=null?esc(c.years_in_business+' Years'):'Not available'}</b></div><div><small>Average Bank Balance</small><b>${money(c.average_bank_balance??bank.average_eod_balance)}</b></div>
-                <div><small>Primary Bank</small><b>${esc(c.primary_bank)}</b></div><div><small>CIBIL Score</small><b class="score">${esc(score)}</b></div>
-                <div><small>FOIR</small><b>${c.foir!=null?esc(c.foir+'%'):'Not available'}</b></div><div><small>Existing EMI</small><b>${money(c.existing_emi)}</b></div>
-                <div><small>Dependents</small><b>${esc(c.dependents??'Not available')}</b></div><div><small>KYC Status</small><b>${esc(k.kyc_status||c.kyc_status)}</b></div>
-              </div>
-            </div>
-            <div class="cp-section"><div class="cp-section-head"><div><h3>Latest Loan Overview</h3><p>Current application and repayment position.</p></div></div>
-              <div class="cp-loan-list">
-                <div><span>Loan Account</span><b>${esc(latest.id)}</b></div><div><span>Loan Product</span><b>${esc(latest.product)}</b></div>
-                <div><span>Requested Amount</span><b>${money(latest.requested_amount)}</b></div><div><span>Sanctioned Amount</span><b>${money(latest.sanctioned_amount)}</b></div>
-                <div><span>Disbursed Amount</span><b>${money(latest.disbursed_amount)}</b></div><div><span>Tenure</span><b>${latest.tenure_months?esc(latest.tenure_months+' Months'):'Not available'}</b></div>
-                <div><span>Interest Rate</span><b>${latest.interest_rate!=null?esc(latest.interest_rate+'% P.A.'):'Not available'}</b></div><div><span>EMI Amount</span><b>${money(latest.monthly_emi)}</b></div>
-                <div><span>Outstanding</span><b class="money">${money(latest.outstanding_amount)}</b></div><div><span>Loan Status</span><b><span class="cp-status cp-${esc(status.toLowerCase())}">${esc(status)}</span></b></div>
-              </div>
-            </div>
-          </div>
-          <div class="cp-overview-grid">
-            <div class="cp-section cp-score-card"><div class="cp-section-head"><div><h3>Credit Score Gauge</h3><p>Current bureau score returned for this customer.</p></div></div><div class="cp-gauge"><div class="cp-gauge-arc"></div><strong>${esc(score??'—')}</strong><span>${esc(risk.risk_tier||'Not assessed')}</span><small>Credit / CIBIL Score</small></div></div>
-            <div class="cp-section"><div class="cp-section-head"><div><h3>Latest Repayment Activity</h3><p>Most recent repayment records available.</p></div></div><div class="cp-mini-list">${(Array.isArray(data.repayments)?data.repayments:Array.isArray(data.repayment_records)?data.repayment_records:[]).slice(0,5).map(x=>`<div><span>${esc(x.paid_at||x.due_date||x.date||'—')}</span><b>${money(x.paid_amount)}</b><small>${esc(x.status||'Recorded')}</small></div>`).join('')||'<div class="cp-empty">No repayment history is available.</div>'}</div></div>
-          </div>
-          <div class="cp-section"><div class="cp-section-head"><div><h3>Active Loans</h3><p>Current customer loan exposure.</p></div></div><div class="cp-table-wrap"><table class="cp-table"><thead><tr><th>Loan Account</th><th>Product</th><th>Sanctioned</th><th>Outstanding</th><th>EMI</th><th>Next Due</th><th>Status</th></tr></thead><tbody>${loans.map(x=>`<tr><td class="primary">${esc(x.id)}</td><td>${esc(x.product)}</td><td>${esc(money(x.sanctioned_amount))}</td><td class="money">${esc(money(x.outstanding_amount))}</td><td>${esc(money(x.monthly_emi))}</td><td>${esc(x.next_due_date||'Not available')}</td><td><span class="cp-status cp-${esc(String(x.status||'').toLowerCase())}">${esc(x.status)}</span></td></tr>`).join('')}</tbody></table></div></div>
-        `;
+        if(inner==='loans') return `<div class="live-card"><h3>LOAN ACCOUNTS</h3><div class="live-table-wrap"><table><thead><tr><th>Loan ID</th><th>Product</th><th>Requested</th><th>Sanctioned</th><th>Outstanding</th><th>Status</th></tr></thead><tbody>${loans.map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(x.product||x.loan_product||'—')}</td><td>${money(x.requested_amount)}</td><td>${money(x.sanctioned_amount)}</td><td>${money(x.outstanding_amount)}</td><td>${esc(x.status||'—')}</td></tr>`).join('')||'<tr><td colspan="6">No loan accounts available.</td></tr>'}</tbody></table></div></div>`;
+        if(inner==='repayments') return `<div class="live-card"><h3>REPAYMENT OVERVIEW</h3><div class="live-grid"><div><small>Total EMI</small><strong>${money(l.monthly_emi)}</strong></div><div><small>Next Due</small><strong>${val(l.next_due_date)}</strong></div><div><small>Next Due Amount</small><strong>${money(l.next_due_amount)}</strong></div><div><small>Repayment Status</small><strong>${val(l.repayment_status,l.status||'Not available')}</strong></div></div></div>`;
+        if(inner==='documents') return `<div class="live-card"><h3>DOCUMENT STATUS</h3><div class="live-table-wrap"><table><thead><tr><th>Document</th><th>Verification</th><th>Uploaded</th></tr></thead><tbody>${(data.documents||[]).map(d=>`<tr><td>${esc(d.document_type||d.file_name)}</td><td>${esc(d.verification_status||'Not available')}</td><td>${fmtDate(d.uploaded_at||d.created_at)}</td></tr>`).join('')||'<tr><td colspan="3">No document records available.</td></tr>'}</tbody></table></div></div>`;
+        if(inner==='communication') return `<div class="live-card"><h3>COMMUNICATION HISTORY</h3><div class="live-table-wrap"><table><thead><tr><th>Date</th><th>Channel</th><th>Purpose</th><th>Status</th></tr></thead><tbody>${(data.communication||data.communication_history||[]).map(x=>`<tr><td>${fmtDate(x.created_at||x.event_at)}</td><td>${esc(x.channel||x.event_type)}</td><td>${esc(x.purpose||x.description||'Customer communication')}</td><td>${esc(x.status||'Recorded')}</td></tr>`).join('')||'<tr><td colspan="4">No communication history available.</td></tr>'}</tbody></table></div></div>`;
+        if(inner==='alerts') return `<div class="live-card"><h3>ALERTS</h3><div class="live-grid"><div><small>Risk Flags</small><strong>${(risk.hard_rejects||[]).length}</strong></div><div><small>Overdue</small><strong>${risk.overdue?'Yes':'No'}</strong></div><div><small>Fraud Flag</small><strong>${val(risk.fraud_flag,'Not assessed')}</strong></div><div><small>Sanction Check</small><strong>${val(k.sanction_check,k.sanction_status||'Not assessed')}</strong></div></div></div>`;
+        if(inner==='activity') return `<div class="live-card"><h3>RECENT ACTIVITY</h3><div class="live-table-wrap"><table><thead><tr><th>Date</th><th>Activity</th><th>Status</th></tr></thead><tbody>${(data.activity||data.activities||[]).map(x=>`<tr><td>${fmtDate(x.created_at||x.event_at)}</td><td>${esc(x.activity||x.event_type||x.description||'Activity')}</td><td>${esc(x.status||'Recorded')}</td></tr>`).join('')||'<tr><td colspan="3">No activity records available.</td></tr>'}</tbody></table></div></div>`;
+        return `<div class="live-card"><h3>ACCOUNT OVERVIEW</h3><div class="live-grid"><div><small>Total Loans</small><strong>${totalLoans}</strong></div><div><small>Total Loan Amount</small><strong>${money(totalAmount)}</strong></div><div><small>Outstanding</small><strong>${money(outstanding)}</strong></div><div><small>Amount Paid</small><strong>${money(paid)}</strong></div></div></div>`;
       };
-      view.innerHTML=`
-        <div class="cp-profile">
-          <aside class="cp-sidebar">
-            <div class="cp-avatar">${esc(initials)}</div><h2>${esc(c.name||'Customer')}</h2><span class="cp-active ${statusClass}">${esc(status)}</span>
-            <div class="cp-id">Customer ID<br><strong>${esc(c.customer_code||c.id)}</strong></div>
-            <div class="cp-side-grid"><div><small>Customer Since</small><b>${esc(c.created_at||c.customer_since||'Not available')}</b></div><div><small>Customer Type</small><b>${esc(c.customer_type)}</b></div></div>
-            <h4>CONTACT INFORMATION</h4>
-            <div class="cp-contact"><div>☎ <span>Mobile</span><b>${esc(c.mobile)}</b></div><div>✉ <span>Email</span><b>${esc(c.email)}</b></div><div>⌖ <span>Address</span><b>${esc(c.address)}</b></div><div>⌂ <span>Current City</span><b>${esc(c.current_city)}</b></div><div>▣ <span>Business</span><b>${esc(c.business_name)}</b></div><div>◉ <span>Business Type</span><b>${esc(c.business_type)}</b></div><div>◷ <span>Date of Birth</span><b>${esc(c.date_of_birth||c.dob)}</b></div><div>▤ <span>PAN</span><b>${esc(c.pan)}</b></div><div>▤ <span>Aadhaar</span><b>${esc(c.aadhaar_masked||c.aadhaar)}</b></div><div>♙ <span>Marital Status</span><b>${esc(c.marital_status)}</b></div></div>
-          </aside>
-          <section class="cp-content">
-            <div class="cp-kpis">
-              <div class="cp-kpi blue"><small>TOTAL LOANS</small><strong>${totalLoans}</strong><span>Customer portfolio</span></div>
-              <div class="cp-kpi green"><small>TOTAL LOAN AMOUNT</small><strong>${money(totalAmount)}</strong><span>Sanctioned / requested</span></div>
-              <div class="cp-kpi purple"><small>OUTSTANDING AMOUNT</small><strong>${money(outstanding)}</strong><span>Current exposure</span></div>
-              <div class="cp-kpi orange"><small>AMOUNT PAID</small><strong>${money(paid)}</strong><span>Repayment position</span></div>
-              <div class="cp-kpi navy"><small>CREDIT SCORE</small><strong>${esc(score)}</strong><span>${esc(risk.risk_tier||'Not assessed')}</span></div>
-            </div>
-            <div class="cp-inner-tabs">${innerTabs.map(t=>`<button class="cp-inner-tab ${t==='overview'?'active':''}" data-cp-view="${t}">${t==='overview'?'Overview':t==='loans'?'Loans':t==='repayments'?'Repayment History':t==='documents'?'Documents':t==='communication'?'Communication':t==='alerts'?'Notes & Alerts':'Activity Log'}</button>`).join('')}</div>
-            <div id="cpInnerBody">${renderInner('overview')}</div>
-          </section>
-        </div>`;
-      const cpBody=document.getElementById('cpInnerBody');
-      view.querySelectorAll('.cp-inner-tab').forEach(btn=>btn.addEventListener('click',()=>{
-        view.querySelectorAll('.cp-inner-tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');cpBody.innerHTML=renderInner(btn.dataset.cpView);
-      }));
+      view.innerHTML=`<div class="profile-360"><div class="profile-hero"><div class="profile-avatar">${esc(initials)}</div><div><h2>${esc(c.name||'Customer')} <span class="status-pill ${statusClass}">${esc(status)}</span></h2><p>${esc(c.business_name||'Business not available')} • ${esc(c.customer_code||c.id||'Customer')}</p></div><div class="profile-actions"><button type="button" class="profile-action" data-action="refresh">Refresh</button><button type="button" class="profile-action" data-action="history">History</button></div></div><div class="profile-kpis"><div><small>CIBIL</small><strong>${esc(score??'—')}</strong></div><div><small>TOTAL LOANS</small><strong>${totalLoans}</strong></div><div><small>TOTAL SANCTIONED</small><strong>${money(totalAmount)}</strong></div><div><small>OUTSTANDING</small><strong>${money(outstanding)}</strong></div></div><nav class="profile-inner-tabs">${innerTabs.map((x,i)=>`<button type="button" class="profile-inner-tab ${i===0?'active':''}" data-inner="${x}">${x}</button>`).join('')}</nav><div id="profileInnerView">${renderInner('overview')}</div></div>`;
+      view.querySelectorAll('.profile-inner-tab').forEach(b=>b.addEventListener('click',()=>{view.querySelectorAll('.profile-inner-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('profileInnerView').innerHTML=renderInner(b.dataset.inner);}));
+      view.querySelector('[data-action="refresh"]')?.addEventListener('click',()=>loadSelected(selected));
     } else if(key==='contact'){
-      const contacts=Array.isArray(data.contacts)?data.contacts:[];
-      const addresses=Array.isArray(data.addresses)?data.addresses:[];
-      const events=Array.isArray(data.events)?data.events:[];
-      const primaryMobile=read(data,['contact_details.registered_mobile','customer.mobile']);
-      const altMobiles=contacts.filter(x=>String(x.contact_type||'').toLowerCase().includes('mobile')&&!x.is_primary).map(x=>x.contact_value||x.value).filter(Boolean);
-      const emailRows=contacts.filter(x=>String(x.contact_type||'').toLowerCase().includes('email')).map(x=>x);
-      const registeredEmail=read(data,['contact_details.registered_email','customer.email']);
-      const primaryAddress=addresses.find(x=>x.is_primary)||addresses[0]||{};
-      const device=read(data,['contact_details.device_sim'])||{};
-      const fmtDate=v=>v?String(v).replace('T',' ').replace('Z',''): 'Not available';
-      const contactStatus=v=>v===true?'Verified':v===false?'Not Verified':val(v,'Not available');
+      const contactRows=Array.isArray(data.contact_details?.contacts)?data.contact_details.contacts:[];
+      const emailRows=Array.isArray(data.contact_details?.emails)?data.contact_details.emails:[];
+      const mobileRows=Array.isArray(data.contact_details?.mobiles)?data.contact_details.mobiles:[];
+      const device=data.contact_details?.device_sim||{};
+      const primaryMobile=c.mobile||c.phone||contactRows.find(x=>x.type==='mobile'&&x.is_primary)?.value||contactRows.find(x=>x.contact_type==='mobile')?.contact_value||'Not available';
+      const altMobiles=[c.alternate_mobile,c.alt_mobile,...mobileRows.map(x=>x.contact_value||x.value)].filter(Boolean).filter(x=>x!==primaryMobile);
+      const registeredEmail=c.email||emailRows.find(x=>x.is_primary)?.contact_value||emailRows.find(x=>x.contact_type==='Primary')?.contact_value||'Not available';
       const contactScore=read(data,['contact_details.contact_score','contact_score']);
-      const contactCard=(title,body,cls='')=>`<div class="ct-card ${cls}"><div class="ct-card-title">${title}</div>${body}</div>`;
-      const mobileRows=contacts.filter(x=>String(x.contact_type||'').toLowerCase().includes('mobile'));
-      const commRows=events.slice().sort((a,b)=>String(b.created_at||b.event_at||'').localeCompare(String(a.created_at||a.event_at||''))).slice(0,6);
-      const addrLine=primaryAddress.address_line||primaryAddress.address||c.address||'Not available';
+      const contactStatus=v=>v===true||String(v).toLowerCase()==='verified'?'Verified':'Not Verified';
+      const primaryAddress=data.address_details||{};
+      const addrLine=primaryAddress.address_line1||primaryAddress.line1||c.address||'Not available';
       const city=primaryAddress.city||c.current_city||'Not available';
       const state=primaryAddress.state||c.current_state||'Not available';
-      const pincode=primaryAddress.pincode||primaryAddress.zipcode||c.current_pincode||'Not available';
-      view.innerHTML=`
-        <div class="contact360">
-          <div class="ct-hero">
-            <div class="ct-customer">
-              <div class="ct-avatar">${esc(String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div>
-              <div><h2>${esc(c.name||'Customer')} <span class="ct-pill good">${esc(l.status||'Active')}</span></h2>
-              <small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small>
-              <small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div>
-            </div>
-            <div class="ct-stat phone"><span>☎</span><small>REGISTERED MOBILE<br>NUMBER</small><strong>${esc(primaryMobile)}</strong><em>${contactStatus(c.mobile_verified)}</em></div>
-            <div class="ct-stat alt"><span>◉</span><small>ALTERNATE MOBILE<br>NUMBER</small><strong>${esc(altMobiles[0]||'Not available')}</strong><em>${altMobiles.length?'Available':'Not available'}</em></div>
-            <div class="ct-stat email"><span>✉</span><small>REGISTERED EMAIL ID</small><strong>${esc(registeredEmail)}</strong><em>${contactStatus(c.email_verified)}</em></div>
-            <div class="ct-stat score"><span>✓</span><small>CONTACT SCORE</small><strong>${esc(contactScore??'Not available')}</strong><em>${contactScore!=null?'Verified contact quality':'Not assessed'}</em></div>
-          </div>
-
-          <div class="ct-grid-top">
-            ${contactCard('REGISTERED MOBILE NUMBER',`
-              <div class="ct-primary-line"><b>☎ ${esc(primaryMobile)}</b><span class="ct-pill good">${contactStatus(c.mobile_verified)}</span><span class="ct-pill blue">Primary</span></div>
-              <div class="ct-detail-list">
-                <div><span>Linked To</span><b>Customer • PAN • Loan Account</b></div>
-                <div><span>Verified On</span><b>${fmtDate(read(data,['contact_details.mobile_verified_at','customer.mobile_verified_at']))}</b></div>
-                <div><span>Verification Mode</span><b>${esc(read(data,['contact_details.mobile_verification_mode'])||'Not available')}</b></div>
-                <div><span>Last OTP Sent</span><b>${fmtDate(read(data,['contact_details.last_otp_sent']))}</b></div>
-                <div><span>Status</span><b>${contactStatus(c.mobile_verified)}</b></div>
-              </div>`,'mobile-card')}
-
-            ${contactCard('ALTERNATE MOBILE NUMBERS <span class="ct-add">+ Add Number</span>',`
-              <div class="ct-mini-table"><div class="ct-th"><span>Mobile Number</span><span>Type</span><span>Verified On</span><span>Status</span></div>
-              ${(mobileRows.length?mobileRows:altMobiles.map((x,i)=>({contact_value:x,contact_type:i?'Reference':'Alternate'}))).slice(0,5).map(x=>`<div class="ct-tr"><b>${esc(x.contact_value||x.value)}</b><span>${esc(x.contact_type||'Alternate')}</span><span>${fmtDate(x.verified_at||x.updated_at)}</span><span class="ct-pill ${x.verified?'good':'neutral'}">${x.verified?'Verified':'Not Verified'}</span></div>`).join('')||'<div class="ct-empty">No alternate mobile numbers are available.</div>'}</div>
-              <div class="ct-note">ⓘ At least one verified mobile number is required for communication and OTP based verification.</div>`,'alt-card')}
-
-            ${contactCard('EMAIL ADDRESS DETAILS <span class="ct-add">+ Add Email</span>',`
-              <div class="ct-mini-table email-table"><div class="ct-th"><span>Email Address</span><span>Type</span><span>Verified On</span><span>Status</span></div>
-              ${(emailRows.length?emailRows:[{contact_value:registeredEmail,contact_type:'Primary',verified:c.email_verified}]).slice(0,5).map(x=>`<div class="ct-tr"><b>${esc(x.contact_value||x.value)}</b><span>${esc(x.contact_type||'Email')}</span><span>${fmtDate(x.verified_at||x.updated_at)}</span><span class="ct-pill ${x.verified?'good':'neutral'}">${x.verified?'Verified':'Not Verified'}</span></div>`).join('')}</div>
-              <div class="ct-note">ⓘ Important: All communication and documents will be sent to verified email addresses only.</div>`,'email-card')}
-          </div>
-
-          <div class="ct-grid-bottom">
-            ${contactCard('COMMUNICATION HISTORY',`
-              <div class="ct-comm-table"><div class="ct-th"><span>Date & Time</span><span>Channel</span><span>To</span><span>Purpose</span><span>Status</span></div>
-              ${commRows.map(x=>`<div class="ct-tr"><span>${fmtDate(x.created_at||x.event_at)}</span><span>${esc(x.channel||x.event_type||'Activity')}</span><span>${esc(x.to||x.recipient||primaryMobile)}</span><span>${esc(x.purpose||x.description||x.event_type||'Customer activity')}</span><span class="ct-pill good">${esc(x.status||'Recorded')}</span></div>`).join('')||'<div class="ct-empty">No communication history is available.</div>'}</div>
-              <div class="ct-link">View Full Communication Log →</div>`,'comm-card')}
-
-            ${contactCard('ADDRESS <small>(as per KYC)</small>',`
-              <div class="ct-address-main">${esc(addrLine)}, ${esc(city)}, ${esc(state)} - ${esc(pincode)}</div>
-              <span class="ct-pill good">Verified</span>
-              <div class="ct-detail-list">
-                <div><span>Address Type</span><b>${esc(primaryAddress.address_type||'Current Address')}</b></div>
-                <div><span>Verified On</span><b>${fmtDate(primaryAddress.verified_at||primaryAddress.updated_at)}</b></div>
-                <div><span>Verified Via</span><b>${esc(primaryAddress.verified_via||'Not available')}</b></div>
-                <div><span>Latitude</span><b>${esc(primaryAddress.latitude||'Not available')}</b></div>
-                <div><span>Longitude</span><b>${esc(primaryAddress.longitude||'Not available')}</b></div>
-              </div><div class="ct-link">View on Map ⌖</div>`,'address-card')}
-
-            ${contactCard('DEVICE & SIM INFORMATION <small>(Latest)</small>',`
-              <div class="ct-detail-list device-list">
-                <div><span>Device</span><b>${esc(device.device||device.device_name||'Not available')}</b></div>
-                <div><span>SIM Operator</span><b>${esc(device.sim_operator||device.operator||'Not available')}</b></div>
-                <div><span>SIM Type</span><b>${esc(device.sim_type||'Not available')}</b></div>
-                <div><span>Last Used</span><b>${fmtDate(device.last_used)}</b></div>
-              </div>
-              <div class="ct-risk-box"><span>◆</span><div><small>Device Risk Score</small><strong>${esc(device.risk_status||device.status||'Not available')}</strong></div></div>`,'device-card')}
-
-            ${contactCard('CONTACT NOTES <span class="ct-add">+ Add Note</span>',`
-              <div class="ct-note-box"><b>ⓘ Contact notes</b><p>${esc(read(data,['contact_details.notes','contact_notes','notes'])||'No contact notes are available in the customer record.')}</p><small>Source record</small></div>`,'notes-card')}
-          </div>
-        </div>`;
+      const pincode=primaryAddress.pincode||c.current_pincode||'Not available';
+      const commRows=Array.isArray(data.communication_history)?data.communication_history.slice(0,12):Array.isArray(data.communication)?data.communication.slice(0,12):[];
+      view.innerHTML=`<div class="contact-360"><div class="ct-hero"><div class="ct-customer"><div class="ct-avatar">${esc(String(c.name||'Customer').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div><div><h2>${esc(c.name||'Customer')} <span class="ct-pill good">${esc(l.status||'Active')}</span></h2><small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small><small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div></div><div class="ct-stat phone"><span>☎</span><small>REGISTERED MOBILE<br>NUMBER</small><strong>${esc(primaryMobile)}</strong><em>${contactStatus(c.mobile_verified)}</em></div><div class="ct-stat alt"><span>◉</span><small>ALTERNATE MOBILE<br>NUMBER</small><strong>${esc(altMobiles[0]||'Not available')}</strong><em>${altMobiles.length?'Available':'Not available'}</em></div><div class="ct-stat email"><span>✉</span><small>REGISTERED EMAIL ID</small><strong>${esc(registeredEmail)}</strong><em>${contactStatus(c.email_verified)}</em></div><div class="ct-stat score"><span>✓</span><small>CONTACT SCORE</small><strong>${esc(contactScore??'Not available')}</strong><em>${contactScore!=null?'Verified contact quality':'Not assessed'}</em></div></div><div class="ct-grid-top">${contactCard('REGISTERED MOBILE NUMBER',`<div class="ct-primary-line"><b>☎ ${esc(primaryMobile)}</b><span class="ct-pill good">${contactStatus(c.mobile_verified)}</span><span class="ct-pill blue">Primary</span></div><div class="ct-detail-list"><div><span>Linked To</span><b>Customer • PAN • Loan Account</b></div><div><span>Verified On</span><b>${fmtDate(read(data,['contact_details.mobile_verified_at','customer.mobile_verified_at']))}</b></div><div><span>Verification Mode</span><b>${esc(read(data,['contact_details.mobile_verification_mode'])||'Not available')}</b></div><div><span>Last OTP Sent</span><b>${fmtDate(read(data,['contact_details.last_otp_sent']))}</b></div><div><span>Status</span><b>${contactStatus(c.mobile_verified)}</b></div></div>`,'mobile-card')}${contactCard('ALTERNATE MOBILE NUMBERS <span class="ct-add">+ Add Number</span>',`<div class="ct-mini-table"><div class="ct-th"><span>Mobile Number</span><span>Type</span><span>Verified On</span><span>Status</span></div>${(mobileRows.length?mobileRows:altMobiles.map((x,i)=>({contact_value:x,contact_type:i?'Reference':'Alternate'}))).slice(0,5).map(x=>`<div class="ct-tr"><b>${esc(x.contact_value||x.value)}</b><span>${esc(x.contact_type||'Alternate')}</span><span>${fmtDate(x.verified_at||x.updated_at)}</span><span class="ct-pill ${x.verified?'good':'neutral'}">${x.verified?'Verified':'Not Verified'}</span></div>`).join('')||'<div class="ct-empty">No alternate mobile numbers are available.</div>'}</div><div class="ct-note">ⓘ At least one verified mobile number is required for communication and OTP based verification.</div>`,'alt-card')}${contactCard('EMAIL ADDRESS DETAILS <span class="ct-add">+ Add Email</span>',`<div class="ct-mini-table email-table"><div class="ct-th"><span>Email Address</span><span>Type</span><span>Verified On</span><span>Status</span></div>${(emailRows.length?emailRows:[{contact_value:registeredEmail,contact_type:'Primary',verified:c.email_verified}]).slice(0,5).map(x=>`<div class="ct-tr"><b>${esc(x.contact_value||x.value)}</b><span>${esc(x.contact_type||'Email')}</span><span>${fmtDate(x.verified_at||x.updated_at)}</span><span class="ct-pill ${x.verified?'good':'neutral'}">${x.verified?'Verified':'Not Verified'}</span></div>`).join('')}</div><div class="ct-note">ⓘ Important: All communication and documents will be sent to verified email addresses only.</div>`,'email-card')}</div><div class="ct-grid-bottom">${contactCard('COMMUNICATION HISTORY',`<div class="ct-comm-table"><div class="ct-th"><span>Date & Time</span><span>Channel</span><span>To</span><span>Purpose</span><span>Status</span></div>${commRows.map(x=>`<div class="ct-tr"><span>${fmtDate(x.created_at||x.event_at)}</span><span>${esc(x.channel||x.event_type||'Activity')}</span><span>${esc(x.to||x.recipient||primaryMobile)}</span><span>${esc(x.purpose||x.description||x.event_type||'Customer activity')}</span><span class="ct-pill good">${esc(x.status||'Recorded')}</span></div>`).join('')||'<div class="ct-empty">No communication history is available.</div>'}</div><div class="ct-link">View Full Communication Log →</div>`,'comm-card')}${contactCard('ADDRESS <small>(as per KYC)</small>',`<div class="ct-address-main">${esc(addrLine)}, ${esc(city)}, ${esc(state)} - ${esc(pincode)}</div><span class="ct-pill good">Verified</span><div class="ct-detail-list"><div><span>Address Type</span><b>${esc(primaryAddress.address_type||'Current Address')}</b></div><div><span>Verified On</span><b>${fmtDate(primaryAddress.verified_at||primaryAddress.updated_at)}</b></div><div><span>Verified Via</span><b>${esc(primaryAddress.verified_via||'Not available')}</b></div><div><span>Latitude</span><b>${esc(primaryAddress.latitude||'Not available')}</b></div><div><span>Longitude</span><b>${esc(primaryAddress.longitude||'Not available')}</b></div></div><div class="ct-link">View on Map ⌖</div>`,'address-card')}${contactCard('DEVICE & SIM INFORMATION <small>(Latest)</small>',`<div class="ct-detail-list device-list"><div><span>Device</span><b>${esc(device.device||device.device_name||'Not available')}</b></div><div><span>SIM Operator</span><b>${esc(device.sim_operator||device.operator||'Not available')}</b></div><div><span>SIM Type</span><b>${esc(device.sim_type||'Not available')}</b></div><div><span>Last Used</span><b>${fmtDate(device.last_used)}</b></div></div><div class="ct-risk-box"><span>◆</span><div><small>Device Risk Score</small><strong>${esc(device.risk_status||device.status||'Not available')}</strong></div></div>`,'device-card')}${contactCard('CONTACT NOTES <span class="ct-add">+ Add Note</span>',`<div class="ct-note-box"><b>ⓘ Contact notes</b><p>${esc(read(data,['contact_details.notes','contact_notes','notes'])||'No contact notes are available in the customer record.')}</p><small>Source record</small></div>`,'notes-card')}</div></div>`;
     } else if(key==='bank'){
       const tx=Array.isArray(data.bank_transactions)?data.bank_transactions:[];
-      const categories={};
-      let credits=0,debits=0;
-      tx.forEach(t=>{const a=Math.abs(Number(t.amount||0)); if(String(t.direction||'').toLowerCase()==='credit')credits+=a; else if(String(t.direction||'').toLowerCase()==='debit')debits+=a; const k=t.category||'Other'; categories[k]=(categories[k]||0)+a;});
-      const bankName=c.primary_bank||data.financial_details?.bank_name||'Not available';
-      const avgBal=bank.average_eod_balance ?? c.average_bank_balance;
-      const txRows=tx.slice(0,12);
-      const monthRows=Array.isArray(bank.monthly_breakdown)?bank.monthly_breakdown.slice(-6):[];
-      const catRows=Object.entries(categories).sort((a,b)=>b[1]-a[1]).slice(0,6);
-      const totalCat=catRows.reduce((s,x)=>s+x[1],0);
-      const maxMonth=Math.max(1,...monthRows.map(x=>Math.max(Number(x.credit||x.credits||0),Number(x.debit||x.debits||0))));
-      const monthChart=monthRows.length?monthRows.map(x=>`<div class="bk-bar-col"><div class="bk-bars"><i style="height:${Math.max(6,Math.round(Number(x.credit||x.credits||0)/maxMonth*100))}%"></i><b style="height:${Math.max(6,Math.round(Number(x.debit||x.debits||0)/maxMonth*100))}%"></b></div><small>${esc(x.month||x.label||'')}</small></div>`).join(''):'<div class="bk-empty">Monthly transaction history is not available.</div>';
-      const donut=catRows.length?`conic-gradient(#1768ed 0 ${(catRows[0][1]/totalCat*100).toFixed(1)}%,#12a05a 0 ${((catRows[0][1]+(catRows[1]?.[1]||0))/totalCat*100).toFixed(1)}%,#f59b12 0 ${((catRows[0][1]+(catRows[1]?.[1]||0)+(catRows[2]?.[1]||0))/totalCat*100).toFixed(1)}%,#7540d8 0 ${((catRows[0][1]+(catRows[1]?.[1]||0)+(catRows[2]?.[1]||0)+(catRows[3]?.[1]||0))/totalCat*100).toFixed(1)}%,#e34a5b 0 100%)`:'none';
-      const moneyOrNA=v=>v==null?'Not available':money(v);
-      view.innerHTML=`
-        <div class="bank360">
-          <div class="bk-profile-row">
-            <div class="bk-customer"><div class="bk-avatar">${esc(String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div><div><h2>${esc(c.name||'Customer')} <span class="bk-pill good">${esc(l.status||'Active')}</span></h2><small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small><small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div></div>
-            <div class="bk-kpi blue"><small>TOTAL CREDITS</small><strong>${moneyOrNA(bank.average_monthly_credit)}</strong><span>${bank.credit_transactions??'—'} credit transactions</span></div>
-            <div class="bk-kpi red"><small>TOTAL DEBITS</small><strong>${moneyOrNA(bank.average_monthly_debit)}</strong><span>${bank.debit_transactions??'—'} debit transactions</span></div>
-            <div class="bk-kpi green"><small>NET CASH FLOW</small><strong>${bank.average_monthly_credit!=null&&bank.average_monthly_debit!=null?money(bank.average_monthly_credit-bank.average_monthly_debit):'Not available'}</strong><span>${bank.status||'Bank data'}</span></div>
-            <div class="bk-kpi purple"><small>AVG. MONTHLY BALANCE</small><strong>${moneyOrNA(avgBal)}</strong><span>Average EOD balance</span></div>
-            <div class="bk-kpi teal"><small>STATEMENT PERIOD</small><strong>${monthRows.length?esc(monthRows.length+' Months'):'Not available'}</strong><span>${tx.length?esc(tx.length+' transactions'):'No transaction ledger'}</span></div>
-          </div>
-
-          <div class="bk-chart-grid">
-            <div class="bk-panel"><div class="bk-head"><div><h3>CASH FLOW OVERVIEW</h3><p>Monthly credit and debit movement</p></div><span class="bk-legend"><i></i>Credits <b></b>Debits</span></div><div class="bk-chart">${monthChart}</div></div>
-            <div class="bk-panel"><div class="bk-head"><div><h3>TRANSACTION CATEGORIZATION</h3><p>Distribution by transaction amount</p></div></div><div class="bk-donut-row"><div class="bk-donut" style="background:${donut}"><span>${catRows.length?money(totalCat):'—'}<small>Total</small></span></div><div class="bk-cat-list">${catRows.map((x,i)=>`<div><i class="c${i}"></i><span>${esc(x[0])}</span><b>${money(x[1])}</b></div>`).join('')||'<div class="bk-empty">No categorized transactions available.</div>'}</div></div></div>
-          </div>
-
-          <div class="bk-bottom-grid">
-            <div class="bk-panel"><div class="bk-head"><h3>TRANSACTION SUMMARY</h3></div><div class="bk-summary">
-              <div><span>Primary Bank</span><b>${esc(bankName)}</b></div><div><span>Total Transactions</span><b>${bank.total_transactions??tx.length}</b></div><div><span>Total Credits</span><b class="credit">${tx.length?money(credits):moneyOrNA(bank.average_monthly_credit)}</b></div><div><span>Total Debits</span><b class="debit">${tx.length?money(debits):moneyOrNA(bank.average_monthly_debit)}</b></div><div><span>Last Balance</span><b>${moneyOrNA(bank.last_balance)}</b></div><div><span>Negative Balance Events</span><b>${bank.negative_balance_count??'—'}</b></div>
-            </div></div>
-            <div class="bk-panel"><div class="bk-head"><h3>AVERAGE BALANCE DETAILS</h3></div><div class="bk-balance-cards"><div><small>MINIMUM</small><b>${moneyOrNA(bank.minimum_balance)}</b></div><div><small>AVERAGE</small><b>${moneyOrNA(avgBal)}</b></div><div><small>MAXIMUM</small><b>${moneyOrNA(bank.maximum_balance)}</b></div></div><div class="bk-balance-note">${esc(bank.status||'Bank statement status')}</div></div>
-            <div class="bk-panel"><div class="bk-head"><h3>TOP TRANSACTIONS</h3></div><div class="bk-top-list">${tx.slice().sort((a,b)=>Math.abs(Number(b.amount||0))-Math.abs(Number(a.amount||0))).slice(0,6).map(t=>`<div><span>${esc(t.description||t.category||'Transaction')}</span><b class="${String(t.direction).toLowerCase()==='credit'?'credit':'debit'}">${String(t.direction).toLowerCase()==='credit'?'+':'-'}${money(Math.abs(Number(t.amount||0)))}</b></div>`).join('')||'<div class="bk-empty">No transaction records are available.</div>'}</div></div>
-          </div>
-
-          <div class="bk-panel bk-ledger"><div class="bk-head"><div><h3>BANK TRANSACTION LEDGER</h3><p>Customer-level transactions returned by the banking data source</p></div></div><div class="bk-table-wrap"><table class="bk-table"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Direction</th><th>Amount</th><th>Balance</th></tr></thead><tbody>${txRows.map(t=>`<tr><td>${esc(t.transaction_date||'—')}</td><td class="primary">${esc(t.description||'—')}</td><td>${esc(t.category||'Other')}</td><td><span class="bk-dir ${String(t.direction).toLowerCase()==='credit'?'credit':'debit'}">${esc(t.direction||'—')}</span></td><td class="money">${money(t.amount)}</td><td>${moneyOrNA(t.balance)}</td></tr>`).join('')||'<tr><td colspan="6" class="bk-empty">No bank transaction records are available for this customer.</td></tr>'}</tbody></table></div></div>
-          <div class="bk-source">Statement source: ${esc(bankName)} <span>•</span> Data status: ${esc(bank.status||'Not available')}</div>
-        </div>`;
+      const categories={};let credits=0,debits=0;tx.forEach(t=>{const a=Math.abs(Number(t.amount||0));if(String(t.direction||'').toLowerCase()==='credit')credits+=a;else if(String(t.direction||'').toLowerCase()==='debit')debits+=a;const k=t.category||'Other';categories[k]=(categories[k]||0)+a;});
+      const bankName=c.primary_bank||data.financial_details?.bank_name||'Not available';const avgBal=bank.average_eod_balance??c.average_bank_balance;const txRows=tx.slice(0,12);const monthRows=Array.isArray(bank.monthly_breakdown)?bank.monthly_breakdown.slice(-6):[];const catRows=Object.entries(categories).sort((a,b)=>b[1]-a[1]).slice(0,6);const totalCat=catRows.reduce((s,x)=>s+x[1],0);const maxMonth=Math.max(1,...monthRows.map(x=>Math.max(Number(x.credit||x.credits||0),Number(x.debit||x.debits||0))));const monthChart=monthRows.length?monthRows.map(x=>`<div class="bk-bar-col"><div class="bk-bars"><i style="height:${Math.max(6,Math.round(Number(x.credit||x.credits||0)/maxMonth*100))}%"></i><b style="height:${Math.max(6,Math.round(Number(x.debit||x.debits||0)/maxMonth*100))}%"></b></div><small>${esc(x.month||x.label||'')}</small></div>`).join(''):'<div class="bk-empty">Monthly transaction history is not available.</div>';const donut=catRows.length?`conic-gradient(#1768ed 0 ${(catRows[0][1]/totalCat*100).toFixed(1)}%,#12a05a 0 ${((catRows[0][1]+(catRows[1]?.[1]||0))/totalCat*100).toFixed(1)}%,#f59b12 0 ${((catRows[0][1]+(catRows[1]?.[1]||0)+(catRows[2]?.[1]||0))/totalCat*100).toFixed(1)}%,#7540d8 0 ${((catRows[0][1]+(catRows[1]?.[1]||0)+(catRows[2]?.[1]||0)+(catRows[3]?.[1]||0))/totalCat*100).toFixed(1)}%,#e34a5b 0 100%)`:'none';const moneyOrNA=v=>v==null?'Not available':money(v);
+      view.innerHTML=`<div class="bank360"><div class="bk-profile-row"><div class="bk-customer"><div class="bk-avatar">${esc(String(c.name||'Customer').split(/\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div><div><h2>${esc(c.name||'Customer')} <span class="bk-pill good">${esc(l.status||'Active')}</span></h2><small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small><small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div></div><div class="bk-kpi blue"><small>TOTAL CREDITS</small><strong>${moneyOrNA(bank.average_monthly_credit)}</strong><span>${bank.credit_transactions??'—'} credit transactions</span></div><div class="bk-kpi red"><small>TOTAL DEBITS</small><strong>${moneyOrNA(bank.average_monthly_debit)}</strong><span>${bank.debit_transactions??'—'} debit transactions</span></div><div class="bk-kpi green"><small>NET CASH FLOW</small><strong>${bank.average_monthly_credit!=null&&bank.average_monthly_debit!=null?money(bank.average_monthly_credit-bank.average_monthly_debit):'Not available'}</strong><span>${bank.status||'Bank data'}</span></div><div class="bk-kpi purple"><small>AVG. MONTHLY BALANCE</small><strong>${moneyOrNA(avgBal)}</strong><span>Average EOD balance</span></div><div class="bk-kpi teal"><small>STATEMENT PERIOD</small><strong>${monthRows.length?esc(monthRows.length+' Months'):'Not available'}</strong><span>${tx.length?esc(tx.length+' transactions'):'No transaction ledger'}</span></div></div><div class="bk-chart-grid"><div class="bk-panel"><div class="bk-head"><div><h3>CASH FLOW OVERVIEW</h3><p>Monthly credit and debit movement</p></div><span class="bk-legend"><i></i>Credits <b></b>Debits</span></div><div class="bk-chart">${monthChart}</div></div><div class="bk-panel"><div class="bk-head"><div><h3>TRANSACTION CATEGORIZATION</h3><p>Distribution by transaction amount</p></div></div><div class="bk-donut-row"><div class="bk-donut" style="background:${donut}"><span>${catRows.length?money(totalCat):'—'}<small>Total</small></span></div><div class="bk-cat-list">${catRows.map((x,i)=>`<div><i class="c${i}"></i><span>${esc(x[0])}</span><b>${money(x[1])}</b></div>`).join('')||'<div class="bk-empty">No categorized transactions available.</div>'}</div></div></div></div><div class="bk-bottom-grid"><div class="bk-panel"><div class="bk-head"><h3>TRANSACTION SUMMARY</h3></div><div class="bk-summary"><div><span>Primary Bank</span><b>${esc(bankName)}</b></div><div><span>Total Transactions</span><b>${bank.total_transactions??tx.length}</b></div><div><span>Total Credits</span><b class="credit">${tx.length?money(credits):moneyOrNA(bank.average_monthly_credit)}</b></div><div><span>Total Debits</span><b class="debit">${tx.length?money(debits):moneyOrNA(bank.average_monthly_debit)}</b></div><div><span>Last Balance</span><b>${moneyOrNA(bank.last_balance)}</b></div><div><span>Negative Balance Events</span><b>${bank.negative_balance_count??'—'}</b></div></div></div><div class="bk-panel"><div class="bk-head"><h3>AVERAGE BALANCE DETAILS</h3></div><div class="bk-balance-cards"><div><small>MINIMUM</small><b>${moneyOrNA(bank.minimum_balance)}</b></div><div><small>AVERAGE</small><b>${moneyOrNA(avgBal)}</b></div><div><small>MAXIMUM</small><b>${moneyOrNA(bank.maximum_balance)}</b></div></div><div class="bk-balance-note">${esc(bank.status||'Bank statement status')}</div></div></div></div>`;
     } else if(key==='kyc'){
-      const docs=Array.isArray(data.documents)?data.documents:[];
-      const businesses=Array.isArray(data.businesses)?data.businesses:[];
-      const addresses=Array.isArray(data.addresses)?data.addresses:[];
-      const kyc=data.kyc||{};
-      const primaryAddress=data.address_details||addresses.find(x=>x.is_primary)||addresses[0]||{};
-      const biz=data.business_details||businesses[0]||{};
-      const verifiedDocs=docs.filter(d=>String(d.verification_status||'').toLowerCase().includes('verif')).length;
-      const kycStatus=k.kyc_status||c.kyc_status||'Not available';
-      const income=k.income??c.monthly_income;
-      const monthlyNet=bank.average_monthly_credit!=null&&bank.average_monthly_debit!=null?bank.average_monthly_credit-bank.average_monthly_debit:null;
-      const fmt=v=>v==null||v===''?'Not available':esc(v);
-      const detail=(label,value)=>`<div><span>${label}</span><b>${fmt(value)}</b></div>`;
-      view.innerHTML=`
-        <div class="kyc360">
-          <div class="ky-profile-row">
-            <div class="ky-customer"><div class="ky-avatar">${esc(String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div><div><h2>${esc(c.name||'Customer')} <span class="ky-pill good">${esc(l.status||'Active')}</span></h2><small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small><small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div></div>
-            <div class="ky-kpi green"><small>KYC STATUS</small><strong>${fmt(kycStatus)}</strong><span>${verifiedDocs?verifiedDocs+' verified documents':'Verification record'}</span></div>
-            <div class="ky-kpi purple"><small>KYC COMPLETED ON</small><strong>${fmt(kyc.verified_at||kyc.completed_at)}</strong><span>${kycStatus}</span></div>
-            <div class="ky-kpi blue"><small>KYC EXPIRY</small><strong>${fmt(kyc.expiry_date||kyc.expires_at)}</strong><span>Validity status</span></div>
-            <div class="ky-kpi orange"><small>EMPLOYMENT TYPE</small><strong>${fmt(k.employment_type||c.occupation)}</strong><span>${fmt(c.business_type||'Business profile')}</span></div>
-            <div class="ky-kpi teal"><small>OVERALL KYC SCORE</small><strong>${fmt(read(data,['risk_score.kyc_score','kyc.kyc_score']))}</strong><span>${read(data,['risk_score.kyc_score'])?'Assessment score':'Not assessed'}</span></div>
-          </div>
-
-          <div class="ky-grid-top">
-            <div class="ky-panel"><div class="ky-head"><h3>KYC DOCUMENTS SUMMARY</h3><span>${verifiedDocs}/${docs.length||0} verified</span></div><div class="ky-table"><div class="ky-th"><span>Document Type</span><span>Document Number</span><span>Issue Date</span><span>Expiry Date</span><span>Status</span><span>Verified On</span></div>
-              ${docs.map(d=>`<div class="ky-tr"><b>${fmt(d.document_type)}</b><span>${fmt(d.document_number||d.file_name)}</span><span>${fmt(d.issue_date)}</span><span>${fmt(d.expiry_date)}</span><span class="ky-pill ${String(d.verification_status).toLowerCase().includes('verif')?'good':'neutral'}">${fmt(d.verification_status)}</span><span>${fmt(d.verified_at||d.updated_at||d.created_at)}</span></div>`).join('')||'<div class="ky-empty">No KYC document records are available.</div>'}</div></div>
-            <div class="ky-panel"><div class="ky-head"><h3>EMPLOYMENT / BUSINESS INFORMATION</h3></div><div class="ky-two-col">
-              <div>${detail('Employment Type',k.employment_type||c.occupation)}${detail('Nature of Business',c.business_type||biz.business_type)}${detail('Business Name',c.business_name||biz.business_name||biz.name)}${detail('Since',c.years_in_business!=null?c.years_in_business+' Years':null)}${detail('PAN',c.pan)}${detail('GSTIN',biz.gstin)}${detail('Monthly Income',income==null?null:money(income))}${detail('Net Monthly Income',monthlyNet==null?null:money(monthlyNet))}</div>
-              <div>${detail('Primary Bank',c.primary_bank||data.financial_details?.bank_name)}${detail('Business Ownership',c.business_ownership||biz.ownership_type)}${detail('Residence Type',k.residence_ownership)}${detail('Work Experience',c.work_experience_years!=null?c.work_experience_years+' Years':null)}${detail('Ownership Proof',k.ownership_proof_status)}${detail('KYC Status',kycStatus)}</div>
-            </div></div>
-          </div>
-
-          <div class="ky-grid-mid">
-            <div class="ky-panel"><div class="ky-head"><h3>ADDRESS DETAILS</h3></div><div class="ky-address-grid"><div><div class="ky-address-main">${fmt(primaryAddress.address_line||primaryAddress.address||c.address)}</div>${detail('City',primaryAddress.city||c.current_city)}${detail('State',primaryAddress.state||c.current_state)}${detail('Pincode',primaryAddress.pincode||primaryAddress.zipcode||c.current_pincode)}${detail('Address Type',primaryAddress.address_type||k.residence_ownership)}${detail('Since',c.residence_since)}</div><div class="ky-verification"><span>✓</span><strong>${primaryAddress.verified_at||primaryAddress.verification_status?'Verified':'Not available'}</strong><small>Address verification status</small></div></div></div>
-            <div class="ky-panel"><div class="ky-head"><h3>BUSINESS DETAILS</h3></div><div class="ky-two-col"><div>${detail('Business Category',c.business_type||biz.business_type)}${detail('Line of Business',biz.line_of_business||c.business_type)}${detail('Business Address',biz.address||primaryAddress.address_line)}${detail('No. of Employees',biz.employee_count)}${detail('Annual Turnover',biz.annual_turnover)}</div><div>${detail('Business Ownership',c.business_ownership||biz.ownership_type)}${detail('GSTIN',biz.gstin)}${detail('Business Vintage',c.years_in_business!=null?c.years_in_business+' Years':null)}${detail('Stability',biz.stability_score||biz.business_stability)}</div></div></div>
-          </div>
-
-          <div class="ky-grid-bottom">
-            <div class="ky-panel"><div class="ky-head"><h3>PEP / SANCTION CHECK</h3></div><div class="ky-checks"><div><span>PEP Check</span><b class="ky-pill good">${fmt(kyc.pep_status||'Not assessed')}</b></div><div><span>Sanction Check</span><b class="ky-pill good">${fmt(kyc.sanction_status||'Not assessed')}</b></div></div></div>
-            <div class="ky-panel"><div class="ky-head"><h3>OVERALL STATUS</h3></div><div class="ky-overall"><span>✓</span><div><strong>${kycStatus}</strong><small>Customer KYC & employment information</small></div></div></div>
-            <div class="ky-panel"><div class="ky-head"><h3>DECLARATIONS</h3></div><div class="ky-declarations"><p>✓ All declared information is available in the customer record.</p><p>✓ Employment / business information is recorded.</p><p>✓ Verification status is shown from source records.</p></div></div>
-          </div>
-          <div class="ky-source">Note: KYC and employment values are displayed from the customer source records. Missing fields are shown as <b>Not available</b>.</div>
-        </div>`;
+      const docs=Array.isArray(data.documents)?data.documents:[];view.innerHTML=`<div class="live-stack">${card('KYC & EMPLOYMENT',[['KYC Status',k.kyc_status],['KYC Completed',fmtDate(k.kyc_completed_on)],['PAN Verification',k.pan_status],['Aadhaar Verification',k.aadhaar_status],['CKYC',k.ckyc_status],['CRIF',k.crif_status],['Overall KYC Score',k.overall_kyc_score],['Employment Type',k.employment_type||c.occupation],['Employer / Business',k.employer_name||c.business_name],['Designation',k.designation],['Net Monthly Income',money(k.net_monthly_income??k.income??c.monthly_income)],['Other Income',money(k.other_income)],['No. of Workers',k.workers??k.no_of_workers],['Total Salary',money(k.total_salary)],['Working Days',k.working_days],['Visiting Card',k.visiting_card],['Contract Based',k.contract_based],['Seller Number',k.seller_number],['Seller Firm',k.seller_firm_name],['Ownership',k.ownership],['Products / Machinery / Stock',k.products||k.stock],['PD Status',k.pd_status],['Sanction Check',k.sanction_check],['Ownership Proof',k.ownership_proof_status],['Overall Status',k.overall_status]])}${card('DOCUMENTS',[['Total Documents',docs.length],['Verified',docs.filter(d=>String(d.verification_status||'').toLowerCase().includes('verif')).length],['Pending',docs.filter(d=>!String(d.verification_status||'').toLowerCase().includes('verif')).length]])}</div>`;
     } else if(key==='risk'){
-      const factors=risk.factor_scores||{};
-      const labels={business_profile:'Business Profile',bank_statement_analysis:'Bank Statement Analysis',cash_flow_turnover:'Cash Flow & Turnover',credit_history:'Credit History (CIBIL)',repayment_track:'Repayment Track Record',existing_obligations:'Existing Obligations (FOIR)',stability_vintage:'Stability & Vintage',gst_it_compliance:'GST & ITR Compliance',enquiries_behaviour:'Enquiries & Credit Behaviour',collateral_security:'Collateral / Security'};
-      const max={business_profile:10,bank_statement_analysis:15,cash_flow_turnover:15,credit_history:20,repayment_track:10,existing_obligations:10,stability_vintage:10,gst_it_compliance:5,enquiries_behaviour:5,collateral_security:5};
-      const entries=Object.entries(factors), total=Number(data.directcredit_score??risk.total_score??0), maxScore=Number(risk.max_score||125);
-      const tier=risk.risk_tier||'Not assessed', decision=risk.decision||'Not available', limit=l.eligible_amount??l.sanctioned_amount;
-      const pct=maxScore?Math.min(100,total/maxScore*100):0, reasons=risk.reasons||[];
-      view.innerHTML=`
-        <div class="risk360">
-          <div class="rk-profile-row">
-            <div class="rk-customer"><div class="rk-avatar">${esc(String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div><div><h2>${esc(c.name||'Customer')} <span class="rk-pill good">${esc(l.status||'Active')}</span></h2><small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small><small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div></div>
-            <div class="rk-score"><small>OVERALL RISK SCORE</small><div class="rk-gauge" style="--pct:${pct}%"><strong>${esc(total||'—')}</strong><span>${esc(tier)}</span><em>0 — ${maxScore}</em></div></div>
-            <div class="rk-kpi green"><small>RISK CATEGORY</small><strong>✓ ${esc(tier)}</strong><span>Probability of Default <b>${risk.probability_of_default==null?'Not available':esc(risk.probability_of_default+'%')}</b></span></div>
-            <div class="rk-kpi teal"><small>SCORE STATUS</small><strong>✓ ${esc(decision)}</strong><span>Recommended Limit <b>${limit==null?'Not available':money(limit)}</b></span></div>
-            <div class="rk-kpi blue"><small>AUTO DECISION</small><strong>${decision==='APPROVE'?'Eligible':esc(decision)}</strong><span>Auto Approval Score <b>${maxScore?((total/maxScore)*100).toFixed(2):'—'} / 100</b></span></div>
-          </div>
-          <div class="rk-main-grid">
-            <div class="rk-panel"><div class="rk-head"><h3>SCORE BREAKDOWN <small>(Total ${maxScore} Points)</small></h3></div>
-              <div class="rk-table"><div class="rk-th"><span>#</span><span>Factor</span><span>Max</span><span>Obtained</span><span>Weight</span><span>Status</span></div>
-              ${entries.map(([key,v],i)=>{const got=Number(v)||0,m=Number(max[key]||0);return `<div class="rk-tr"><span class="rk-num">${i+1}</span><b>${esc(labels[key]||key)}</b><span>${m||'—'}</span><span>${got}</span><span>${m?((got/m)*100).toFixed(1)+'%':'—'}</span><span class="rk-pill ${m&&got/m>=.8?'good':'neutral'}">${m&&got/m>=.8?'Good':'Review'}</span></div>`}).join('')||'<div class="rk-empty">No completed factor-level scorecard is available.</div>'}
-              ${entries.length?`<div class="rk-total"><b>TOTAL</b><span>${maxScore}</span><strong>${total}</strong><span>100%</span><em>${esc(tier)}</em></div>`:''}</div></div>
-            <div class="rk-right">
-              <div class="rk-panel"><div class="rk-head"><h3>SCORE DISTRIBUTION</h3></div><div class="rk-donut-wrap"><div class="rk-donut" style="--pct:${pct}%"><span>${esc(total||'—')}<small>Total Score</small><small>out of ${maxScore}</small></span></div><div class="rk-dist"><div><i></i><span>Excellent (90 - 110)</span><b>${tier==='Excellent'?pct.toFixed(1)+'%':'—'}</b></div><div><i></i><span>Good (70 - 89)</span><b>${tier==='Good'?pct.toFixed(1)+'%':'—'}</b></div><div><i></i><span>Average (50 - 69)</span><b>${tier==='Average'?pct.toFixed(1)+'%':'—'}</b></div><div><i></i><span>Poor (30 - 49)</span><b>${tier==='Poor'?pct.toFixed(1)+'%':'—'}</b></div></div></div></div>
-              <div class="rk-panel"><div class="rk-head"><h3>SCORE TREND</h3><span>Latest Score <b>${esc(total||'—')}</b></span></div><div class="rk-trend-empty">${risk.score_history?'Historical score trend available':'Historical score trend is not available.'}</div></div>
-            </div>
-          </div>
-          <div class="rk-bottom-grid">
-            <div class="rk-panel"><div class="rk-head"><h3>RISK FACTORS</h3></div><div class="rk-checks"><div><span>Delayed Payments</span><b class="ok">No</b></div><div><span>High Credit Utilization</span><b class="ok">No</b></div><div><span>Recent Hard Enquiries</span><b class="ok">No</b></div><div><span>Overdue Accounts</span><b class="ok">No</b></div><div><span>High Cash Withdrawals</span><b class="warn">Moderate</b></div></div></div>
-            <div class="rk-panel"><div class="rk-head"><h3>KEY INSIGHTS</h3></div><div class="rk-insights">${(reasons.length?reasons:['Customer assessment is based on available scorecard data.','Bank and repayment information is considered where available.']).slice(0,5).map(x=>`<p>✓ ${esc(x)}</p>`).join('')}</div></div>
-            <div class="rk-panel"><div class="rk-head"><h3>RISK SUMMARY</h3></div><div class="rk-summary"><div><span>Probability of Default</span><b>${risk.probability_of_default==null?'Not available':risk.probability_of_default+'%'}</b></div><div><span>Exposure at Default</span><b>${l.sanctioned_amount==null?'Not available':money(l.sanctioned_amount)}</b></div><div><span>Risk Grade</span><b>${esc(risk.risk_grade||tier)}</b></div><div><span>Approval</span><b>${risk.approval_percent==null?'Not available':risk.approval_percent+'%'}</b></div></div></div>
-            <div class="rk-panel"><div class="rk-head"><h3>RECOMMENDATION</h3></div><div class="rk-recommend"><strong>✓ ${esc(decision==='APPROVE'?'Approve':decision)}</strong><div><span>Recommended Limit</span><b>${limit==null?'Not available':money(limit)}</b></div><div><span>Tenure</span><b>${l.tenure_months?l.tenure_months+' Months':'Not available'}</b></div><div><span>Interest Rate</span><b>${l.interest_rate==null?'Not available':l.interest_rate+'% P.A.'}</b></div></div></div>
-          </div>
-          <div class="rk-source">Scores are calculated from available customer risk and scorecard records. Missing fields are shown as <b>Not available</b>.</div>
-        </div>`;
-    } else {
-      const requested=l.requested_amount, eligible=l.eligible_amount, sanctioned=l.sanctioned_amount;
-      const score=l.scorecard_score??data.directcredit_score??risk.total_score;
-      const approval=l.scorecard_approval_percent??risk.approval_percent;
-      const rate=l.interest_rate, tenure=l.tenure_months, emi=l.monthly_emi;
-      const purpose=l.purpose||l.loan_purpose||'Not available';
-      const process=[
-        ['Application Submitted',l.created_at||l.application_date,'done'],
-        ['KYC Verified',data.kyc?.verified_at||data.kyc_employment?.kyc_verified_at,'done'],
-        ['Document Verification',data.documents?.[0]?.verified_at||data.documents?.[0]?.updated_at,'done'],
-        ['Credit Assessment',risk.assessed_at||risk.updated_at,'done'],
-        ['Eligibility Approved',l.approved_at||l.sanctioned_at,'done'],
-        ['Sanction Generated',l.sanctioned_at||l.updated_at,'done'],
-        ['Disbursement Pending',l.disbursed_at,'current']
-      ];
-      const docRows=(Array.isArray(data.documents)?data.documents:[]).slice(0,7);
-      const factorRows=Object.entries(risk.factor_scores||{}).slice(0,8);
-      const factorLabels={business_profile:'Business Profile',bank_statement_analysis:'Bank Statement',cash_flow_turnover:'Cash Flow',credit_history:'Credit History',repayment_track:'Repayment Track',existing_obligations:'Existing Obligations',stability_vintage:'Stability & Vintage',gst_it_compliance:'GST & ITR Compliance',enquiries_behaviour:'Enquiries & Behaviour',collateral_security:'Collateral / Security'};
-      const factorMax={business_profile:10,bank_statement_analysis:15,cash_flow_turnover:15,credit_history:20,repayment_track:10,existing_obligations:10,stability_vintage:10,gst_it_compliance:5,enquiries_behaviour:5,collateral_security:5};
-      const offerDecision=risk.decision||l.status||'Not available';
-      const fmtDate=v=>v?esc(String(v).slice(0,16).replace('T',' ')):'Not available';
-      view.innerHTML=`
-        <div class="elig360">
-          <div class="el-profile-row">
-            <div class="el-customer"><div class="el-avatar">${esc(String(c.name||'Customer').split(/\\s+/).map(x=>x[0]).join('').slice(0,2).toUpperCase())}</div><div><h2>${esc(c.name||'Customer')} <span class="el-pill good">${esc(l.status||'Active')}</span></h2><small>Customer ID <b>${esc(c.customer_code||c.id)}</b></small><small>Loan Account No. <b>${esc(l.id||'Not available')}</b></small></div></div>
-            <div class="el-kpi blue"><small>LOAN AMOUNT REQUESTED</small><strong>${requested==null?'Not available':money(requested)}</strong><span>Customer request</span></div>
-            <div class="el-kpi green"><small>ELIGIBLE AMOUNT</small><strong>${eligible==null?'Not available':money(eligible)}</strong><span>${requested&&eligible!=null?Math.round(eligible/requested*100)+'% of requested':'Eligibility result'}</span></div>
-            <div class="el-kpi purple"><small>ELIGIBILITY SCORE</small><strong>${score==null?'Not available':esc(score+' / '+(risk.max_score||110))}</strong><span>${score!=null?(Number(score)>=90?'Excellent':Number(score)>=70?'Good':'Review'):'Not assessed'}</span></div>
-            <div class="el-kpi orange"><small>RECOMMENDED TENOR</small><strong>${tenure?esc(tenure+' Months'):'Not available'}</strong><span>Maximum eligible</span></div>
-            <div class="el-kpi teal"><small>AUTO DECISION</small><strong>✓ ${esc(offerDecision)}</strong><span>Interest ${rate==null?'Not available':esc(rate+'% P.A.')}</span></div>
-          </div>
-          <div class="el-grid-top">
-            <div class="el-panel"><div class="el-head"><h3>LOAN REQUEST DETAILS</h3></div><div class="el-detail-grid">
-              <div>Application / Loan ID<b>${esc(l.id||'Not available')}</b></div><div>Application Date<b>${fmtDate(l.created_at||l.application_date)}</b></div>
-              <div>Customer ID<b>${esc(c.customer_code||c.id)}</b></div><div>Customer Name<b>${esc(c.name||'Not available')}</b></div>
-              <div>Loan Product<b>${esc(l.product||l.loan_product||'Not available')}</b></div><div>Purpose<b>${esc(purpose)}</b></div>
-              <div>Requested Amount<b>${requested==null?'Not available':money(requested)}</b></div><div>Tenor Requested<b>${tenure?tenure+' Months':'Not available'}</b></div>
-              <div>EMI (Approx.)<b>${emi==null?'Not available':money(emi)}</b></div><div>Preferred Disbursement<b>${fmtDate(l.preferred_disbursement_date)}</b></div>
-            </div></div>
-            <div class="el-panel"><div class="el-head"><h3>ELIGIBILITY FACTORS SUMMARY</h3><span>${score==null?'Not assessed':esc(score+' points')}</span></div><div class="el-factor-chart">
-              ${factorRows.map(([key,v])=>{const max=Number(factorMax[key]||10);return `<div><span>${esc(factorLabels[key]||key)}</span><b>${Number(v).toFixed(1)} / ${max}</b><i><em style="width:${Math.min(100,Number(v)/max*100)}%"></em></i></div>`}).join('')||'<div class="el-empty">Eligibility factor details are not available.</div>'}
-            </div></div>
-            <div class="el-panel"><div class="el-head"><h3>RECOMMENDED OFFER</h3><span class="el-pill good">Best Offer</span></div><div class="el-offer"><div><span>Sanction Amount</span><b>${sanctioned==null?(eligible==null?'Not available':money(eligible)):money(sanctioned)}</b></div><div><span>Interest Rate</span><b>${rate==null?'Not available':rate+'% P.A.'}</b></div><div><span>Processing Fee</span><b>${l.processing_fee==null?'Not available':money(l.processing_fee)}</b></div><div><span>Tenor</span><b>${tenure?tenure+' Months':'Not available'}</b></div><div><span>EMI</span><b>${emi==null?'Not available':money(emi)}</b></div><div><span>Decision</span><b class="good-text">${esc(offerDecision)}</b></div></div></div>
-          </div>
-          <div class="el-grid-mid">
-            <div class="el-panel"><div class="el-head"><h3>REQUIRED DOCUMENTS</h3></div><div class="el-docs">${docRows.map(d=>`<div><span>▣ ${esc(d.document_type||d.file_name||'Document')}</span><b class="${String(d.verification_status||'').toLowerCase().includes('verif')?'verified':'review'}">${esc(d.verification_status||'Not available')}</b></div>`).join('')||'<div class="el-empty">No document records are available.</div>'}</div></div>
-            <div class="el-panel"><div class="el-head"><h3>LOAN PURPOSE & TENOR</h3></div><div class="el-two-col"><div><span>Purpose of Loan</span><b>${esc(purpose)}</b></div><div><span>Max Eligible Tenor</span><b>${tenure?tenure+' Months':'Not available'}</b></div><div><span>Preferred Purpose</span><b>${esc(purpose)}</b></div><div><span>Repayment Type</span><b>${esc(l.repayment_type||'EMI - Monthly')}</b></div></div></div>
-            <div class="el-panel"><div class="el-head"><h3>REPAYMENT CAPACITY (FOR ANALYSIS)</h3></div><div class="el-two-col"><div><span>Monthly Net Income</span><b>${c.monthly_income==null?'Not available':money(c.monthly_income)}</b></div><div><span>Existing EMI</span><b>${c.existing_emi==null?'Not available':money(c.existing_emi)}</b></div><div><span>Proposed EMI</span><b>${emi==null?'Not available':money(emi)}</b></div><div><span>FOIR</span><b>${risk.foir==null?'Not available':risk.foir+'%'}</b></div></div></div>
-            <div class="el-panel"><div class="el-head"><h3>RISK INDICATORS</h3></div><div class="el-risk"><div><span>Probability of Default</span><b>${risk.probability_of_default==null?'Not available':risk.probability_of_default+'%'}</b></div><div><span>Loss Given Default</span><b>${risk.loss_given_default==null?'Not available':risk.loss_given_default+'%'}</b></div><div><span>Exposure at Default</span><b>${sanctioned==null?'Not available':money(sanctioned)}</b></div><div><span>Risk Grade</span><b>${esc(risk.risk_grade||risk.risk_tier||'Not assessed')}</b></div></div></div>
-          </div>
-          <div class="el-panel el-tracker"><div class="el-head"><h3>LOAN PROCESS TRACKER</h3></div><div class="el-process">${process.map((p,i)=>`<div class="el-step ${p[2]}"><i>${p[2]==='done'?'✓':i+1}</i><strong>${esc(p[0])}</strong><small>${fmtDate(p[1])}</small></div>`).join('')}</div></div>
-          <div class="el-source">Eligibility is calculated from available customer, loan, KYC, banking and risk records. Missing fields are shown as <b>Not available</b>.</div>
-        </div>`;
-      addEligibilityMicroDetails(c,l,k,risk);
-
+      const factors=Array.isArray(risk.factors)?risk.factors:[];view.innerHTML=`<div class="live-stack">${card('RISK & SCORE',[['Overall Risk Score',risk.total_score??risk.score??c.directcredit_score],['Maximum Score',risk.max_score],['CIBIL Score',risk.credit_score??c.cibil_score],['Risk Tier',risk.risk_tier||risk.risk_grade],['Risk Category',risk.category],['Score Status',risk.score_status],['Auto Decision',risk.auto_decision||risk.decision],['Approval %',risk.approval_percent],['Assessment Date',fmtDate(risk.assessment_date)],['Scorecard Version',risk.scorecard_version],['Probability of Default',risk.probability_default??risk.pd],['Loss Given Default',risk.loss_given_default??risk.lgd],['Expected Loss',risk.expected_loss],['Recommended Limit',money(risk.recommended_limit)],['Recommended Tenure',risk.recommended_tenure],['Recommended Interest Rate',risk.recommended_interest_rate]])}${factors.length?card('SCORE FACTORS',factors.map(f=>[f.label||f.name,f.score??f.value])):''}</div>`;
+    } else if(key==='eligibility'){
+      const factorRows=Array.isArray(risk.factors)?risk.factors.map(f=>[f.key||f.name,f.score??f.value]):Object.entries(risk.factor_scores||{});const factorMax=risk.factor_max||max;const l2=l||{};const requested=l2.requested_amount;const eligible=l2.eligible_amount;const sanctioned=l2.sanctioned_amount;const tenure=l2.tenure_months||l2.requested_tenure_months;const rate=l2.interest_rate;const emi=l2.monthly_emi;const purpose=l2.loan_purpose||l2.purpose||'Not available';const offerDecision=risk.decision||risk.auto_decision||'Pending';const docRows=Array.isArray(data.documents)?data.documents:[];const process=[['Application Submitted',l2.application_date||l2.created_at,'done'],['KYC Verification',k.kyc_completed_on,k.kyc_status?'done':'pending'],['Document Verification',docRows[0]?.verified_at||docRows[0]?.updated_at,docRows.length?'done':'pending'],['Credit Assessment',risk.assessment_date,risk.source==='scorecard'?'done':'pending'],['Eligibility Approval',risk.decision_date,risk.decision?'done':'pending'],['Sanction',l2.sanction_date,l2.sanctioned_amount?'done':'pending']];
+      view.innerHTML=`<div class="eligibility-360"><div class="el-head-row"><div><h2>${esc(c.name||'Customer')} — Eligibility</h2><p>${esc(c.business_name||'Business not available')} • ${esc(c.customer_code||c.id||'Customer')}</p></div><span class="el-status">${esc(offerDecision)}</span></div><div class="el-grid-top"><div class="el-panel"><div class="el-head"><h3>APPLICATION SUMMARY</h3><span>${esc(l2.status||'Pending')}</span></div><div class="el-summary"><div>Customer ID<b>${esc(c.customer_code||c.id)}</b></div><div>Customer Name<b>${esc(c.name||'Not available')}</b></div><div>Loan Product<b>${esc(l2.product||l2.loan_product||'Not available')}</b></div><div>Purpose<b>${esc(purpose)}</b></div><div>Requested Amount<b>${requested==null?'Not available':money(requested)}</b></div><div>Tenor Requested<b>${tenure?tenure+' Months':'Not available'}</b></div><div>EMI (Approx.)<b>${emi==null?'Not available':money(emi)}</b></div><div>Preferred Disbursement<b>${fmtDate(l2.preferred_disbursement_date)}</b></div></div></div><div class="el-panel"><div class="el-head"><h3>ELIGIBILITY FACTORS SUMMARY</h3><span>${risk.total_score==null?'Not assessed':esc(risk.total_score+' points')}</span></div><div class="el-factor-chart">${factorRows.map(([key,v])=>{const mx=Number(factorMax[key]||10);return `<div><span>${esc(labels[key]||key)}</span><b>${Number(v).toFixed(1)} / ${mx}</b><i><em style="width:${Math.min(100,Number(v)/mx*100)}%"></em></i></div>`}).join('')||'<div class="el-empty">Eligibility factor details are not available.</div>'}</div></div><div class="el-panel"><div class="el-head"><h3>RECOMMENDED OFFER</h3><span class="el-pill good">Best Offer</span></div><div class="el-offer"><div><span>Sanction Amount</span><b>${sanctioned==null?(eligible==null?'Not available':money(eligible)):money(sanctioned)}</b></div><div><span>Interest Rate</span><b>${rate==null?'Not available':rate+'% P.A.'}</b></div><div><span>Processing Fee</span><b>${l2.processing_fee==null?'Not available':money(l2.processing_fee)}</b></div><div><span>Tenor</span><b>${tenure?tenure+' Months':'Not available'}</b></div><div><span>EMI</span><b>${emi==null?'Not available':money(emi)}</b></div><div><span>Decision</span><b class="good-text">${esc(offerDecision)}</b></div></div></div></div><div class="el-grid-mid"><div class="el-panel"><div class="el-head"><h3>REQUIRED DOCUMENTS</h3></div><div class="el-docs">${docRows.map(d=>`<div><span>▣ ${esc(d.document_type||d.file_name||'Document')}</span><b class="${String(d.verification_status||'').toLowerCase().includes('verif')?'verified':'review'}">${esc(d.verification_status||'Not available')}</b></div>`).join('')||'<div class="el-empty">No document records are available.</div>'}</div></div><div class="el-panel"><div class="el-head"><h3>LOAN PURPOSE & TENOR</h3></div><div class="el-two-col"><div><span>Purpose of Loan</span><b>${esc(purpose)}</b></div><div><span>Max Eligible Tenor</span><b>${tenure?tenure+' Months':'Not available'}</b></div><div><span>Preferred Purpose</span><b>${esc(purpose)}</b></div><div><span>Repayment Type</span><b>${esc(l2.repayment_type||'EMI - Monthly')}</b></div></div></div><div class="el-panel"><div class="el-head"><h3>REPAYMENT CAPACITY (FOR ANALYSIS)</h3></div><div class="el-two-col"><div><span>Monthly Net Income</span><b>${c.monthly_income==null?'Not available':money(c.monthly_income)}</b></div><div><span>Existing EMI</span><b>${c.existing_emi==null?'Not available':money(c.existing_emi)}</b></div><div><span>Proposed EMI</span><b>${emi==null?'Not available':money(emi)}</b></div><div><span>FOIR</span><b>${risk.foir==null?'Not available':risk.foir+'%'}</b></div></div></div><div class="el-panel"><div class="el-head"><h3>RISK INDICATORS</h3></div><div class="el-risk"><div><span>Probability of Default</span><b>${risk.probability_of_default==null?'Not available':risk.probability_of_default+'%'}</b></div><div><span>Loss Given Default</span><b>${risk.loss_given_default==null?'Not available':risk.loss_given_default+'%'}</b></div><div><span>Exposure at Default</span><b>${sanctioned==null?'Not available':money(sanctioned)}</b></div><div><span>Risk Grade</span><b>${esc(risk.risk_grade||risk.risk_tier||'Not assessed')}</b></div></div></div></div><div class="el-panel el-tracker"><div class="el-head"><h3>LOAN PROCESS TRACKER</h3></div><div class="el-process">${process.map((p,i)=>`<div class="el-step ${p[2]}"><i>${p[2]==='done'?'✓':i+1}</i><strong>${esc(p[0])}</strong><small>${fmtDate(p[1])}</small></div>`).join('')}</div></div><div class="el-source">Eligibility is calculated from available customer, loan, KYC, banking and risk records. Missing fields are shown as <b>Not available</b>.</div></div>`;
+      addEligibilityMicroDetails(c,l2,k,risk);
     }
-    if(!["contact","bank","kyc","risk"].includes(key)) view.insertAdjacentHTML("beforeend", referenceDetails(data,key));
+    if(!["contact","bank","kyc","risk"].includes(key)) view.insertAdjacentHTML("beforeend",referenceDetails(data,key));
   }
 
   function buildSelector(options){
     let select=document.getElementById('applicationSelector');
     if(!select){
       const host=document.querySelector('.application-context');
-      select=document.createElement('select');
-      select.id='applicationSelector';
-      select.setAttribute('aria-label','Select application');
-      select.style.cssText='margin-left:auto;min-width:260px;max-width:360px;padding:9px 12px;border:1px solid #d7e1ef;border-radius:8px;background:#fff;color:#173052;font-weight:600';
-      host.appendChild(select);
-      select.addEventListener('change',()=>loadSelected(select.value));
+      select=document.createElement('select');select.id='applicationSelector';select.setAttribute('aria-label','Select application');select.style.cssText='margin-left:auto;min-width:260px;max-width:360px;padding:9px 12px;border:1px solid #d7e1ef;border-radius:8px;background:#fff;color:#173052;font-weight:600';
+      host.appendChild(select);select.addEventListener('change',()=>loadSelected(select.value));
     }
     select.innerHTML=options.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
-    if(selected && options.some(o=>o.value===selected)) select.value=selected;
+    if(selected && options.some(o=>o.value===selected))select.value=selected;
   }
 
   async function loadSelected(key){
     if(!key)return;
-    selected=key;
-    view.innerHTML='<div class="live-empty">Loading application data…</div>';
+    selected=key;view.innerHTML='<div class="live-empty">Loading application data…</div>';
     try{
       const [source,id]=key.split(':');
-      if(source!=='live' && source!=='demo') throw new Error('Unknown application source.');
-      data=await window.DirectCreditData.customer(Number(id),source==='demo'
-        ? {source:'demo'}
-        : {source:'live',strictLive:true});
-      const c=data.customer||{};
-      const isDemo=source==='demo';
+      if(!id || (source!=='live' && source!=='demo'))throw new Error('Invalid customer selection.');
+      data=await window.DirectCreditData.customer(Number(id),source==='demo'?{source:'demo'}:{source:'live',strictLive:true});
+      const c=data.customer||{};const isDemo=source==='demo';
       document.getElementById('contextCustomer').textContent=val(c.name,'Customer');
       document.getElementById('contextId').textContent=`${isDemo?'Demo Test':'Live'} • Customer ID ${val(c.id,id)} • ${val(c.customer_code,'No customer code')}`;
       document.getElementById('contextStatus').textContent=isDemo?'Demo test record':'Live database';
-      render(document.querySelector('.application-tab.active')?.dataset.view||'profile');
+      if(document.getElementById('applicationSelector'))document.getElementById('applicationSelector').value=key;
+      const requestedTab=params.get('workspace_tab');
+      const activeTab=tabs.includes(requestedTab)?requestedTab:(document.querySelector('.application-tab.active')?.dataset.view||'profile');
+      document.querySelectorAll('.application-tab').forEach(b=>b.classList.toggle('active',b.dataset.view===activeTab));
+      render(activeTab);
     }catch(e){
-      data=null;
-      document.getElementById('contextStatus').textContent='Data unavailable';
-      view.innerHTML=`<div class="live-empty">Unable to load this application. ${esc(e.message||'Please try again.')}</div>`;
+      data=null;document.getElementById('contextStatus').textContent='Data unavailable';view.innerHTML=`<div class="live-empty">Unable to load this application. ${esc(e.message||'Please try again.')}</div>`;
     }
   }
 
   async function load(){
     view.innerHTML='<div class="live-empty">Loading application list…</div>';
     try{
-      // Keep the 10 built-in demo records available for testing, while live
-      // customer/application records remain the primary production source.
       let liveRows=[];
-      try {
-        liveRows=window.DirectCreditData.liveLoans
-          ? await window.DirectCreditData.liveLoans()
-          : await window.DirectCreditData.loans();
-      } catch(_) {
-        // A protected live endpoint may return 401; demo applications must remain testable.
-        liveRows=[];
-      }
+      try{liveRows=window.DirectCreditData.liveLoans?await window.DirectCreditData.liveLoans():await window.DirectCreditData.loans();}catch(_){liveRows=[];}
       const live=Array.isArray(liveRows)?liveRows:[];
       const liveCustomers=[...new Map(live.filter(x=>x.customer_id!=null).map(x=>[String(x.customer_id),x])).values()];
-      const liveOptions=liveCustomers.map(x=>({
-        value:'live:'+x.customer_id,
-        label:`LIVE • ${x.customer_name||'Customer '+x.customer_id}${x.business_name?' • '+x.business_name:''} • Application #${x.id||x.loan_id||'—'}`
-      }));
+      const liveOptions=liveCustomers.map(x=>({value:'live:'+x.customer_id,label:`LIVE • ${x.customer_name||'Customer '+x.customer_id}${x.business_name?' • '+x.business_name:''} • Application #${x.id||x.loan_id||'—'}`}));
       const demoCustomers=window.DirectCreditData.demoCustomers||[];
-      const demoOptions=demoCustomers.map(x=>({
-        value:'demo:'+x.id,
-        label:`DEMO TEST • ${x.name}${x.business_name?' • '+x.business_name:''} • Application #${x.loan?.id||'—'}`
-      }));
+      const demoOptions=demoCustomers.map(x=>({value:'demo:'+x.id,label:`DEMO TEST • ${x.name}${x.business_name?' • '+x.business_name:''} • Application #${x.loan?.id||'—'}`}));
       const options=[...liveOptions,...demoOptions];
-      if(!options.length){
-        view.innerHTML='<div class="live-empty">No application records are available.</div>';
-        return;
+      const requested=params.get('customer_id');const requestedSource=params.get('source');
+      const requestedKey=requested&&(requestedSource==='live'||requestedSource==='demo')?requestedSource+':'+requested:'';
+      if(!options.length && !requestedKey){view.innerHTML='<div class="live-empty">No application records are available.</div>';return;}
+      // Do not silently fall back to the first option. The URL selection is
+      // authoritative; otherwise every customer could become the first demo
+      // record (Aarav Shah) when the live list is paginated or temporarily unavailable.
+      const resolvedKey=requestedKey||options[0].value;
+      if(requestedKey && !options.some(o=>o.value===requestedKey)){
+        const sourceLabel=requestedSource==='live'?'LIVE':'DEMO';
+        options.unshift({value:requestedKey,label:`${sourceLabel} • Selected customer (${requested}) • Loading…`});
       }
+      selected=resolvedKey;
       buildSelector(options);
-      const requested=params.get('customer_id');
-      const requestedSource=params.get('source');
-      const requestedKey=requested && (requestedSource==='live' || requestedSource==='demo')
-        ? requestedSource+':'+requested : '';
-      selected=requestedKey && options.some(o=>o.value===requestedKey)
-        ? requestedKey : options[0].value;
-      document.getElementById('applicationSelector').value=selected;
-      await loadSelected(selected);
-    }catch(e){
-      view.innerHTML=`<div class="live-empty">Application data could not be loaded. ${esc(e.message||'Please check the database/API connection and refresh.')}</div>`;
-    }
+      const selector=document.getElementById('applicationSelector');if(selector)selector.value=resolvedKey;
+      await loadSelected(resolvedKey);
+    }catch(e){view.innerHTML=`<div class="live-empty">Application data could not be loaded. ${esc(e.message||'Please check the database/API connection and refresh.')}</div>`;}
   }
 
-  document.querySelectorAll('.application-tab').forEach(b=>b.addEventListener('click',()=>{
-    document.querySelectorAll('.application-tab').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    render(b.dataset.view);
-  }));
+  document.querySelectorAll('.application-tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.application-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');params.set('workspace_tab',b.dataset.view);history.replaceState(null,'',`${location.pathname}?${params.toString()}`);render(b.dataset.view);}));
   document.getElementById('refreshBtn')?.addEventListener('click',load);
   load();
 })();
