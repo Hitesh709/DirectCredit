@@ -35,6 +35,9 @@
     navs.forEach(n=>n.classList.toggle('active',n.dataset.page===id));
     document.body.classList.toggle('dc-iframe-page-active',['loanRequest','funnelMatrix','accounting','settlement','collection'].includes(id));
     const activePage=document.getElementById(id),frame=activePage?.querySelector('iframe[data-src]');
+    // Embedded pages already provide their own export controls. Keep only one export bar visible.
+    const globalExportBar=document.querySelector('.main > .dc-export-bar');
+    if(globalExportBar)globalExportBar.style.display=frame?'none':'';
     if(frame){prepareAdminFrame(frame);if(!frame.getAttribute('src'))frame.src=frame.dataset.src;else fitAdminFrame(frame)}
     const title=document.getElementById('pageTitle');if(title)title.textContent=label||titles[id]||id;
     const main=document.querySelector('.main');if(main)main.scrollTop=0;
