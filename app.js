@@ -28,22 +28,34 @@
   function fitAll(){document.querySelectorAll('.page iframe[data-src]').forEach(f=>{prepareAdminFrame(f);if(f.contentDocument?.readyState==='complete')fitAdminFrame(f)})}
   window.DCResizeAdminFrames=fitAll;
 
+  const iframePageIds=new Set(['loanRequest','funnelMatrix','accounting','settlement','collection']);
+  function syncGlobalExportBar(){
+    const active=document.querySelector('.page.activePage');
+    const frame=active?.querySelector('iframe[data-src]');
+    const bar=document.querySelector('.main > .dc-export-bar');
+    if(bar)bar.style.display=frame?'none':'';
+  }
+
   const pages=[...document.querySelectorAll('.page')],navs=[...document.querySelectorAll('.nav')];
   const titles={dashboard:'Dashboard',reports:'Analytics',loanRequest:'Applications',funnelMatrix:'Funnel & Matrix',accounting:'Accounting',settlement:'Settlement',collection:'Collections',alerts:'Alerts',documents:'Documents',settings:'Settings',support:'Support'};
   function showPage(id,label){
     pages.forEach(p=>p.classList.toggle('activePage',p.id===id));
     navs.forEach(n=>n.classList.toggle('active',n.dataset.page===id));
-    document.body.classList.toggle('dc-iframe-page-active',['loanRequest','funnelMatrix','accounting','settlement','collection'].includes(id));
+    document.body.classList.toggle('dc-iframe-page-active',iframePageIds.has(id));
     const activePage=document.getElementById(id),frame=activePage?.querySelector('iframe[data-src]');
-    // Embedded pages already provide their own export controls. Keep only one export bar visible.
-    const globalExportBar=document.querySelector('.main > .dc-export-bar');
-    if(globalExportBar)globalExportBar.style.display=frame?'none':'';
     if(frame){prepareAdminFrame(frame);if(!frame.getAttribute('src'))frame.src=frame.dataset.src;else fitAdminFrame(frame)}
+    syncGlobalExportBar();
     const title=document.getElementById('pageTitle');if(title)title.textContent=label||titles[id]||id;
     const main=document.querySelector('.main');if(main)main.scrollTop=0;
     history.replaceState(null,'','#'+id);
   }
   navs.forEach(n=>n.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showPage(n.dataset.page,n.textContent.trim())}));
+
+  // admin-interactions.js creates the global export bar after this file loads.
+  // Keep it hidden whenever an embedded page is active so the embedded page has exactly one toolbar.
+  const main=document.querySelector('.main');
+  if(main&&window.MutationObserver){new MutationObserver(()=>syncGlobalExportBar()).observe(main,{childList:true,subtree:false});}
+
   const initial=(location.hash||'#dashboard').slice(1);showPage(titles[initial]?initial:'dashboard');
   window.addEventListener('resize',fitAll);
 })();
