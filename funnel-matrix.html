@@ -6,7 +6,7 @@
 <title>Funnel &amp; Matrix — DirectCredit</title>
 <link rel="stylesheet" href="pipeline.css"><link rel="stylesheet" href="admin-consistency.css?v=20261001.2">
 <link rel="stylesheet" href="disbursement-matrix.css">
-<link rel="stylesheet" href="loan-slab.css">
+<link rel="stylesheet" href="loan-slab.css?v=20261006.3">
 <link rel="stylesheet" href="repayment-matrix.css?v=20261001.3">
 <link rel="stylesheet" href="due-calendar.css">
 <link rel="stylesheet" href="funnel-matrix.css?v=20261006.2">
@@ -14,53 +14,17 @@
 <body>
 <main class="content funnel-workspace">
   <header class="page-head">
-    <div>
-      <h1>Funnel &amp; Matrix</h1>
-      <p>Loan portfolio, disbursement, repayment, due calendar, pipeline and registered users in one workspace.</p>
-    </div>
-    <div class="head-actions">
-      <button id="fmRefresh">Refresh</button>
-    </div>
+    <div><h1>Funnel &amp; Matrix</h1><p>Loan portfolio, disbursement, repayment, due calendar, pipeline and registered users in one workspace.</p></div>
+    <div class="head-actions"><button id="fmRefresh">Refresh</button></div>
   </header>
-
   <nav class="application-tabs fm-tabs" aria-label="Funnel and Matrix sections">
-    <button class="application-tab fm-tab active" data-view="loan">Loan</button>
-    <button class="application-tab fm-tab" data-view="disbursement">Disbursement</button>
-    <button class="application-tab fm-tab" data-view="repayment">Repayment</button>
-    <button class="application-tab fm-tab" data-view="calendar">Due Calendar</button>
-    <button class="application-tab fm-tab" data-view="pipeline">Loan Pipeline</button>
-    <button class="application-tab fm-tab" data-view="users">Registration &amp; Users</button>
+    <button class="application-tab fm-tab active" data-view="loan">Loan</button><button class="application-tab fm-tab" data-view="disbursement">Disbursement</button><button class="application-tab fm-tab" data-view="repayment">Repayment</button><button class="application-tab fm-tab" data-view="calendar">Due Calendar</button><button class="application-tab fm-tab" data-view="pipeline">Loan Pipeline</button><button class="application-tab fm-tab" data-view="users">Registration &amp; Users</button>
   </nav>
-
-  <section class="application-context fm-context">
-    <div class="context-avatar">DC</div>
-    <div>
-      <strong>Loan portfolio workspace</strong>
-      <small>Live funnel, matrix and portfolio data</small>
-    </div>
-    <div class="context-status">
-      <span>Source</span>
-      <b>Live database</b>
-    </div>
-  </section>
-
+  <section class="application-context fm-context"><div class="context-avatar">DC</div><div><strong>Loan portfolio workspace</strong><small>Live funnel, matrix and portfolio data</small></div><div class="context-status"><span>Source</span><b>Live database</b></div></section>
   <main class="fm-content">
-    <section class="fm-view active" data-panel="loan"><div id="slab"></div></section>
-    <section class="fm-view" data-panel="disbursement"><div id="disbursementMatrix"></div></section>
-    <section class="fm-view" data-panel="repayment"><div id="repayment"></div></section>
-    <section class="fm-view" data-panel="calendar"><div id="calendar"></div></section>
-    <section class="fm-view" data-panel="pipeline"><div id="pipeline"></div></section>
-    <section class="fm-view" data-panel="users"><div id="registrationUsers"><div class="fm-loading">Loading registered users…</div></div></section>
+    <section class="fm-view active" data-panel="loan"><div id="slab"></div></section><section class="fm-view" data-panel="disbursement"><div id="disbursementMatrix"></div></section><section class="fm-view" data-panel="repayment"><div id="repayment"></div></section><section class="fm-view" data-panel="calendar"><div id="calendar"></div></section><section class="fm-view" data-panel="pipeline"><div id="pipeline"></div></section><section class="fm-view" data-panel="users"><div id="registrationUsers"><div class="fm-loading">Loading registered users…</div></div></section>
   </main>
 </main>
-<script src="admin-data.js?v=20261001.18"></script>
-<script src="loan-slab.js?v=20260928.2"></script>
-<script src="disbursement-matrix.js?v=20260928.2"></script>
-<script src="repayment-matrix.js?v=20261001.3"></script>
-<script src="due-calendar.js?v=20260928.2"></script>
-<script src="pipeline.js?v=20261001.18"></script>
-<script src="funnel-matrix.js?v=20261001.5"></script>
-<script src="admin-interactions.js?v=20261001.1"></script>
-<script src="admin-deep-detail.js?v=20261001.1"></script>
+<script src="admin-data.js?v=20261001.18"></script><script src="loan-slab.js?v=20260928.2"></script><script src="disbursement-matrix.js?v=20260928.2"></script><script src="repayment-matrix.js?v=20261001.3"></script><script src="due-calendar.js?v=20260928.2"></script><script src="pipeline.js?v=20261001.18"></script><script src="funnel-matrix.js?v=20261001.5"></script><script src="admin-interactions.js?v=20261001.1"></script><script src="admin-deep-detail.js?v=20261001.1"></script>
 </body>
 </html>
