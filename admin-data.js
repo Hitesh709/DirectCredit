@@ -145,48 +145,173 @@ window.DirectCreditData = (() => {
   const parsed=v=>{if(v==null)return v;if(typeof v!=='string')return v;try{return JSON.parse(v)}catch(_){return v}};
   function demoCustomer(id){
     const demo=DEMO_CUSTOMERS.find(x=>Number(x.id)===Number(id))||DEMO_CUSTOMERS[0];
+    const loan=demo.loan;
+    const monthly=[
+      {month:'Mar-26',credits:62000,debits:51000,transactions:18,average_balance:Math.round((demo.average_bank_balance||18000)*0.82),credit:62000,debit:51000},
+      {month:'Apr-26',credits:71000,debits:58000,transactions:20,average_balance:Math.round((demo.average_bank_balance||18000)*0.91),credit:71000,debit:58000},
+      {month:'May-26',credits:68000,debits:54000,transactions:17,average_balance:Math.round((demo.average_bank_balance||18000)*0.96),credit:68000,debit:54000},
+      {month:'Jun-26',credits:76000,debits:61000,transactions:22,average_balance:Math.round((demo.average_bank_balance||18000)*1.03),credit:76000,debit:61000},
+      {month:'Jul-26',credits:82000,debits:67000,transactions:23,average_balance:Math.round((demo.average_bank_balance||18000)*1.08),credit:82000,debit:67000},
+      {month:'Aug-26',credits:45000,debits:32000,transactions:12,average_balance:demo.average_bank_balance||18000,credit:45000,debit:32000}
+    ];
+    const transactions=[
+      {id:'TXN-'+loan.id+'-01',date:'2026-08-02',description:'Business sales receipt',amount:12000,direction:'credit',category:'Business Receipts'},
+      {id:'TXN-'+loan.id+'-02',date:'2026-08-04',description:'UPI customer payment',amount:8500,direction:'credit',category:'Business Receipts'},
+      {id:'TXN-'+loan.id+'-03',date:'2026-08-06',description:'Wholesale purchase',amount:7000,direction:'debit',category:'Supplier Payments'},
+      {id:'TXN-'+loan.id+'-04',date:'2026-08-08',description:'Retail sales settlement',amount:9500,direction:'credit',category:'Business Receipts'},
+      {id:'TXN-'+loan.id+'-05',date:'2026-08-10',description:'Shop rent',amount:5000,direction:'debit',category:'Rent & Utilities'},
+      {id:'TXN-'+loan.id+'-06',date:'2026-08-12',description:'Business sales receipt',amount:7500,direction:'credit',category:'Business Receipts'},
+      {id:'TXN-'+loan.id+'-07',date:'2026-08-14',description:'Inventory supplier',amount:6000,direction:'debit',category:'Supplier Payments'},
+      {id:'TXN-'+loan.id+'-08',date:'2026-08-16',description:'UPI customer payment',amount:7500,direction:'credit',category:'Business Receipts'},
+      {id:'TXN-'+loan.id+'-09',date:'2026-08-18',description:'Utility payment',amount:3000,direction:'debit',category:'Rent & Utilities'},
+      {id:'TXN-'+loan.id+'-10',date:'2026-08-20',description:'Cash sales deposit',amount:10000,direction:'credit',category:'Business Receipts'},
+      {id:'TXN-'+loan.id+'-11',date:'2026-08-22',description:'Stock purchase',amount:7000,direction:'debit',category:'Supplier Payments'},
+      {id:'TXN-'+loan.id+'-12',date:'2026-08-25',description:'Loan/EMI payment',amount:4000,direction:'debit',category:'Loan Repayment'}
+    ];
+    const docs=[
+      {document_type:'PAN Card',verification_status:'Verified',uploaded_at:'2026-08-01'},
+      {document_type:'Aadhaar Card',verification_status:'Verified',uploaded_at:'2026-08-01'},
+      {document_type:'Bank Statement',verification_status:'Pending review',uploaded_at:'2026-08-02'},
+      {document_type:'Business Proof',verification_status:'Verified',uploaded_at:'2026-08-03'}
+    ];
+    const riskFactors=[
+      {key:'cibil_repayment',label:'CIBIL & Repayment Track',score:loan.scorecard_score>=105?13:10,max_score:15},
+      {key:'bank_credits',label:'Bank Credits',score:8,max_score:10},
+      {key:'bank_stability',label:'Bank Statement Stability',score:4,max_score:5},
+      {key:'business_vintage',label:'Business Vintage',score:4,max_score:5},
+      {key:'monthly_emi',label:'Monthly EMI Obligation',score:4,max_score:5},
+      {key:'foir',label:'FOIR',score:4,max_score:5},
+      {key:'trade_validation',label:'Trade Validation',score:8,max_score:10}
+    ];
+    const primaryMobile=demo.mobile||'Not available';
     return {
       customer:demo,
-      loans:[demo.loan],
+      loans:[loan],
       metrics:{
         total_loans:1,
-        total_loan_amount:demo.loan.sanctioned_amount||demo.loan.requested_amount,
-        outstanding_amount:demo.loan.outstanding_amount,
-        amount_paid:Math.max(Number(demo.loan.disbursed_amount||0)-Number(demo.loan.outstanding_amount||0),0),
-        overdue_amount:demo.loan.status==='overdue'?demo.loan.outstanding_amount:0
+        total_loan_amount:loan.sanctioned_amount||loan.requested_amount,
+        outstanding_amount:loan.outstanding_amount,
+        amount_paid:Math.max(Number(loan.disbursed_amount||0)-Number(loan.outstanding_amount||0),0),
+        overdue_amount:loan.status==='overdue'?loan.outstanding_amount:0
       },
+      contact_details:{
+        registered_mobile:primaryMobile,
+        alternate_mobile:demo.alternate_mobile||'Not available',
+        registered_email:demo.email||'Not available',
+        mobile_verification:demo.mobile_verified?'Verified':'Pending',
+        email_verification:demo.email_verified?'Verified':'Pending',
+        contacts:[{contact_type:'mobile',type:'mobile',contact_value:primaryMobile,value:primaryMobile,is_primary:true,verified:!!demo.mobile_verified}],
+        mobiles:demo.alternate_mobile?[{contact_type:'Alternate',contact_value:demo.alternate_mobile,verified:false}]:[],
+        emails:[{contact_type:'Primary',contact_value:demo.email||'Not available',is_primary:true,verified:!!demo.email_verified}],
+        device_sim:{device:'Android mobile',sim_operator:'Indian telecom provider',sim_type:'4G',sim_age:'24 months',risk_score:12,risk_status:'Low risk',status:'Low risk',last_used:'2026-08-25'},
+        contact_score:demo.mobile_verified&&demo.email_verified?85:65,
+        notes:'Synthetic demo contact record for workspace testing.'
+      },
+      address_details:{
+        address_type:'Business / Residential',
+        address_line1:demo.address||'Demo Market Road',
+        town:demo.current_city||'Rajkot',
+        city:demo.current_city||'Rajkot',
+        district:demo.current_city||'Rajkot',
+        state:demo.current_state||'Gujarat',
+        pincode:demo.current_pincode||'360001',
+        landmark:'Main market',
+        verified_via:'Demo KYC record'
+      },
+      business_details:{
+        firm_name:demo.business_name,
+        business_type:demo.business_type||'Retail',
+        no_of_workers:3,
+        workers:3,
+        total_salary:24000,
+        working_days:26,
+        visiting_card:'Provided',
+        contract_based:'No',
+        seller_number:demo.customer_code,
+        registration_number:demo.customer_code,
+        seller_firm_name:demo.business_name,
+        ownership:demo.residence_ownership||'Not available',
+        products:demo.business_type||'Retail goods',
+        stock:demo.business_type||'Retail goods'
+      },
+      financial_details:{bank_name:demo.primary_bank||'HDFC Bank',account_number:'XXXXXX'+String(1000+Number(demo.id)).slice(-4),ifsc_code:'HDFC0000001',account_type:'Current'},
       bank_analysis:{
         status:'Demo banking data',
-        average_eod_balance:demo.average_bank_balance,
+        bank_name:demo.primary_bank||'HDFC Bank',
+        average_eod_balance:demo.average_bank_balance||18000,
+        average_monthly_balance:demo.average_bank_balance||18000,
         average_monthly_credit:45000,
         average_monthly_debit:32000,
-        total_transactions:12,
+        total_transactions:transactions.length,
+        credit_transactions:7,
+        debit_transactions:5,
+        credits:45000,
+        debits:32000,
+        net_cash_flow:13000,
+        monthly_breakdown:monthly,
+        monthly,
+        top_categories:[['Business Receipts',47500],['Supplier Payments',20000],['Rent & Utilities',8000],['Loan Repayment',4000]],
+        minimum_balance:null,
+        maximum_balance:null,
+        last_balance:null,
         negative_balance_count:0
       },
+      bank_transactions:transactions,
       kyc_employment:{
-        kyc_status:demo.kyc_status,
-        employment_type:demo.occupation,
+        kyc_status:demo.kyc_status||'Pending',
+        kyc_completed_on:demo.kyc_status==='verified'?'2026-08-01':null,
+        pan_status:demo.pan?'Verified':'Pending',
+        pan_verified:!!demo.pan,
+        aadhaar_status:demo.aadhaar_masked?'Verified':'Pending',
+        aadhaar_verified:!!demo.aadhaar_masked,
+        ckyc_status:'Not linked in demo',
+        crif_status:'Demo record only',
+        overall_kyc_score:demo.kyc_status==='verified'?90:65,
+        employment_type:demo.occupation||'Self-employed',
+        employer_name:demo.business_name,
         income:demo.monthly_income,
-        work_experience_years:demo.work_experience_years,
-        years_in_business:demo.years_in_business,
+        net_monthly_income:demo.monthly_income,
+        work_experience_years:demo.work_experience_years||3,
+        years_in_business:demo.years_in_business||3,
         residence_ownership:demo.residence_ownership,
-        ownership_proof_status:demo.ownership_proof_status
+        ownership_proof_status:demo.ownership_proof_status||'Pending',
+        pd_status:'Demo record only',
+        sanction_check:'Not checked against a live registry',
+        overall_status:demo.kyc_status||'Pending'
       },
+      documents:docs,
+      communication:[{created_at:'2026-08-25',channel:'SMS',purpose:'Application status update',status:'Demo sent'}],
+      activity:[{created_at:'2026-08-25',activity:'Demo customer record opened',status:'Recorded'},{created_at:'2026-08-24',activity:'KYC documents reviewed',status:'Demo event'}],
       risk_score:{
-        total_score:demo.loan.scorecard_score,
+        total_score:loan.scorecard_score,
         max_score:125,
-        raw_score:demo.loan.scorecard_score,
-        risk_tier:demo.loan.scorecard_score>=105?'Low Risk':'Moderate Risk',
-        decision:demo.loan.status==='pending'?'MANUAL_REVIEW':'APPROVE',
+        raw_score:loan.scorecard_score,
+        risk_tier:loan.scorecard_score>=105?'Low Risk':'Moderate Risk',
+        risk_grade:loan.scorecard_score>=105?'A':'B',
+        category:loan.scorecard_score>=105?'Lower risk':'Moderate risk',
+        score_status:'Demo scorecard',
+        auto_decision:loan.status==='pending'?'MANUAL_REVIEW':'APPROVE',
+        decision:loan.status==='pending'?'MANUAL_REVIEW':'APPROVE',
         credit_score:demo.cibil_score,
         source:'scorecard',
+        assessment_date:'2026-08-25',
         scorecard_version:'MBL-125-v1',
-        approval_percent:demo.loan.scorecard_approval_percent,
-        reasons:['Demo assessment record'],
+        approval_percent:loan.scorecard_approval_percent,
+        recommended_limit:loan.eligible_amount,
+        recommended_tenure:loan.tenure_months,
+        recommended_interest_rate:18,
+        probability_default:3.2,
+        loss_given_default:35,
+        expected_loss:Math.round(Number(loan.outstanding_amount||0)*0.032*0.35),
+        factors:riskFactors,
+        factor_scores:Object.fromEntries(riskFactors.map(x=>[x.key,x.score])),
+        factor_max:Object.fromEntries(riskFactors.map(x=>[x.key,x.max_score])),
+        reasons:['Synthetic demo assessment record'],
         hard_rejects:[],
-        factor_scores:{}
+        overdue:false,
+        fraud_flag:'Not assessed'
       },
-      directcredit_score:demo.loan.scorecard_score,
+      directcredit_score:loan.scorecard_score,
       source:'demo'
     };
   }
