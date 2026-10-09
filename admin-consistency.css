@@ -8,3 +8,104 @@ html,body{font-family:var(--dc-font)!important;color:var(--dc-text);-webkit-font
 .application-view{min-height:0!important;display:grid;gap:14px}.live-card{padding:18px!important}.live-card h3{font-size:15px!important}.live-grid{gap:10px}.live-grid>div{padding:12px}.live-grid small{font-size:10px!important}.live-grid strong{font-size:13px!important}.live-empty{min-height:220px!important;font-size:12px!important}table{font-size:11px!important}th,td{padding:10px!important}th{font-size:10px!important}
 /* Shared finance tabs */
 .settlement-page,.collection-page,.accounting-page{min-width:0!important;padding:22px 24px 30px!important;background:var(--dc-bg)!important}.settlement-head,.head,.accounting-head{min-height:46px;display:flex!important;justify-content:space-between!important;align-items:flex-start!important;gap:18px;margin:0 0 16px!important}.settlement-head h2,.head h2,.accounting-head h2{margin:0!important;color:#102a57!important;font-size:24px!important;line-height:1.2!important;font-weight:800!important;letter-spacing:-.35px!important}.settlement-head p,.head p,.accounting-head p{margin:6px 0 0!important;color:#667085!important;font-size:12px!important;line-height:1.5!important;font-weight:500!important}.settlement-btn,.accounting-btn,.actions button{height:38px!important;padding:0 15px!important;border:1px solid #d7dfeb!important;border-radius:8px!important;background:#fff!important;color:#19335f!important;font-size:12px!important;font-weight:800!important}.settlement-panel,.accounting-panel,.collection-page .panel{border:1px solid var(--dc-line)!important;border-radius:var(--dc-radius)!important;background:var(--dc-card)!important;box-shadow:var(--dc-shadow)!important}.settlement-panel h3,.accounting-panel h3,.collection-page .panel h3{color:#182b4e!important;font-size:14px!important;font-weight:800!important}.summary-row,.repay-row{font-size:12px!important;color:#526174!important}.summary-row strong,.repay-row strong{color:#1e335a!important;font-size:13px!important}.settlement-table,.accounting-table,.collection-page table,.dc-customer-records table{font-family:var(--dc-font)!important;font-size:11px!important}.settlement-table th,.accounting-table th,.collection-page th,.dc-customer-records th{background:#f8fafc!important;color:#667085!important;font-size:10px!important;font-weight:800!important;letter-spacing:.2px!important;padding:10px!important}.settlement-table td,.accounting-table td,.collection-page td,.dc-customer-records td{color:#273653!important;font-size:11px!important;padding:10px!important;border-bottom:1px solid #edf0f4!important}
+
+
+/* DirectCredit Fintech Pro — calm, high-trust banking UI.
+   Visual-only overrides: no changes to loan logic, data contracts, or workflow behavior. */
+:root{
+  --fp-navy:#14243a;
+  --fp-navy-2:#1c3553;
+  --fp-green:#0f9f78;
+  --fp-green-soft:#e7f6f0;
+  --fp-bg:#f4f7fb;
+  --fp-surface:#ffffff;
+  --fp-ink:#17263b;
+  --fp-muted:#69788d;
+  --fp-line:#e2e9f1;
+  --fp-amber:#b7791f;
+  --fp-red:#c83e4d;
+  --fp-blue:#2f6fed;
+  --fp-radius:12px;
+  --fp-shadow:0 3px 12px rgba(20,36,58,.045);
+}
+html{background:var(--fp-bg)!important}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;color:var(--fp-ink)!important;background:var(--fp-bg)!important}
+h1,h2,h3,h4{letter-spacing:-.025em}
+p,small{color:var(--fp-muted)}
+/* Main application navigation */
+.sidebar{background:var(--fp-navy)!important;border-right:1px solid rgba(255,255,255,.07)!important;box-shadow:4px 0 18px rgba(20,36,58,.07)!important}
+.sidebar .brand{background:var(--fp-green)!important;color:#fff!important;box-shadow:none!important;border:0!important}
+.sidebar .product{color:#fff!important}
+.sidebar .nav-label{color:#9aacc2!important;letter-spacing:1.1px!important}
+.sidebar .nav{color:#dce6f1!important;border-radius:8px!important;transition:background .16s ease,color .16s ease!important}
+.sidebar .nav:hover{background:rgba(255,255,255,.075)!important;transform:none!important}
+.sidebar .nav.active{background:rgba(15,159,120,.20)!important;color:#fff!important;box-shadow:inset 3px 0 var(--fp-green)!important}
+.sidebar-toggle{border-radius:8px!important}
+/* Calm workspace background, surfaces, and typography */
+.main,#dashboard,#reports{background:var(--fp-bg)!important}
+.panel,.card,.dc-panel,.lp-panel,.dm-table-wrap,.slab-table-wrap,.rm-panel,.calendar-panel,.settlement-panel,
+.live-card,.bk-panel,.el-panel,.application-picker .picker-dialog{
+  background:var(--fp-surface)!important;border:1px solid var(--fp-line)!important;
+  border-radius:var(--fp-radius)!important;box-shadow:var(--fp-shadow)!important
+}
+.panel:hover,.card:hover,.dc-panel:hover,.lp-panel:hover{box-shadow:0 6px 18px rgba(20,36,58,.07)!important}
+.page h1,.content h1,.page-head h1{color:var(--fp-ink)!important;font-weight:750!important}
+.page h2,.content h2,.page-head h2{color:var(--fp-ink)!important}
+.eyebrow,.nav-label{font-weight:750!important}
+input,select,textarea{border-color:#d8e2ed!important;border-radius:8px!important;box-shadow:none!important}
+input:focus,select:focus,textarea:focus{border-color:#69bda6!important;box-shadow:0 0 0 3px rgba(15,159,120,.10)!important}
+button,.btn,.dc-refresh,.fr-refresh{font-family:inherit!important;transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease!important}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(15,159,120,.28)!important;outline-offset:2px!important}
+.btn.primary,.head-actions button,#refreshBtn,.dc-exec-new{background:var(--fp-green)!important;border-color:var(--fp-green)!important;color:#fff!important;box-shadow:none!important}
+.btn.primary:hover,.head-actions button:hover,#refreshBtn:hover,.dc-exec-new:hover{background:#0b8968!important;border-color:#0b8968!important}
+table th{background:#f6f8fb!important;color:#617188!important}
+table th,table td{border-bottom:1px solid #edf1f5!important}
+table tbody tr:hover td{background:#f7fbf9!important}
+.badge.green,.status.ok,.el-pill.good,.bk-pill.good{background:var(--fp-green-soft)!important;color:#087c5c!important}
+.status.warn{background:#fff5e5!important;color:var(--fp-amber)!important}
+.status:not(.ok):not(.warn){border-radius:999px!important}
+.good-text,.credit{color:#0f9f78!important}
+.debit{color:var(--fp-red)!important}
+/* Dashboard KPIs: use clean, restrained cards rather than oversized gradients */
+#dashboard .dc-exec-kpi{border:1px solid var(--fp-line)!important;border-radius:12px!important;box-shadow:var(--fp-shadow)!important}
+#dashboard .dc-exec-kpi:after{display:none!important}
+#dashboard .dc-exec-kpi.blue,#dashboard .dc-exec-kpi.purple,#dashboard .dc-exec-kpi.green,#dashboard .dc-exec-kpi.red{
+  background:#fff!important;color:var(--fp-ink)!important;border-top:3px solid var(--fp-green)!important
+}
+#dashboard .dc-exec-kpi small,#dashboard .dc-exec-kpi span{color:var(--fp-muted)!important}
+#dashboard .dc-exec-kpi strong{color:var(--fp-ink)!important}
+/* Applications workspace — preserve all six rich customer tabs and existing layouts */
+body:has(.application-workspace),body:has(.funnel-workspace){background:var(--fp-bg)!important}
+.content.application-workspace,.content.funnel-workspace{color:var(--fp-ink)!important}
+.page-head{border-bottom:1px solid transparent!important}
+.page-head h1{font-size:25px!important}
+.page-head p{color:var(--fp-muted)!important}
+.application-summary-tabs{gap:10px!important}
+.application-summary-tabs .summary-tab{background:#fff!important;border:1px solid var(--fp-line)!important;border-radius:11px!important;box-shadow:none!important;color:var(--fp-ink)!important}
+.application-summary-tabs .summary-tab.active{border-color:#9bd8c6!important;background:#f4fbf8!important}
+.application-summary-tabs .summary-tab strong{color:var(--fp-ink)!important}
+.application-summary-tabs .summary-tab.active strong{color:#087c5c!important}
+.application-context{background:#fff!important;border:1px solid var(--fp-line)!important;border-radius:11px!important;box-shadow:none!important}
+.context-avatar{background:var(--fp-navy)!important;color:#fff!important;border-radius:9px!important}
+.application-tabs{gap:5px!important;border-bottom:1px solid var(--fp-line)!important}
+.application-tab{background:transparent!important;color:#65758b!important;border:1px solid transparent!important;border-radius:8px 8px 0 0!important;box-shadow:none!important}
+.application-tab:hover{background:#edf5f2!important;color:#087c5c!important}
+.application-tab.active{background:#fff!important;color:#087c5c!important;border-color:var(--fp-line)!important;border-bottom-color:#fff!important;box-shadow:inset 0 3px var(--fp-green)!important}
+.live-card h3,.bk-panel h3,.el-panel h3{color:var(--fp-navy)!important}
+.live-grid>div{background:#f8fafc!important;border:1px solid #edf1f5!important}
+.live-grid small{color:#738197!important}
+.live-grid strong{color:var(--fp-ink)!important;overflow-wrap:anywhere}
+.application-picker .picker-dialog{overflow:hidden}
+.picker-header{background:#fff!important;border-bottom:1px solid var(--fp-line)!important}
+.picker-list [aria-selected="true"],.picker-list .selected{background:#edf8f4!important;border-color:#a9dece!important}
+.el-status,.el-offer .good-text{color:#087c5c!important}
+.el-process .el-step.done i{background:var(--fp-green)!important}
+/* Other embedded operations pages */
+.funnel-workspace .application-tab.active{color:#087c5c!important;box-shadow:inset 0 3px var(--fp-green)!important}
+@media(max-width:700px){
+  .application-summary-tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .page-head{gap:10px!important;align-items:flex-start!important}
+  .page-head h1{font-size:22px!important}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+
