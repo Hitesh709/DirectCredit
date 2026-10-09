@@ -101,17 +101,6 @@
     if(!["contact","bank","kyc","risk"].includes(key)) view.insertAdjacentHTML("beforeend",referenceDetails(data,key));
   }
 
-  function buildSelector(options){
-    let select=document.getElementById('applicationSelector');
-    if(!select){
-      const host=document.querySelector('.application-context');
-      select=document.createElement('select');select.id='applicationSelector';select.setAttribute('aria-label','Select application');select.style.cssText='margin-left:auto;min-width:260px;max-width:360px;padding:9px 12px;border:1px solid #d7e1ef;border-radius:8px;background:#fff;color:#173052;font-weight:600';
-      host.appendChild(select);select.addEventListener('change',()=>loadSelected(select.value));
-    }
-    select.innerHTML=options.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
-    if(selected && options.some(o=>o.value===selected))select.value=selected;
-  }
-
   async function loadSelected(key){
     if(!key)return;
     selected=key;view.innerHTML='<div class="live-empty">Loading application data…</div>';
@@ -123,7 +112,6 @@
       document.getElementById('contextCustomer').textContent=val(c.name,'Customer');
       document.getElementById('contextId').textContent=`${isDemo?'Demo Test':'Live'} • Customer ID ${val(c.id,id)} • ${val(c.customer_code,'No customer code')}`;
       document.getElementById('contextStatus').textContent=isDemo?'Demo test record':'Live database';
-      if(document.getElementById('applicationSelector'))document.getElementById('applicationSelector').value=key;
       const requestedTab=params.get('workspace_tab');
       const activeTab=tabs.includes(requestedTab)?requestedTab:(document.querySelector('.application-tab.active')?.dataset.view||'profile');
       document.querySelectorAll('.application-tab').forEach(b=>b.classList.toggle('active',b.dataset.view===activeTab));
@@ -134,32 +122,17 @@
   }
 
   async function load(){
-    view.innerHTML='<div class="live-empty">Loading application list…</div>';
-    try{
-      let liveRows=[];
-      try{liveRows=window.DirectCreditData.liveLoans?await window.DirectCreditData.liveLoans():await window.DirectCreditData.loans();}catch(_){liveRows=[];}
-      const live=Array.isArray(liveRows)?liveRows:[];
-      const liveCustomers=[...new Map(live.filter(x=>x.customer_id!=null).map(x=>[String(x.customer_id),x])).values()];
-      const liveOptions=liveCustomers.map(x=>({value:'live:'+x.customer_id,label:`LIVE • ${x.customer_name||'Customer '+x.customer_id}${x.business_name?' • '+x.business_name:''} • Application #${x.id||x.loan_id||'—'}`}));
-      const demoCustomers=window.DirectCreditData.demoCustomers||[];
-      const demoOptions=demoCustomers.map(x=>({value:'demo:'+x.id,label:`DEMO TEST • ${x.name}${x.business_name?' • '+x.business_name:''} • Application #${x.loan?.id||'—'}`}));
-      const options=[...liveOptions,...demoOptions];
-      const requested=params.get('customer_id');const requestedSource=params.get('source');
-      const requestedKey=requested&&(requestedSource==='live'||requestedSource==='demo')?requestedSource+':'+requested:'';
-      if(!options.length && !requestedKey){view.innerHTML='<div class="live-empty">No application records are available.</div>';return;}
-      // Do not silently fall back to the first option. The URL selection is
-      // authoritative; otherwise every customer could become the first demo
-      // record (Aarav Shah) when the live list is paginated or temporarily unavailable.
-      const resolvedKey=requestedKey||options[0].value;
-      if(requestedKey && !options.some(o=>o.value===requestedKey)){
-        const sourceLabel=requestedSource==='live'?'LIVE':'DEMO';
-        options.unshift({value:requestedKey,label:`${sourceLabel} • Selected customer (${requested}) • Loading…`});
-      }
-      selected=resolvedKey;
-      buildSelector(options);
-      const selector=document.getElementById('applicationSelector');if(selector)selector.value=resolvedKey;
-      await loadSelected(resolvedKey);
-    }catch(e){view.innerHTML=`<div class="live-empty">Application data could not be loaded. ${esc(e.message||'Please check the database/API connection and refresh.')}</div>`;}
+    const requested=params.get('customer_id');
+    const source=params.get('source');
+    if(!requested || !['live','demo'].includes(source)){
+      data=null;
+      document.getElementById('contextCustomer').textContent='No application selected';
+      document.getElementById('contextId').textContent='Select a customer from Total, Approved, Pending, Rejected, Approval or Sanctioned';
+      document.getElementById('contextStatus').textContent='Waiting for selection';
+      view.innerHTML='<div class="live-empty">Select a customer from one of the application status summaries above.</div>';
+      return;
+    }
+    await loadSelected(source+':'+requested);
   }
 
   document.querySelectorAll('.application-tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.application-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');params.set('workspace_tab',b.dataset.view);history.replaceState(null,'',`${location.pathname}?${params.toString()}`);render(b.dataset.view);}));
