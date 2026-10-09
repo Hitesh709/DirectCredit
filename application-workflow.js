@@ -97,7 +97,7 @@
     // Preserve the current customer workspace tab when possible. If the user
     // is selecting from a summary tab, start the newly selected customer on
     // Eligibility so the requested credit-decision view is immediately usable.
-    url.searchParams.set('workspace_tab','profile');
+    url.searchParams.set('workspace_tab','eligibility');
     location.assign(url.toString());
   }
 
