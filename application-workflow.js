@@ -22,15 +22,15 @@
 
   function buildRows(reporting){
     const loanRows=Array.isArray(reporting?.loan_records)?reporting.loan_records:[];
-    if(loanRows.length)return loanRows.map(r=>({...r,customer_id:r.customer_id,customer_name:r.customer_name||'Customer',business_name:r.business_name||'',application_id:r.loan_id??r.id,status:r.status||r.stage,source:r.source||'live'}));
+    if(loanRows.length)return loanRows.map(r=>({...r,customer_id:r.customer_id,customer_name:r.customer_name||'Customer',business_name:r.business_name||'',application_id:r.loan_id??r.id,status:r.status||r.stage,source:reporting?.source==='demo'?'demo':(r.source||'live')}));
     const customerRows=Array.isArray(reporting?.customer_records)?reporting.customer_records:[];
-    return customerRows.map(c=>({...c,customer_id:c.customer_id??c.id,customer_name:c.customer_name||c.name,source:c.source||'live'}));
+    return customerRows.map(c=>({...c,customer_id:c.customer_id??c.id,customer_name:c.customer_name||c.name,source:reporting?.source==='demo'?'demo':(c.source||'live')}));
   }
 
   function mergeDemo(list){
     const demo=window.DirectCreditData?.demoCustomers||[];
     const mapped=demo.map(c=>({customer_id:c.id,customer_name:c.name,business_name:c.business_name,application_id:c.loan?.id,requested_amount:c.loan?.requested_amount,eligible_amount:c.loan?.eligible_amount,sanctioned_amount:c.loan?.sanctioned_amount,disbursed_amount:c.loan?.disbursed_amount,outstanding_amount:c.loan?.outstanding_amount,status:c.loan?.status,stage:c.loan?.current_stage,source:'demo',customer_code:c.customer_code}));
-    return list.length?[...list,...mapped]:mapped;
+    const existingDemoKeys=new Set(list.filter(r=>r.source==='demo').map(r=>String(r.customer_id)+':'+String(r.application_id))); return [...list,...mapped.filter(r=>!existingDemoKeys.has(String(r.customer_id)+':'+String(r.application_id)))];
   }
 
   function num(...values){
@@ -40,17 +40,17 @@
 
   function setSummary(reporting={}){
     const base=rows;
-    const total=num(reporting.applications,reporting.total_applications,reporting.total,base.length);
+    const total=base.length;
     const rowApproved=base.filter(r=>statusOf(r)==='approved').length;
     const rowPending=base.filter(r=>statusOf(r)==='pending').length;
     const rowRejected=base.filter(r=>statusOf(r)==='rejected').length;
-    const approved=num(reporting.approved,reporting.approved_applications,reporting.approvals,rowApproved);
-    const pending=num(reporting.pending,reporting.pending_applications,rowPending);
-    const rejected=num(reporting.rejected,reporting.rejected_applications,rowRejected);
+    const approved=rowApproved;
+    const pending=rowPending;
+    const rejected=rowRejected;
     const approvalRaw=reporting.approval_rate ?? reporting.approval_percent ?? reporting.approval_percentage;
     const approval=approvalRaw!==undefined && approvalRaw!==null ? Number(approvalRaw) : (total?approved/total*100:0);
     const rowSanctioned=base.reduce((s,r)=>s+Number(r.sanctioned_amount||0),0);
-    const sanctioned=num(reporting?.amounts?.sanctioned,reporting.sanctioned_amount,reporting.sanctioned_amount_total,rowSanctioned);
+    const sanctioned=rowSanctioned;
     document.getElementById('summaryTotal').textContent=total.toLocaleString('en-IN');
     document.getElementById('summaryApproved').textContent=approved.toLocaleString('en-IN');
     document.getElementById('summaryPending').textContent=pending.toLocaleString('en-IN');
