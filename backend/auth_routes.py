@@ -101,14 +101,10 @@ def customer_mobile_otp_verify(payload: dict, db: Session = Depends(get_db)):
         raise HTTPException(404, "Customer not found")
     return _tokens(c)
 
-@router.post("/customer-mobile-login")
-def customer_mobile_login(payload: dict, db: Session = Depends(get_db)):
-    """Temporary mobile-only access for an existing customer record."""
-    mobile = _normalize_mobile(payload.get("mobile"))
-    if len(mobile)!=10: raise HTTPException(422,"Enter a 10-digit mobile number")
-    c=db.query(CustomerRecord).filter(CustomerRecord.mobile.in_([mobile, f"+91{mobile}", f"91{mobile}"])).first()
-    if not c: raise HTTPException(404,"No customer record is registered for this mobile number")
-    return _tokens(c)
+@router.post("/customer-mobile-login", include_in_schema=False)
+def customer_mobile_login_disabled():
+    """Reject legacy mobile-only login; it must never issue an authenticated session."""
+    raise HTTPException(410, "Mobile-only login has been retired. Use mobile number and password.")
 
 
 @router.post("/refresh")
