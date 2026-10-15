@@ -44,7 +44,7 @@ def customer_register(payload: CustomerRegistrationRequest, db: Session = Depend
     if existing: raise HTTPException(409, "A customer is already registered for this mobile number")
     if payload.email and db.query(CustomerRecord).filter(CustomerRecord.email == payload.email.strip()).first():
         raise HTTPException(409, "Email is already registered")
-    c = CustomerRecord(name=payload.name.strip(), mobile=mobile, email=payload.email.strip() if payload.email else None, customer_type=payload.customer_type.strip(), occupation=payload.occupation.strip(), business_name=payload.business_name.strip() if payload.business_name else None, business_type=payload.business_type.strip() if payload.business_type else None, current_city=payload.current_city.strip() if payload.current_city else None, kyc_status="pending", email_verified="pending", selfie_status="pending", session_version=1)
+    c = CustomerRecord(name=payload.name.strip(), mobile=mobile, password_hash=hash_password(payload.password), email=payload.email.strip() if payload.email else None, customer_type=payload.customer_type.strip(), occupation=payload.occupation.strip(), business_name=payload.business_name.strip() if payload.business_name else None, business_type=payload.business_type.strip() if payload.business_type else None, current_city=payload.current_city.strip() if payload.current_city else None, kyc_status="pending", email_verified="pending", selfie_status="pending", session_version=1)
     db.add(c); db.commit(); db.refresh(c)
     c.customer_code=f"CUST{c.id:08d}"; c.login_id=f"MOB{mobile}"
     db.commit(); db.refresh(c)
@@ -55,6 +55,20 @@ def customer_register(payload: CustomerRegistrationRequest, db: Session = Depend
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     c=db.query(CustomerRecord).filter(CustomerRecord.login_id==payload.login_id.strip()).first()
     if not c or not c.password_hash or not verify_password(payload.password,c.password_hash): raise HTTPException(401,"Invalid customer ID or password")
+    return _tokens(c)
+
+
+@router.post("/customer-mobile-password-login")
+def customer_mobile_password_login(payload: dict, db: Session = Depends(get_db)):
+    """Authenticate a customer using a registered mobile number and password."""
+    mobile = _normalize_mobile(payload.get("mobile"))
+    password = str(payload.get("password") or "")
+    if len(mobile) != 10 or not password:
+        raise HTTPException(422, "Enter a valid 10-digit mobile number and password")
+    c = db.query(CustomerRecord).filter(CustomerRecord.mobile.in_([mobile, f"+91{mobile}", f"91{mobile}"])).first()
+    # Keep the failure response identical for unknown mobile numbers and incorrect passwords.
+    if not c or not c.password_hash or not verify_password(password, c.password_hash):
+        raise HTTPException(401, "Invalid mobile number or password")
     return _tokens(c)
 
 
