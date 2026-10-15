@@ -1,4 +1,4 @@
-const API=(window.DIRECTCREDIT_API_URL||'/api').replace(/\/$/,'');const TOKEN='directcredit_customer_token',CID='directcredit_customer_id';let data=null,app=null,wi=0,otpRequestId=null;
+const API=(window.DIRECTCREDIT_API_URL||'https://directcredit-api.onrender.com/api').replace(/\/$/,'');const TOKEN='directcredit_customer_token',CID='directcredit_customer_id';let data=null,app=null,wi=0,otpRequestId=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));const money=v=>v==null||v===''||Number.isNaN(Number(v))?'—':'₹'+Number(v).toLocaleString('en-IN');const txt=(v,f='—')=>v==null||String(v).trim()===''?f:String(v);const stat=v=>txt(v).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
 async function api(path,opt={}){const h={Accept:'application/json',...(opt.headers||{})},t=sessionStorage.getItem(TOKEN);if(t)h.Authorization='Bearer '+t;const r=await fetch(API+path,{...opt,headers:h});const b=await r.json().catch(()=>null);if(!r.ok)throw Error(b?.detail||b?.message||('Request failed ('+r.status+')'));return b}
 function msg(id,s,e=false){const x=document.getElementById(id);if(x){x.textContent=s||'';x.className='msg'+(e?' error':' success')}}
@@ -309,8 +309,9 @@ async function login(){
  try{
   const x=await api('/auth/customer-mobile-password-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile,password})});
   sessionStorage.setItem(TOKEN,x.access_token);sessionStorage.setItem(CID,String(x.customer.id));sessionStorage.setItem('mobile_otp_verified','false');
-  document.getElementById('access').classList.add('hidden');document.getElementById('app').classList.remove('hidden');await load();go('dashboard');
- }catch(e){msg('accessMsg',e.message,true)}
+  await load();
+  document.getElementById('access').classList.add('hidden');document.getElementById('app').classList.remove('hidden');go('dashboard');
+ }catch(e){sessionStorage.removeItem(TOKEN);sessionStorage.removeItem(CID);msg('accessMsg','Login could not finish: '+e.message,true)}
 }
 async function signup(){
  const name=document.getElementById('signupName').value.trim(),mobile=document.getElementById('signupMobile').value.replace(/\D/g,'').slice(0,10);
@@ -321,8 +322,9 @@ async function signup(){
  try{
   const x=await api('/auth/customer-register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,mobile,password})});
   sessionStorage.setItem(TOKEN,x.access_token);sessionStorage.setItem(CID,String(x.customer.id));sessionStorage.setItem('mobile_otp_verified','false');
-  document.getElementById('access').classList.add('hidden');document.getElementById('app').classList.remove('hidden');await load();go('dashboard');
- }catch(e){msg('accessMsg',e.message,true)}
+  await load();
+  document.getElementById('access').classList.add('hidden');document.getElementById('app').classList.remove('hidden');go('dashboard');
+ }catch(e){sessionStorage.removeItem(TOKEN);sessionStorage.removeItem(CID);msg('accessMsg','Account created, but dashboard could not load: '+e.message,true)}
 }
 function logout(){sessionStorage.removeItem(TOKEN);sessionStorage.removeItem(CID);sessionStorage.removeItem('mobile_otp_verified');location.reload()}
 document.addEventListener('click',e=>{const n=e.target.closest('.nav');if(n)go(n.dataset.page);const g=e.target.closest('[data-go]');if(g)go(g.dataset.go)});
