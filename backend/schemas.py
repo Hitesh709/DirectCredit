@@ -16,6 +16,7 @@ class CustomerLogin(BaseModel):
 class CustomerRegistrationRequest(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     mobile: str = Field(min_length=10, max_length=16)
+    password: str = Field(min_length=10, max_length=200)
     email: Optional[str] = Field(default=None, max_length=200)
     customer_type: str = Field(default="Individual", max_length=40)
     occupation: str = Field(default="Business", max_length=100)
