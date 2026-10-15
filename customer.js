@@ -304,25 +304,27 @@ async function stage(s){
 async function apply(){const id=sessionStorage.getItem(CID),amount=Number(document.getElementById('amount').value),tenure=Number(document.getElementById('tenure').value);if(app){openWizard(app);return}if(amount<5000||amount>15000||![3,6,9,12].includes(tenure)){msg('applyMsg','Enter a valid amount (₹5,000–₹15,000) and tenure.',true);return}try{const x=await api('/services/loan-request/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product:'Micro Business Loan',requested_amount:amount,tenure_months:tenure})});app={loan_id:x.loan_id,requested_amount:x.requested_amount,tenure_months:x.tenure_months,product:x.product,status:x.status,current_stage:x.current_stage};openWizard(app);await loadApps()}catch(e){msg('applyMsg',e.message,true)}}
 async function login(){
  const mobile=document.getElementById('mobile').value.replace(/\D/g,'').slice(0,10);
- if(mobile.length!==10){msg('accessMsg','Enter a valid 10-digit mobile number.',true);return}
+ const password=document.getElementById('loginPassword').value;
+ if(mobile.length!==10||password.length<10){msg('accessMsg','Enter a valid 10-digit mobile number and password (at least 10 characters).',true);return}
  try{
-  const x=await api('/auth/customer-mobile-otp/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile})});
-  otpRequestId=x.request_id;
-  document.getElementById('otpBox').classList.remove('hidden');
-  msg('accessMsg',x.status==='NOT_CONFIGURED'?'OTP provider is not configured. Configure the SMS provider before production use.':'OTP sent. Enter the OTP to continue.');
- }catch(e){msg('accessMsg',e.message,true)}
-}
-async function verifyOtp(){
- const mobile=document.getElementById('mobile').value.replace(/\D/g,'').slice(0,10),otp=document.getElementById('loginOtp').value.replace(/\D/g,'').slice(0,6);
- if(mobile.length!==10||otp.length!==6||!otpRequestId){msg('accessMsg','Request a valid OTP first.',true);return}
- try{
-  const x=await api('/auth/customer-mobile-otp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile,otp,request_id:otpRequestId})});
-  sessionStorage.setItem(TOKEN,x.access_token);sessionStorage.setItem(CID,String(x.customer.id));sessionStorage.setItem('mobile_otp_verified','true');
+  const x=await api('/auth/customer-mobile-password-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mobile,password})});
+  sessionStorage.setItem(TOKEN,x.access_token);sessionStorage.setItem(CID,String(x.customer.id));sessionStorage.setItem('mobile_otp_verified','false');
   document.getElementById('access').classList.add('hidden');document.getElementById('app').classList.remove('hidden');await load();go('dashboard');
  }catch(e){msg('accessMsg',e.message,true)}
 }
-async function signup(){const name=document.getElementById('signupName').value.trim(),mobile=document.getElementById('signupMobile').value.replace(/\D/g,'').slice(0,10);if(name.length<2||mobile.length!==10){msg('accessMsg','Enter a valid name and 10-digit mobile.',true);return}try{const x=await api('/services/api/auth/customer-register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,mobile})});sessionStorage.setItem(TOKEN,x.access_token);sessionStorage.setItem(CID,String(x.customer.id));sessionStorage.setItem('mobile_otp_verified','false');document.getElementById('access').classList.add('hidden');document.getElementById('app').classList.remove('hidden');await load();go('dashboard')}catch(e){msg('accessMsg',e.message,true)}}
+async function signup(){
+ const name=document.getElementById('signupName').value.trim(),mobile=document.getElementById('signupMobile').value.replace(/\D/g,'').slice(0,10);
+ const password=document.getElementById('signupPassword').value,confirm=document.getElementById('signupPasswordConfirm').value;
+ if(name.length<2||mobile.length!==10){msg('accessMsg','Enter a valid name and 10-digit mobile number.',true);return}
+ if(password.length<10){msg('accessMsg','Use a password with at least 10 characters.',true);return}
+ if(password!==confirm){msg('accessMsg','Passwords do not match.',true);return}
+ try{
+  const x=await api('/auth/customer-register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,mobile,password})});
+  sessionStorage.setItem(TOKEN,x.access_token);sessionStorage.setItem(CID,String(x.customer.id));sessionStorage.setItem('mobile_otp_verified','false');
+  document.getElementById('access').classList.add('hidden');document.getElementById('app').classList.remove('hidden');await load();go('dashboard');
+ }catch(e){msg('accessMsg',e.message,true)}
+}
 function logout(){sessionStorage.removeItem(TOKEN);sessionStorage.removeItem(CID);sessionStorage.removeItem('mobile_otp_verified');location.reload()}
 document.addEventListener('click',e=>{const n=e.target.closest('.nav');if(n)go(n.dataset.page);const g=e.target.closest('[data-go]');if(g)go(g.dataset.go)});
-document.getElementById('sendOtp').onclick=login;document.getElementById('verifyOtp').onclick=verifyOtp;document.getElementById('signupBtn').onclick=signup;document.getElementById('signupToggle').onclick=()=>document.getElementById('signup').classList.toggle('hidden');document.getElementById('logout').onclick=logout;document.getElementById('print').onclick=()=>window.print();document.getElementById('applyBtn').onclick=apply;document.getElementById('wNext').onclick=nextWizard;document.getElementById('wBack').onclick=()=>{if(wi>0){wi--;drawWizard()}};document.getElementById('refreshApps').onclick=loadApps;
+document.getElementById('loginForm').addEventListener('submit',e=>{e.preventDefault();login()});document.getElementById('signupBtn').onclick=signup;document.getElementById('signupToggle').onclick=()=>document.getElementById('signup').classList.toggle('hidden');document.getElementById('logout').onclick=logout;document.getElementById('print').onclick=()=>window.print();document.getElementById('applyBtn').onclick=apply;document.getElementById('wNext').onclick=nextWizard;document.getElementById('wBack').onclick=()=>{if(wi>0){wi--;drawWizard()}};document.getElementById('refreshApps').onclick=loadApps;
 (async()=>{const id=sessionStorage.getItem(CID),t=sessionStorage.getItem(TOKEN);if(id&&t)try{document.getElementById('access').classList.add('hidden');document.getElementById('app').classList.remove('hidden');await load()}catch(e){logout()}})();
