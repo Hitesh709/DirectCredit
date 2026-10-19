@@ -147,7 +147,17 @@
     await loadSelected(source+':'+requested);
   }
 
-  document.querySelectorAll('.application-tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.application-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');params.set('workspace_tab',b.dataset.view);history.replaceState(null,'',`${location.pathname}?${params.toString()}`);render(b.dataset.view);}));
+  document.querySelectorAll('.application-tab').forEach(b=>b.addEventListener('click',async()=>{
+    document.querySelectorAll('.application-tab').forEach(x=>x.classList.toggle('active',x===b));
+    params.set('workspace_tab',b.dataset.view);
+    history.replaceState(null,'',`${location.pathname}?${params.toString()}`);
+    // If the tab is clicked before customer loading finishes (or after a
+    // failed/stale render), retry the selected customer instead of leaving the
+    // panel stuck on "Select an application to load data."
+    if(data){render(b.dataset.view);return;}
+    if(selected){await loadSelected(selected);return;}
+    await load();
+  }));
   document.getElementById('refreshBtn')?.addEventListener('click',load);
   load();
 })();
