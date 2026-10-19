@@ -10,6 +10,14 @@
   const labels={ownership_proof:'Ownership Proof',business_geography:'Business Geography',age:'Age',cibil_enquiries:'CIBIL Enquiries',cibil_repayment:'CIBIL Repayment',unsecured_track:'Unsecured Track',bank_credits:'Bank Credits',bank_stability:'Bank Statement Stability',aqb:'Average Quarterly Balance',emi_track:'EMI Repayment Track',business_type:'Business Type',business_vintage:'Business Vintage',business_stock:'Business Stock',monthly_emi:'Monthly EMI Obligation',foir:'FOIR',trade_validation:'Trade Validation',gst:'GST Registration',gstr3b:'GSTR-3B Turnover',itr:'ITR',mobile_stability:'Mobile Stability',both_owned_bonus:'Both-Owned Bonus'};
   const max={ownership_proof:5,business_geography:5,age:5,cibil_enquiries:5,cibil_repayment:15,unsecured_track:10,bank_credits:10,bank_stability:5,aqb:5,emi_track:5,business_type:5,business_vintage:5,business_stock:5,monthly_emi:5,foir:5,trade_validation:10,gst:5,gstr3b:10,itr:5,mobile_stability:5,both_owned_bonus:5};
 
+  // Shared date formatter used by the Customer, Contact, KYC, Risk and Eligibility views.
+  function fmtDate(value){
+    if(value===null||value===undefined||value==='') return 'Not available';
+    const d=value instanceof Date?value:new Date(value);
+    if(Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  }
+
   function card(title,rows){
     return `<div class="live-card"><h3>${esc(title)}</h3><div class="live-grid">${rows.map(r=>`<div><small>${esc(r[0])}</small><strong>${esc(val(r[1]))}</strong></div>`).join('')}</div></div>`;
   }
