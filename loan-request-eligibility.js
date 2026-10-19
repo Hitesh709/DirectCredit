@@ -107,7 +107,19 @@
     try{
       const [source,id]=key.split(':');
       if(!id || (source!=='live' && source!=='demo'))throw new Error('Invalid customer selection.');
-      data=await window.DirectCreditData.customer(Number(id),source==='demo'?{source:'demo'}:{source:'live',strictLive:true});
+      // Demo rows must remain viewable even if the shared customer loader is
+      // unavailable or a stale cached script is in use. The demo record is
+      // synthetic and local; live records continue to require the API.
+      try {
+        data=await window.DirectCreditData.customer(Number(id),source==='demo'?{source:'demo'}:{source:'live',strictLive:true});
+      } catch (loadError) {
+        if(source!=='demo' || typeof window.DirectCreditData?.demoCustomer!=='function') throw loadError;
+        data=window.DirectCreditData.demoCustomer(Number(id));
+      }
+      if(!data && source==='demo' && typeof window.DirectCreditData?.demoCustomer==='function') {
+        data=window.DirectCreditData.demoCustomer(Number(id));
+      }
+      if(!data) throw new Error('No customer detail record was returned.');
       const c=data.customer||{};const isDemo=source==='demo';
       document.getElementById('contextCustomer').textContent=val(c.name,'Customer');
       document.getElementById('contextId').textContent=`${isDemo?'Demo Test':'Live'} • Customer ID ${val(c.id,id)} • ${val(c.customer_code,'No customer code')}`;
