@@ -96,3 +96,21 @@ body:has(.application-workspace),body:has(.funnel-workspace){background:var(--fp
   .page-head h1{font-size:22px!important}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+
+
+/* DirectCredit UI consistency pass — October 2026
+   Visual and interaction safety only; does not alter data or business logic. */
+:root{--dc-navy:#14243a;--dc-navy-deep:#0f1d31;--dc-emerald:#0f9f78;--dc-emerald-soft:#e7f6f0;--dc-canvas:#f4f7fb;--dc-border:#dfe7ef;--dc-text:#17263b;--dc-muted:#65758b}
+html,body{font-size:14px!important;color:var(--dc-text)!important;background:var(--dc-canvas)!important}
+button,a,[role="button"],.application-tab,.summary-tab,.nav,.fm-tab{pointer-events:auto!important;cursor:pointer!important;touch-action:manipulation}
+button:disabled,[aria-disabled="true"]{cursor:not-allowed!important;opacity:.58}
+.page-head h1,.accounting-head h2{font-size:clamp(22px,1.65vw,28px)!important;line-height:1.2!important;font-weight:750!important}
+.page-head p,.accounting-head p{font-size:13px!important;line-height:1.45!important}
+button,input,select,textarea{font-family:inherit}button{font-size:13px}table{font-size:12px}th{font-size:11px;font-weight:750}td{font-size:12px}
+.application-tab,.summary-tab,.fm-tab{position:relative!important;z-index:2!important;min-height:44px!important;font-size:13px!important;font-weight:650!important}
+.application-tabs,.application-summary-tabs,.fm-tabs{position:relative!important;z-index:2!important}
+.application-context,.application-view,.fm-content,.accounting-panel{position:relative}
+.application-view{z-index:1}.application-context{font-size:13px}.application-context strong{font-size:14px!important}.application-context small{font-size:11px!important}
+.accounting-page{font-size:13px!important}.accounting-head h2{font-size:26px!important}.accounting-kpi .kpi-title{font-size:12px!important}.accounting-kpi .kpi-value{font-size:26px!important}.accounting-panel h3{font-size:14px!important}
+.fm-context,.fm-content{pointer-events:auto}.fm-tabs .fm-tab{min-height:44px!important;color:var(--dc-text)!important}.fm-tabs .fm-tab.active{color:var(--dc-emerald)!important;border-color:#9bd9c7!important;box-shadow:inset 0 3px var(--dc-emerald)!important;background:#fff!important}
+@media(max-width:760px){.page-head{flex-wrap:wrap}.application-tabs,.application-summary-tabs,.fm-tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}.application-tab,.summary-tab,.fm-tab{min-height:42px!important}.accounting-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}.accounting-grid{grid-template-columns:1fr!important}}
