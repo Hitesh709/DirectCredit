@@ -9,11 +9,10 @@
   toggle?.addEventListener('click',()=>setCollapsed(!document.body.classList.contains('sidebar-collapsed')));
   window.DCAdminSidebar={setCollapsed,isCollapsed:()=>document.body.classList.contains('sidebar-collapsed')};
 
-  // Funnel & Matrix is content-sized. The other embedded workspaces retain their fixed viewport mode.
-  function isFixedWorkspace(frame){
-    const src=String(frame?.dataset?.src||frame?.getAttribute('src')||'').toLowerCase();
-    return /loan-request-eligibility|accounting|settlement|collection/.test(src);
-  }
+  // Keep every embedded workspace content-sized. Fixed-height, overflow-hidden
+  // iframe mode clipped tabs, tables, and application detail panels on smaller screens.
+  // The parent page is the single vertical scroller for every embedded workspace.
+  function isFixedWorkspace(frame){ return false; }
 
   function injectReadableFrameStyle(doc,frame){
     if(!doc)return;
