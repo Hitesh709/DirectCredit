@@ -122,13 +122,67 @@
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&picker.classList.contains('open'))closePicker()});
   document.getElementById('refreshBtn')?.addEventListener('click',()=>loadSummary());
 
+  // Multi-step customer-to-loan journey.
+  let journeyStep=0;
+  const journeyPanels=[...document.querySelectorAll('.dc-journey-panel')];
+  const journeySteps=[...document.querySelectorAll('.dc-journey-step')];
+  const journeyBack=document.getElementById('dcJourneyBack');
+  const journeyNext=document.getElementById('dcJourneyNext');
+  const journeySubmit=document.getElementById('newApplicationSubmit');
+  const journeyProgress=document.getElementById('dcJourneyProgress');
+  const journeyReview=document.getElementById('dcJourneyReview');
+  const journeyForm=document.getElementById('newApplicationForm');
+  function showJourneyStep(index){
+    journeyStep=Math.max(0,Math.min(6,index));
+    journeyPanels.forEach((p,i)=>p.classList.toggle('active',i===journeyStep));
+    journeySteps.forEach((b,i)=>{b.classList.toggle('active',i===journeyStep);b.classList.toggle('complete',i<journeyStep);});
+    if(journeyBack)journeyBack.disabled=journeyStep===0;
+    if(journeyNext)journeyNext.hidden=journeyStep===6;
+    if(journeySubmit)journeySubmit.hidden=journeyStep!==6;
+    if(journeyProgress)journeyProgress.style.width=((journeyStep+1)/7*100)+'%';
+    if(journeyStep===6)buildJourneyReview();
+    const content=document.querySelector('.dc-journey-content');if(content)content.scrollTop=0;
+  }
+  function buildJourneyReview(){
+    if(!journeyReview||!journeyForm)return;
+    const fd=new FormData(journeyForm);
+    const rows=[['Customer',fd.get('name')],['Mobile',fd.get('mobile')],['Email',fd.get('email')],['PAN',fd.get('pan')],['Current address',[fd.get('current_address'),fd.get('current_city'),fd.get('state'),fd.get('pincode')].filter(Boolean).join(', ')],['Business',fd.get('business_name')],['Business type',fd.get('business_type')],['Monthly income',fd.get('monthly_income')?fmt(fd.get('monthly_income')):'Not entered'],['Bank',fd.get('bank_name')],['IFSC',fd.get('ifsc')],['Documents selected',[...journeyForm.querySelectorAll('input[type=file]')].filter(x=>x.files?.length).map(x=>x.files[0].name).join(', ')||'None yet'],['Loan product',fd.get('product')],['Requested amount',fd.get('requested_amount')?fmt(fd.get('requested_amount')):'Not entered'],['Tenure',(fd.get('tenure_months')||'6')+' months'],['Purpose',fd.get('loan_purpose')],['Customer consent',fd.get('customer_consent')?'Confirmed':'Not confirmed']];
+    journeyReview.innerHTML='<div class="dc-review-grid">'+rows.map(([k,v])=>'<div><small>'+esc(k)+'</small><strong>'+esc(v||'—')+'</strong></div>').join('')+'</div>';
+  }
+  function validateJourneyStep(){
+    const panel=journeyPanels[journeyStep];if(!panel)return true;
+    const fields=[...panel.querySelectorAll('input,select,textarea')].filter(el=>el.type!=='file'&&el.type!=='checkbox'&&el.willValidate);
+    for(const field of fields){if(!field.checkValidity()){field.reportValidity();field.focus();return false;}}
+    if(journeyStep===0){
+      const mobile=String(journeyForm.elements.mobile.value||'').replace(/\\D/g,'');
+      if(mobile.length<10){alert('Enter a valid customer mobile number.');journeyForm.elements.mobile.focus();return false;}
+    }
+    if(journeyStep===3){
+      const account=String(journeyForm.elements.account_number.value||'').trim();
+      const confirm=String(journeyForm.elements.account_number_confirm.value||'').trim();
+      if(account&&account!==confirm){alert('Bank account number and confirmation do not match.');journeyForm.elements.account_number_confirm.focus();return false;}
+    }
+    if(journeyStep===4){
+      for(const fileInput of panel.querySelectorAll('input[type=file]'))if(fileInput.files?.[0]&&fileInput.files[0].size>2*1024*1024){alert(fileInput.files[0].name+' is larger than 2 MB.');return false;}
+    }
+    if(journeyStep===5){
+      const amount=Number(journeyForm.elements.requested_amount.value);
+      if(!Number.isFinite(amount)||amount<5000||amount>15000){alert('Enter a loan amount between ₹5,000 and ₹15,000.');journeyForm.elements.requested_amount.focus();return false;}
+    }
+    return true;
+  }
+  journeyNext?.addEventListener('click',()=>{if(validateJourneyStep())showJourneyStep(journeyStep+1);});
+  journeyBack?.addEventListener('click',()=>showJourneyStep(journeyStep-1));
+  journeySteps.forEach(b=>b.addEventListener('click',()=>{const target=Number(b.dataset.step);if(target<=journeyStep){showJourneyStep(target);return;}if(validateJourneyStep())showJourneyStep(target);}));
+  journeyForm?.querySelector('[name="same_address"]')?.addEventListener('change',e=>{if(e.target.value==='yes')journeyForm.elements.permanent_address.value=[journeyForm.elements.current_address.value,journeyForm.elements.current_city.value,journeyForm.elements.state.value,journeyForm.elements.pincode.value].filter(Boolean).join(', ');});
+  ['current_address','current_city','state','pincode'].forEach(n=>journeyForm?.elements[n]?.addEventListener('change',()=>{if(journeyForm.elements.same_address.value==='yes')journeyForm.elements.permanent_address.value=[journeyForm.elements.current_address.value,journeyForm.elements.current_city.value,journeyForm.elements.state.value,journeyForm.elements.pincode.value].filter(Boolean).join(', ');}));
   // Admin-created customer and application workflow.
   const newModal=document.getElementById('newApplicationModal');
   const newForm=document.getElementById('newApplicationForm');
   const newMessage=document.getElementById('newApplicationMessage');
   const newSubmit=document.getElementById('newApplicationSubmit');
   function closeNewApplication(){newModal?.classList.remove('open');newModal?.setAttribute('aria-hidden','true');}
-  function openNewApplication(){newMessage.textContent='';newMessage.className='new-application-message';newForm?.reset();newModal?.classList.add('open');newModal?.setAttribute('aria-hidden','false');newForm?.querySelector('[name="name"]')?.focus();}
+  function openNewApplication(){newMessage.textContent='';newMessage.className='new-application-message';newForm?.reset();showJourneyStep(0);newModal?.classList.add('open');newModal?.setAttribute('aria-hidden','false');newForm?.querySelector('[name="name"]')?.focus();}
   document.getElementById('newApplicationBtn')?.addEventListener('click',openNewApplication);
   document.querySelectorAll('[data-new-app-close]').forEach(el=>el.addEventListener('click',closeNewApplication));
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&newModal?.classList.contains('open'))closeNewApplication();});
@@ -144,28 +198,26 @@
     const name=String(form.get('name')||'').trim();
     const amount=Number(form.get('requested_amount'));
     const tenure=Number(form.get('tenure_months')||6);
-    const adminToken=String(form.get('admin_token')||'').trim();
     if(!name||!Number.isFinite(amount)||amount<5000||amount>15000){newMessage.textContent='Enter a customer name and a loan amount between ₹5,000 and ₹15,000.';newMessage.className='new-application-message show error';return;}
-    if(!adminToken){newMessage.textContent='Admin API token is required to create a loan application. No customer has been created.';newMessage.className='new-application-message show error';return;}
     const api=window.DirectCreditData;
     if(!api?.base||typeof api.headers!=='function'){newMessage.textContent='The DirectCredit API configuration is unavailable. Refresh the page and try again.';newMessage.className='new-application-message show error';return;}
-    const headers={...api.headers(),'Content-Type':'application/json',Authorization:'Bearer '+adminToken};
-    const payload={name,mobile:String(form.get('mobile')||'').trim()||null,email:String(form.get('email')||'').trim()||null,business_name:String(form.get('business_name')||'').trim()||null,business_type:String(form.get('business_type')||'').trim()||null,current_city:String(form.get('current_city')||'').trim()||null,monthly_income:Number(form.get('monthly_income')||0),customer_type:String(form.get('customer_type')||'Individual'),occupation:'Business'};
+    const headers={...api.headers(),'Content-Type':'application/json'};
+    const payload={name,mobile:String(form.get('mobile')||'').trim()||null,email:String(form.get('email')||'').trim()||null,business_name:String(form.get('business_name')||'').trim()||null,business_type:String(form.get('business_type')||'').trim()||null,current_city:String(form.get('current_city')||'').trim()||null,monthly_income:Number(form.get('monthly_income')||0),customer_type:String(form.get('customer_type')||'Individual'),occupation:String(form.get('occupation')||'Business'),pan:String(form.get('pan')||'').trim().toUpperCase()||null,date_of_birth:String(form.get('date_of_birth')||'')||null,gender:String(form.get('gender')||'')||null,marital_status:String(form.get('marital_status')||'')||null,address:String(form.get('current_address')||'').trim()||null,permanent_address:String(form.get('permanent_address')||'').trim()||null,residence_ownership:String(form.get('residence_ownership')||'')||null,residence_since:String(form.get('residence_since')||'')||null,state:String(form.get('state')||'')||null,pincode:String(form.get('pincode')||'')||null,father_spouse_name:String(form.get('father_spouse_name')||'').trim()||null,monthly_turnover:Number(form.get('monthly_turnover')||0)||null,annual_turnover:Number(form.get('annual_turnover')||0)||null,existing_emi:Number(form.get('existing_emi')||0),dependents:Number(form.get('dependents')||0),gstin:String(form.get('gstin')||'').trim().toUpperCase()||null,business_address:String(form.get('business_address')||'').trim()||null,bank_name:String(form.get('bank_name')||'').trim()||null,account_holder_name:String(form.get('account_holder_name')||'').trim()||null,account_number:String(form.get('account_number')||'').trim()||null,ifsc:String(form.get('ifsc')||'').trim().toUpperCase()||null,account_type:String(form.get('account_type')||'')||null,average_bank_balance:Number(form.get('average_bank_balance')||0)||null,customer_consent:form.get('customer_consent')==='on'};
     const docTypes=[['pan_document','PAN'],['address_document','ADDRESS_PROOF'],['bank_document','BANK_STATEMENT'],['business_document','BUSINESS_PROOF']];
     newSubmit.disabled=true;newSubmit.textContent='Creating…';newMessage.textContent='Checking documents and creating customer/application…';newMessage.className='new-application-message show';
     try{
       const docs=[];
       for(const [field,type] of docTypes){const file=form.get(field);if(file instanceof File&&file.size)docs.push({type,...await readDocument(file)});}
       // Preflight the authenticated loan route before creating a customer, avoiding orphan records.
-      const authCheck=await fetch(api.base+'/admin/reports/customer/1/profile',{headers:{...api.headers(),Authorization:'Bearer '+adminToken},cache:'no-store'});
-      if(authCheck.status===401||authCheck.status===403)throw new Error('Admin API token was rejected. Use the authorized admin token configured for the DirectCredit API. No customer was created.');
+      const authCheck=await fetch(api.base+'/admin/reports/customer/1/profile',{headers:api.headers(),cache:'no-store'});
+      if(authCheck.status===401||authCheck.status===403)throw new Error('The configured API session is not authorized to create applications. Please sign in as an authorized administrator; no customer was created.');
       if(!authCheck.ok)throw new Error('Could not verify admin access (HTTP '+authCheck.status+'). No customer was created.');
       const customerResponse=await fetch(api.base+'/customers',{method:'POST',headers,body:JSON.stringify(payload)});
       const customerBody=await customerResponse.json().catch(()=>({}));
       if(!customerResponse.ok)throw new Error(customerBody.detail||customerBody.message||('Customer creation failed (HTTP '+customerResponse.status+').'));
       const customerId=customerBody.id;
       if(!customerId)throw new Error('Customer was saved but the API did not return a customer ID. Please check the customer list before retrying.');
-      const loanResponse=await fetch(api.base+'/loans',{method:'POST',headers,body:JSON.stringify({customer_id:Number(customerId),requested_amount:amount,product:String(form.get('product')||'Micro Business Loan'),tenure_months:tenure})});
+      const loanResponse=await fetch(api.base+'/loans',{method:'POST',headers,body:JSON.stringify({customer_id:Number(customerId),requested_amount:amount,product:String(form.get('product')||'Micro Business Loan'),tenure_months:tenure,loan_purpose:String(form.get('loan_purpose')||'')||null,preferred_disbursement_date:String(form.get('preferred_disbursement_date')||'')||null,repayment_frequency:String(form.get('repayment_frequency')||'Monthly'),application_notes:String(form.get('application_notes')||'').trim()||null})});
       const loanBody=await loanResponse.json().catch(()=>({}));
       if(!loanResponse.ok)throw new Error('Customer created (ID '+customerId+'), but loan creation failed: '+(loanBody.detail||loanBody.message||('HTTP '+loanResponse.status))+'. Open that customer and retry the loan only; do not create the customer again.');
       const loanId=loanBody.id||loanBody.loan_id||null;
