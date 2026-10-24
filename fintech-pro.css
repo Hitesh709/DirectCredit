@@ -114,3 +114,22 @@ button,input,select,textarea{font-family:inherit}button{font-size:13px}table{fon
 .accounting-page{font-size:13px!important}.accounting-head h2{font-size:26px!important}.accounting-kpi .kpi-title{font-size:12px!important}.accounting-kpi .kpi-value{font-size:26px!important}.accounting-panel h3{font-size:14px!important}
 .fm-context,.fm-content{pointer-events:auto}.fm-tabs .fm-tab{min-height:44px!important;color:var(--dc-text)!important}.fm-tabs .fm-tab.active{color:var(--dc-emerald)!important;border-color:#9bd9c7!important;box-shadow:inset 0 3px var(--dc-emerald)!important;background:#fff!important}
 @media(max-width:760px){.page-head{flex-wrap:wrap}.application-tabs,.application-summary-tabs,.fm-tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}.application-tab,.summary-tab,.fm-tab{min-height:42px!important}.accounting-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}.accounting-grid{grid-template-columns:1fr!important}}
+
+
+/* DirectCredit Midnight Sapphire theme — visual-only palette override, no workflow/API changes. */
+:root{--fp-green:#536dfe;--fp-green-soft:#edf0ff;--dc-emerald:#536dfe;--dc-emerald-hover:#4054d6;--dc-emerald-soft:#edf0ff;--dc-mint:#edf0ff;--fp-blue:#536dfe;--fp-navy:#101d35;--fp-navy-2:#192b4a;--fp-bg:#f5f7fc;--fp-surface:#ffffff;--fp-line:#e0e6f2;--dc-navy:#101d35;--dc-navy-deep:#0b1427;--dc-canvas:#f5f7fc;--dc-border:#e0e6f2;--dc-text:#17243d;--dc-muted:#697893}
+.sidebar .brand,.side-brand .brand{background:#536dfe!important;color:#fff!important}
+.sidebar .nav.active,.nav.active,.customer-nav button.active{background:rgba(83,109,254,.18)!important;color:#fff!important;box-shadow:inset 3px 0 #536dfe!important}
+.sidebar .nav.active{box-shadow:inset 3px 0 #536dfe!important}
+.btn.primary,.head-actions button,#refreshBtn,.dc-exec-new,.btn,.primary,.primary-btn,.btn-primary{background:#536dfe!important;border-color:#536dfe!important;color:#fff!important}
+.btn.primary:hover,.head-actions button:hover,#refreshBtn:hover,.dc-exec-new:hover,.btn:hover,.primary:hover,.primary-btn:hover,.btn-primary:hover{background:#4054d6!important;border-color:#4054d6!important}
+input:focus,select:focus,textarea:focus{border-color:#8796ff!important;box-shadow:0 0 0 3px rgba(83,109,254,.13)!important}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(83,109,254,.28)!important;outline-offset:2px!important}
+#dashboard .dc-exec-kpi.blue,#dashboard .dc-exec-kpi.purple,#dashboard .dc-exec-kpi.green,#dashboard .dc-exec-kpi.red{border-top-color:#536dfe!important}
+.application-summary-tabs .summary-tab.active strong,.application-tab.active,.application-tab:hover,.fm-tabs .fm-tab.active,.fm-tab.active,.application-tab[aria-selected=true],.fm-tab[aria-selected=true]{color:#4054d6!important;border-color:#cbd3ff!important;box-shadow:inset 0 3px #536dfe!important;background:#edf0ff!important}
+.application-tab.active{background:#fff!important}
+.good-text,.credit,.el-status,.el-offer .good-text{color:#4054d6!important}
+.badge.green,.status.ok,.el-pill.good,.bk-pill.good{background:#edf0ff!important;color:#4054d6!important}
+.el-process .el-step.done i{background:#536dfe!important}
+.funnel-workspace .application-tab.active{color:#4054d6!important;box-shadow:inset 0 3px #536dfe!important}
+table tbody tr:hover td{background:#f6f8ff!important}
