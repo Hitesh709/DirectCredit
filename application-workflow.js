@@ -176,6 +176,17 @@
   journeySteps.forEach(b=>b.addEventListener('click',()=>{const target=Number(b.dataset.step);if(target<=journeyStep){showJourneyStep(target);return;}if(validateJourneyStep())showJourneyStep(target);}));
   journeyForm?.querySelector('[name="same_address"]')?.addEventListener('change',e=>{if(e.target.value==='yes')journeyForm.elements.permanent_address.value=[journeyForm.elements.current_address.value,journeyForm.elements.current_city.value,journeyForm.elements.state.value,journeyForm.elements.pincode.value].filter(Boolean).join(', ');});
   ['current_address','current_city','state','pincode'].forEach(n=>journeyForm?.elements[n]?.addEventListener('change',()=>{if(journeyForm.elements.same_address.value==='yes')journeyForm.elements.permanent_address.value=[journeyForm.elements.current_address.value,journeyForm.elements.current_city.value,journeyForm.elements.state.value,journeyForm.elements.pincode.value].filter(Boolean).join(', ');}));
+  async function ensureAdminSession(api){
+    if(localStorage.getItem('directcredit_admin_token')||window.DIRECTCREDIT_ADMIN_TOKEN)return;
+    const username=window.prompt('Administrator sign-in: enter your admin username');
+    if(!username)throw new Error('Administrator sign-in cancelled. No customer was created.');
+    const password=window.prompt('Enter your administrator password');
+    if(!password)throw new Error('Administrator sign-in cancelled. No customer was created.');
+    const response=await fetch(api.base+'/admin/auth/login',{method:'POST',headers:{Accept:'application/json','Content-Type':'application/json'},body:JSON.stringify({username:username.trim(),password}),cache:'no-store'});
+    const body=await response.json().catch(()=>({}));
+    if(!response.ok||!body.access_token)throw new Error(body.detail||body.message||'Administrator sign-in failed.');
+    localStorage.setItem('directcredit_admin_token',body.access_token);
+  }
   // Admin-created customer and application workflow.
   const newModal=document.getElementById('newApplicationModal');
   const newForm=document.getElementById('newApplicationForm');
@@ -201,11 +212,13 @@
     if(!name||!Number.isFinite(amount)||amount<5000||amount>15000){newMessage.textContent='Enter a customer name and a loan amount between ₹5,000 and ₹15,000.';newMessage.className='new-application-message show error';return;}
     const api=window.DirectCreditData;
     if(!api?.base||typeof api.headers!=='function'){newMessage.textContent='The DirectCredit API configuration is unavailable. Refresh the page and try again.';newMessage.className='new-application-message show error';return;}
-    const headers={...api.headers(),'Content-Type':'application/json'};
+    let headers;
     const payload={name,mobile:String(form.get('mobile')||'').trim()||null,email:String(form.get('email')||'').trim()||null,business_name:String(form.get('business_name')||'').trim()||null,business_type:String(form.get('business_type')||'').trim()||null,current_city:String(form.get('current_city')||'').trim()||null,monthly_income:Number(form.get('monthly_income')||0),customer_type:String(form.get('customer_type')||'Individual'),occupation:String(form.get('occupation')||'Business'),pan:String(form.get('pan')||'').trim().toUpperCase()||null,aadhaar_masked:form.get('aadhaar_reference')?('XXXX-XXXX-'+String(form.get('aadhaar_reference')).slice(-4)):null,date_of_birth:String(form.get('date_of_birth')||'')||null,gender:String(form.get('gender')||'')||null,marital_status:String(form.get('marital_status')||'')||null,address:String(form.get('current_address')||'').trim()||null,permanent_address:String(form.get('permanent_address')||'').trim()||null,residence_ownership:String(form.get('residence_ownership')||'')||null,residence_since:String(form.get('residence_since')||'')||null,state:String(form.get('state')||'')||null,pincode:String(form.get('pincode')||'')||null,father_spouse_name:String(form.get('father_spouse_name')||'').trim()||null,years_in_business:Number(form.get('business_vintage')||0),average_bank_balance:Number(form.get('average_bank_balance')||0),primary_bank:String(form.get('bank_name')||'').trim()||null,existing_emi:Number(form.get('existing_emi')||0),dependents:Number(form.get('dependents')||0),gstin:String(form.get('gstin')||'').trim().toUpperCase()||null,customer_consent:form.get('customer_consent')==='on'};
     const docTypes=[['pan_document','PAN'],['address_document','ADDRESS_PROOF'],['bank_document','BANK_STATEMENT'],['business_document','BUSINESS_PROOF'],['income_document','INCOME_PROOF'],['other_document','OTHER']];
     newSubmit.disabled=true;newSubmit.textContent='Creating…';newMessage.textContent='Checking documents and creating customer/application…';newMessage.className='new-application-message show';
     try{
+      await ensureAdminSession(api);
+      headers={...api.headers(),'Content-Type':'application/json'};
       const docs=[];
       for(const [field,type] of docTypes){const file=form.get(field);if(file instanceof File&&file.size)docs.push({type,...await readDocument(file)});}
       // Preflight the authenticated loan route before creating a customer, avoiding orphan records.
