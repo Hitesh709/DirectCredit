@@ -23,7 +23,7 @@ from .profile_service import profile_payload
 from .api_services import router as service_router
 from .reporting import router as reporting_router
 from .audit_routes import router as audit_router
-from .auth import hash_password, verify_password, issue_demo_token, get_current_customer
+from .auth import hash_password, verify_password, issue_demo_token, issue_token, get_current_customer
 from .admin_auth import get_current_admin
 from .auth_routes import router as auth_router
 from .migration_runner import migrate_database
@@ -65,6 +65,20 @@ def root(): return {"application":"DirectCredit","status":"online","mode":"produ
 def health(db:Session=Depends(get_db)): db.execute(func.count(CustomerRecord.id)); return {"status":"healthy","database":"connected"}
 @app.get("/api/version")
 def version(): return {"name":"DirectCredit API","version":"0.8.0"}
+@app.post("/api/admin/auth/login")
+def admin_login(payload:dict):
+    """Issue a short-lived signed admin session using server-configured credentials."""
+    expected_user=os.getenv("ADMIN_USERNAME","").strip()
+    expected_password=os.getenv("ADMIN_PASSWORD","")
+    username=str(payload.get("username") or "").strip()
+    password=str(payload.get("password") or "")
+    if not expected_user or not expected_password:
+        raise HTTPException(503,"Admin sign-in is not configured. Set ADMIN_USERNAME and ADMIN_PASSWORD in the API environment.")
+    import hmac
+    if not hmac.compare_digest(username,expected_user) or not hmac.compare_digest(password,expected_password):
+        raise HTTPException(401,"Invalid administrator credentials")
+    token=issue_token("admin:"+username,"admin","access",8)
+    return {"access_token":token,"token_type":"bearer","expires_in":28800,"admin":{"username":username,"role":"admin"}}
 @app.post("/api/customer/login")
 def customer_login(payload:CustomerLogin,request:Request,db:Session=Depends(get_db)):
     login_id=payload.login_id.strip(); customer=db.query(CustomerRecord).filter(CustomerRecord.login_id==login_id).first()
