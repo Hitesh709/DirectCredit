@@ -154,7 +154,7 @@
     const fields=[...panel.querySelectorAll('input,select,textarea')].filter(el=>el.type!=='file'&&el.type!=='checkbox'&&el.willValidate);
     for(const field of fields){if(!field.checkValidity()){field.reportValidity();field.focus();return false;}}
     if(journeyStep===0){
-      const mobile=String(journeyForm.elements.mobile.value||'').replace(/\\D/g,'');
+      const mobile=String(journeyForm.elements.mobile.value||'').replace(/\D/g,'');
       if(mobile.length<10){alert('Enter a valid customer mobile number.');journeyForm.elements.mobile.focus();return false;}
     }
     if(journeyStep===3){
