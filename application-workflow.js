@@ -157,7 +157,7 @@
       const docs=[];
       for(const [field,type] of docTypes){const file=form.get(field);if(file instanceof File&&file.size)docs.push({type,...await readDocument(file)});}
       // Preflight the authenticated loan route before creating a customer, avoiding orphan records.
-      const authCheck=await fetch(api.base+'/admin/dashboard',{headers:{...api.headers(),Authorization:'Bearer '+adminToken},cache:'no-store'});
+      const authCheck=await fetch(api.base+'/admin/reports/customer/1/profile',{headers:{...api.headers(),Authorization:'Bearer '+adminToken},cache:'no-store'});
       if(authCheck.status===401||authCheck.status===403)throw new Error('Admin API token was rejected. Use the authorized admin token configured for the DirectCredit API. No customer was created.');
       if(!authCheck.ok)throw new Error('Could not verify admin access (HTTP '+authCheck.status+'). No customer was created.');
       const customerResponse=await fetch(api.base+'/customers',{method:'POST',headers,body:JSON.stringify(payload)});
