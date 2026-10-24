@@ -122,8 +122,7 @@
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&picker.classList.contains('open'))closePicker()});
   document.getElementById('refreshBtn')?.addEventListener('click',()=>loadSummary());
 
-  // Admin-created applications: create the customer first, then create the loan
-  // using the existing DirectCredit API and its configured admin headers.
+  // Admin-created customer and application workflow.
   const newModal=document.getElementById('newApplicationModal');
   const newForm=document.getElementById('newApplicationForm');
   const newMessage=document.getElementById('newApplicationMessage');
@@ -133,33 +132,54 @@
   document.getElementById('newApplicationBtn')?.addEventListener('click',openNewApplication);
   document.querySelectorAll('[data-new-app-close]').forEach(el=>el.addEventListener('click',closeNewApplication));
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&newModal?.classList.contains('open'))closeNewApplication();});
+  const readDocument=async(file)=>{
+    if(!file)return null;
+    if(file.size>2*1024*1024)throw new Error(file.name+' is larger than 2 MB. Choose a smaller file.');
+    if(!['application/pdf','image/jpeg','image/png'].includes(file.type))throw new Error(file.name+': only PDF, JPG and PNG files are supported.');
+    return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({file_name:file.name,mime_type:file.type,file_size:file.size,data_url:String(reader.result)});reader.onerror=()=>reject(new Error('Could not read '+file.name));reader.readAsDataURL(file);});
+  };
   newForm?.addEventListener('submit',async e=>{
     e.preventDefault();
     const form=new FormData(newForm);
     const name=String(form.get('name')||'').trim();
     const amount=Number(form.get('requested_amount'));
     const tenure=Number(form.get('tenure_months')||6);
-    if(!name||!Number.isFinite(amount)||amount<=0||amount>15000){newMessage.textContent='Enter a customer name and a loan amount between ₹1 and ₹15,000.';newMessage.className='new-application-message show error';return;}
+    const adminToken=String(form.get('admin_token')||'').trim();
+    if(!name||!Number.isFinite(amount)||amount<5000||amount>15000){newMessage.textContent='Enter a customer name and a loan amount between ₹5,000 and ₹15,000.';newMessage.className='new-application-message show error';return;}
+    if(!adminToken){newMessage.textContent='Admin API token is required to create a loan application. No customer has been created.';newMessage.className='new-application-message show error';return;}
     const api=window.DirectCreditData;
     if(!api?.base||typeof api.headers!=='function'){newMessage.textContent='The DirectCredit API configuration is unavailable. Refresh the page and try again.';newMessage.className='new-application-message show error';return;}
+    const headers={...api.headers(),'Content-Type':'application/json',Authorization:'Bearer '+adminToken};
     const payload={name,mobile:String(form.get('mobile')||'').trim()||null,email:String(form.get('email')||'').trim()||null,business_name:String(form.get('business_name')||'').trim()||null,business_type:String(form.get('business_type')||'').trim()||null,current_city:String(form.get('current_city')||'').trim()||null,monthly_income:Number(form.get('monthly_income')||0),customer_type:String(form.get('customer_type')||'Individual'),occupation:'Business'};
-    newSubmit.disabled=true;newSubmit.textContent='Creating…';newMessage.textContent='Saving customer and creating application…';newMessage.className='new-application-message show';
+    const docTypes=[['pan_document','PAN'],['address_document','ADDRESS_PROOF'],['bank_document','BANK_STATEMENT'],['business_document','BUSINESS_PROOF']];
+    newSubmit.disabled=true;newSubmit.textContent='Creating…';newMessage.textContent='Checking documents and creating customer/application…';newMessage.className='new-application-message show';
     try{
-      const customerResponse=await fetch(api.base+'/customers',{method:'POST',headers:{...api.headers(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const docs=[];
+      for(const [field,type] of docTypes){const file=form.get(field);if(file instanceof File&&file.size)docs.push({type,...await readDocument(file)});}
+      // Preflight the authenticated loan route before creating a customer, avoiding orphan records.
+      const authCheck=await fetch(api.base+'/admin/dashboard',{headers:{...api.headers(),Authorization:'Bearer '+adminToken},cache:'no-store'});
+      if(authCheck.status===401||authCheck.status===403)throw new Error('Admin API token was rejected. Use the authorized admin token configured for the DirectCredit API. No customer was created.');
+      if(!authCheck.ok)throw new Error('Could not verify admin access (HTTP '+authCheck.status+'). No customer was created.');
+      const customerResponse=await fetch(api.base+'/customers',{method:'POST',headers,body:JSON.stringify(payload)});
       const customerBody=await customerResponse.json().catch(()=>({}));
       if(!customerResponse.ok)throw new Error(customerBody.detail||customerBody.message||('Customer creation failed (HTTP '+customerResponse.status+').'));
       const customerId=customerBody.id;
-      if(!customerId)throw new Error('Customer was saved but the API did not return a customer ID. Contact support before retrying.');
-      let loanResponse,loanBody;
-      try{
-        loanResponse=await fetch(api.base+'/loans',{method:'POST',headers:{...api.headers(),'Content-Type':'application/json'},body:JSON.stringify({customer_id:Number(customerId),requested_amount:amount,product:String(form.get('product')||'Micro Business Loan'),tenure_months:tenure})});
-        loanBody=await loanResponse.json().catch(()=>({}));
-      }catch(err){throw new Error('Customer was created (ID '+customerId+'), but the loan request could not be completed. '+(err.message||''));}
-      if(!loanResponse.ok)throw new Error('Customer was created (ID '+customerId+'), but loan creation failed: '+(loanBody.detail||loanBody.message||('HTTP '+loanResponse.status))+'. Please open that customer and retry only the loan application.');
-      newMessage.textContent='Application created successfully. Opening the new customer workspace…';newMessage.className='new-application-message show success';
+      if(!customerId)throw new Error('Customer was saved but the API did not return a customer ID. Please check the customer list before retrying.');
+      const loanResponse=await fetch(api.base+'/loans',{method:'POST',headers,body:JSON.stringify({customer_id:Number(customerId),requested_amount:amount,product:String(form.get('product')||'Micro Business Loan'),tenure_months:tenure})});
+      const loanBody=await loanResponse.json().catch(()=>({}));
+      if(!loanResponse.ok)throw new Error('Customer created (ID '+customerId+'), but loan creation failed: '+(loanBody.detail||loanBody.message||('HTTP '+loanResponse.status))+'. Open that customer and retry the loan only; do not create the customer again.');
+      const loanId=loanBody.id||loanBody.loan_id||null;
+      for(const doc of docs){
+        // The existing document API stores document records and their storage_key; keep files small.
+        const documentPayload={customer_id:Number(customerId),loan_id:loanId?Number(loanId):null,document_type:doc.type,document_role:'supporting',file_name:doc.file_name,mime_type:doc.mime_type,file_size:doc.file_size,source:'admin_application',required:false,verification_status:'pending',storage_provider:'database',storage_key:doc.data_url};
+        const response=await fetch(api.base+'/documents',{method:'POST',headers,body:JSON.stringify(documentPayload)});
+        const body=await response.json().catch(()=>({}));
+        if(!response.ok)throw new Error('Application created, but document "'+doc.file_name+'" could not be saved: '+(body.detail||body.message||('HTTP '+response.status))+'. Customer ID: '+customerId+', application ID: '+(loanId||'created')+'.');
+      }
+      newMessage.textContent='Customer and application created successfully'+(docs.length?' with '+docs.length+' document(s)':'')+'. Opening the customer workspace…';newMessage.className='new-application-message show success';
       await loadSummary();
-      setTimeout(()=>{const url=new URL(location.href);url.searchParams.set('customer_id',String(customerId));url.searchParams.set('source','live');url.searchParams.set('workspace_tab','eligibility');location.assign(url.toString());},500);
-    }catch(err){newMessage.textContent=err.message||'Unable to create application. Please check the API and try again.';newMessage.className='new-application-message show error';}
+      setTimeout(()=>{const url=new URL(location.href);url.searchParams.set('customer_id',String(customerId));url.searchParams.set('source','live');url.searchParams.set('workspace_tab','eligibility');location.assign(url.toString());},700);
+    }catch(err){newMessage.textContent=err.message||'Unable to create application. Please check API access and try again.';newMessage.className='new-application-message show error';}
     finally{newSubmit.disabled=false;newSubmit.textContent='Create application';}
   });
 
