@@ -103,7 +103,7 @@
     const funnel=[['Registered',d.applications],['KYC Completed',d.customers&&d.customers.kyc_verified],['Risk Assessed',r.assessed_loans],['Approved',approval],['Disbursed',d.disbursed_count]].filter(x=>x[1]!=null),maxF=Math.max(1,...funnel.map(x=>Number(x[1]||0)));
     const alerts=[];if(manual)alerts.push(['',''+manual+' application'+(manual>1?'s':'')+' require manual review','Risk queue']);if(r.hard_reject_count)alerts.push(['danger',r.hard_reject_count+' hard-reject signal detected','Credit risk']);if(d.bank_analysis&&d.bank_analysis.negative_balance_events)alerts.push(['',''+d.bank_analysis.negative_balance_events+' negative bank-balance event','Bank analysis']);if(d.customers&&d.customers.incomplete)alerts.push(['info',d.customers.incomplete+' customer records need KYC attention','Compliance']);if(!alerts.length)alerts.push(['success','No critical portfolio alerts','Risk & operations']);
     let h='<div class="dc-exec">';
-    h+='<div class="dc-exec-head"><div class="dc-exec-title"><small>DIRECTCREDIT · ADMIN COMMAND CENTER</small><h1>Welcome back, Hitesh 👋</h1><p>Here’s what’s happening across your lending business today.</p></div><div class="dc-exec-actions"><label class="dc-exec-search">⌕<input id="dcDashSearch" placeholder="Search customer, mobile, loan ID…"><kbd>Ctrl K</kbd></label><button class="dc-exec-new" id="dcNewApplication">＋ New Application</button><div class="dc-exec-user"><div class="dc-exec-avatar">HK</div><div><b>Hitesh Kansara</b><small>Admin</small></div></div></div></div>';
+    h+='<div class="dc-exec-head"><div class="dc-exec-title"><small>DIRECTCREDIT · ADMIN COMMAND CENTER</small><h1>Admin Command Center</h1><p>Portfolio overview, customer servicing and loan operations.</p></div><div class="dc-exec-actions"><label class="dc-exec-search">⌕<input id="dcDashSearch" placeholder="Search customer, mobile, loan ID…" autocomplete="off"><kbd>Enter</kbd></label><button class="dc-exec-new" id="dcNewApplication" type="button">＋ New Application</button><div class="dc-exec-user-wrap"><button class="dc-exec-user" id="dcProfileMenuButton" type="button" aria-expanded="false" aria-haspopup="true"><div class="dc-exec-avatar">HK</div><div><b>Hitesh Kansara</b><small>Administrator ▾</small></div></button><div class="dc-profile-menu" id="dcProfileMenu" hidden><button type="button" data-dc-nav="settings">Profile &amp; Settings</button><button type="button" data-dc-nav="support">Help &amp; Support</button><button type="button" id="dcProfileClose">Close menu</button></div></div></div></div>';
     h+='<div class="dc-exec-toolbar"><div><strong>Command Center</strong><span class="dc-source '+(d.source==='demo'?'demo':'')+'">'+(d.source==='demo'?'Demo test data':'Live database')+'</span></div><div class="dc-sync">Updated '+esc(d.generated_at?new Date(d.generated_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'now')+'</div></div>';
     h+='<div class="dc-exec-kpis">'+k.map(x=>'<article class="dc-exec-kpi '+x[3]+' dc-clickable" data-drill-key="'+x[5]+'" data-drill-label="'+x[0]+'"><i>'+x[4]+'</i><div><span>'+x[0]+'</span><small>'+x[2]+'</small><strong>'+x[1]+'</strong></div></article>').join('')+'</div>';
     h+='<div class="dc-exec-grid"><section class="dc-exec-card"><div class="dc-exec-cardhead"><div><h3>Portfolio Health</h3><p>Current exposure across the loan book</p></div><select><option>Portfolio</option></select></div><div class="dc-health"><div class="dc-donut" style="--good:'+Math.max(0,100-pct(a.overdue,a.outstanding))+'%"><div><strong>'+pct(Number(a.outstanding||0)-Number(a.overdue||0),a.outstanding)+'%</strong><small>Performing</small></div></div><div class="dc-legend"><div><i class="g"></i><span>Performing</span><b>'+fmt(Math.max(Number(a.outstanding||0)-Number(a.overdue||0),0))+'</b></div><div><i class="a"></i><span>Watchlist</span><b>'+num(d.pending)+' loans</b></div><div><i class="r"></i><span>Overdue</span><b>'+fmt(a.overdue)+'</b></div></div></div></section>';
@@ -128,6 +128,47 @@
     dash.innerHTML=h;
     if(!document.getElementById('dcModuleLauncherStyle')){const ms=document.createElement('style');ms.id='dcModuleLauncherStyle';ms.textContent='.dc-module-launcher{margin:18px 0 28px;padding:20px;background:#fff;border:1px solid #dfe7f0;border-radius:16px;box-shadow:0 5px 18px rgba(17,36,62,.045)}.dc-module-heading{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}.dc-module-heading span{font-size:10px;letter-spacing:1.4px;font-weight:850;color:#0b9b75}.dc-module-heading h2{font-size:21px;margin:5px 0;color:#132b4a}.dc-module-heading p{font-size:12px;margin:0;color:#6b7b90}.dc-module-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.dc-module-card{display:flex;align-items:center;gap:11px;min-width:0;min-height:90px;text-align:left;padding:14px;border:1px solid #e0e8f1;border-radius:12px;background:linear-gradient(145deg,#fff,#f8fbfd);color:#152b48;cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s}.dc-module-card:hover{border-color:#0aa77b;transform:translateY(-2px);box-shadow:0 7px 20px rgba(10,167,123,.1)}.dc-module-icon{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:11px;background:#e7f7f1;color:#07885f;font-size:18px;font-weight:800}.dc-module-copy{display:flex;flex-direction:column;gap:5px;min-width:0}.dc-module-copy b{font-size:12px;line-height:1.35}.dc-module-copy small{font-size:10px;line-height:1.4;color:#728198;font-weight:500}.dc-module-arrow{margin-left:auto;align-self:center;color:#0b9b75;font-size:16px}@media(max-width:1200px){.dc-module-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:850px){.dc-module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.dc-module-launcher{padding:13px}.dc-module-grid{grid-template-columns:1fr}.dc-module-card{min-height:76px}}';document.head.appendChild(ms)}
     dash.querySelectorAll('[data-dc-nav]').forEach(function(btn){btn.addEventListener('click',function(){const target=btn.getAttribute('data-dc-nav');const nav=document.querySelector('.nav[data-page="'+target+'"]');if(nav)nav.click();else window.location.hash='#'+target;});});
+    // Dashboard quick actions: send customer searches to the Applications workspace
+    // and open its built-in searchable customer picker rather than using a dead input.
+    const searchInput=dash.querySelector('#dcDashSearch');
+    function openApplications(searchTerm, newApplication){
+      const nav=document.querySelector('.nav[data-page="loanRequest"]');
+      if(!nav)return;
+      nav.click();
+      const frame=document.querySelector('#loanRequest iframe');
+      let tries=0;
+      const activate=()=>{
+        tries++;
+        try{
+          const doc=frame?.contentDocument;
+          const summary=doc?.querySelector('.summary-tab[data-status="all"]');
+          const picker=doc?.getElementById('applicationPicker');
+          const input=doc?.getElementById('applicationSearch');
+          if(summary&&picker){
+            summary.click();
+            if(input&&searchTerm){input.value=searchTerm;input.dispatchEvent(new Event('input',{bubbles:true}));}
+            if(newApplication){
+              const title=doc.getElementById('pickerTitle');
+              const subtitle=doc.getElementById('pickerSubtitle');
+              if(title)title.textContent='Start application — select customer';
+              if(subtitle)subtitle.textContent='Choose the customer whose application you want to review. Creating a new loan record depends on the configured application workflow.';
+            }
+            if(input)input.focus();
+            return;
+          }
+        }catch(e){}
+        if(tries<20)setTimeout(activate,250);
+      };
+      setTimeout(activate,250);
+    }
+    searchInput?.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();openApplications(searchInput.value.trim(),false)}});
+    searchInput?.addEventListener('input',function(){const v=searchInput.value.trim();if(v.length>=3){clearTimeout(searchInput._dcTimer);searchInput._dcTimer=setTimeout(()=>openApplications(v,false),650)}});
+    dash.querySelector('#dcNewApplication')?.addEventListener('click',()=>openApplications('',true));
+    const profileButton=dash.querySelector('#dcProfileMenuButton'),profileMenu=dash.querySelector('#dcProfileMenu');
+    profileButton?.addEventListener('click',()=>{const open=profileMenu.hidden;profileMenu.hidden=!open;profileButton.setAttribute('aria-expanded',String(open));});
+    dash.querySelector('#dcProfileClose')?.addEventListener('click',()=>{profileMenu.hidden=true;profileButton?.setAttribute('aria-expanded','false');});
+    document.addEventListener('click',function(e){if(profileMenu&&!e.target.closest('.dc-exec-user-wrap')){profileMenu.hidden=true;profileButton?.setAttribute('aria-expanded','false');}},{once:true});
+
   };
 
   if(window.DirectCreditData&&window.DirectCreditData.reporting){
@@ -141,3 +182,5 @@
     fetch(base+'/admin/reporting',{headers:token?{Authorization:'Bearer '+token,Accept:'application/json'}:{Accept:'application/json'}}).then(r=>{if(!r.ok)throw Error(r.status);return r.json()}).then(window.__dcRenderDashboard).catch(function(){dash.innerHTML='<div class="dc-panel"><h3>Dashboard unavailable</h3><p>Unable to load dashboard data. Verify the Admin API connection.</p></div>'});
   }
 })();
+/* Dashboard command header interaction fixes */
+.dc-exec-user-wrap{position:relative;display:flex;align-items:center}.dc-exec-user{border:0;background:transparent;text-align:left;cursor:pointer;padding:5px;border-radius:9px}.dc-exec-user:hover{background:#edf1ff}.dc-profile-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:1000;min-width:190px;background:#fff;border:1px solid #dfe6f2;border-radius:11px;box-shadow:0 12px 32px rgba(15,29,53,.16);padding:6px}.dc-profile-menu[hidden]{display:none!important}.dc-profile-menu button{display:block;width:100%;border:0;background:#fff;text-align:left;padding:10px 12px;border-radius:7px;font-size:12px;color:#17243d;cursor:pointer}.dc-profile-menu button:hover{background:#edf0ff;color:#4054d6}.dc-exec-title h1{font-size:25px!important}.dc-exec-search{min-width:260px}.dc-exec-search input{font-size:12px!important}.dc-exec-new{background:#536dfe!important;border-color:#536dfe!important}.dc-exec-new:hover{background:#4054d6!important}@media(max-width:900px){.dc-exec-head{gap:10px}.dc-exec-actions{flex-wrap:wrap}.dc-exec-search{min-width:200px}}
