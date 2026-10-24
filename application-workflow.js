@@ -121,6 +121,48 @@
   search.addEventListener('input',renderList);
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&picker.classList.contains('open'))closePicker()});
   document.getElementById('refreshBtn')?.addEventListener('click',()=>loadSummary());
+
+  // Admin-created applications: create the customer first, then create the loan
+  // using the existing DirectCredit API and its configured admin headers.
+  const newModal=document.getElementById('newApplicationModal');
+  const newForm=document.getElementById('newApplicationForm');
+  const newMessage=document.getElementById('newApplicationMessage');
+  const newSubmit=document.getElementById('newApplicationSubmit');
+  function closeNewApplication(){newModal?.classList.remove('open');newModal?.setAttribute('aria-hidden','true');}
+  function openNewApplication(){newMessage.textContent='';newMessage.className='new-application-message';newForm?.reset();newModal?.classList.add('open');newModal?.setAttribute('aria-hidden','false');newForm?.querySelector('[name="name"]')?.focus();}
+  document.getElementById('newApplicationBtn')?.addEventListener('click',openNewApplication);
+  document.querySelectorAll('[data-new-app-close]').forEach(el=>el.addEventListener('click',closeNewApplication));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&newModal?.classList.contains('open'))closeNewApplication();});
+  newForm?.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const form=new FormData(newForm);
+    const name=String(form.get('name')||'').trim();
+    const amount=Number(form.get('requested_amount'));
+    const tenure=Number(form.get('tenure_months')||6);
+    if(!name||!Number.isFinite(amount)||amount<=0||amount>15000){newMessage.textContent='Enter a customer name and a loan amount between ₹1 and ₹15,000.';newMessage.className='new-application-message show error';return;}
+    const api=window.DirectCreditData;
+    if(!api?.base||typeof api.headers!=='function'){newMessage.textContent='The DirectCredit API configuration is unavailable. Refresh the page and try again.';newMessage.className='new-application-message show error';return;}
+    const payload={name,mobile:String(form.get('mobile')||'').trim()||null,email:String(form.get('email')||'').trim()||null,business_name:String(form.get('business_name')||'').trim()||null,business_type:String(form.get('business_type')||'').trim()||null,current_city:String(form.get('current_city')||'').trim()||null,monthly_income:Number(form.get('monthly_income')||0),customer_type:String(form.get('customer_type')||'Individual'),occupation:'Business'};
+    newSubmit.disabled=true;newSubmit.textContent='Creating…';newMessage.textContent='Saving customer and creating application…';newMessage.className='new-application-message show';
+    try{
+      const customerResponse=await fetch(api.base+'/customers',{method:'POST',headers:{...api.headers(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const customerBody=await customerResponse.json().catch(()=>({}));
+      if(!customerResponse.ok)throw new Error(customerBody.detail||customerBody.message||('Customer creation failed (HTTP '+customerResponse.status+').'));
+      const customerId=customerBody.id;
+      if(!customerId)throw new Error('Customer was saved but the API did not return a customer ID. Contact support before retrying.');
+      let loanResponse,loanBody;
+      try{
+        loanResponse=await fetch(api.base+'/loans',{method:'POST',headers:{...api.headers(),'Content-Type':'application/json'},body:JSON.stringify({customer_id:Number(customerId),requested_amount:amount,product:String(form.get('product')||'Micro Business Loan'),tenure_months:tenure})});
+        loanBody=await loanResponse.json().catch(()=>({}));
+      }catch(err){throw new Error('Customer was created (ID '+customerId+'), but the loan request could not be completed. '+(err.message||''));}
+      if(!loanResponse.ok)throw new Error('Customer was created (ID '+customerId+'), but loan creation failed: '+(loanBody.detail||loanBody.message||('HTTP '+loanResponse.status))+'. Please open that customer and retry only the loan application.');
+      newMessage.textContent='Application created successfully. Opening the new customer workspace…';newMessage.className='new-application-message show success';
+      await loadSummary();
+      setTimeout(()=>{const url=new URL(location.href);url.searchParams.set('customer_id',String(customerId));url.searchParams.set('source','live');url.searchParams.set('workspace_tab','eligibility');location.assign(url.toString());},500);
+    }catch(err){newMessage.textContent=err.message||'Unable to create application. Please check the API and try again.';newMessage.className='new-application-message show error';}
+    finally{newSubmit.disabled=false;newSubmit.textContent='Create application';}
+  });
+
   setSummary({applications:0,approved:0,pending:0,rejected:0,approval_rate:0,sanctioned_amount:0});
   loadSummary();
 })();
