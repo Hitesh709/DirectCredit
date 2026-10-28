@@ -1,0 +1,100 @@
+/* DirectCredit Titan-inspired navy/blue interface theme.
+   Visual-only overrides: preserve existing page structure, forms, navigation and API behavior. */
+:root {
+  color-scheme: dark;
+  --dc-bg: #050d1c;
+  --dc-panel: #08162b;
+  --dc-panel-2: #0b1c35;
+  --dc-border: rgba(96, 145, 218, .22);
+  --dc-text: #eaf1ff;
+  --dc-muted: #8ea4c4;
+  --dc-blue: #3984ff;
+  --dc-cyan: #5ee7ff;
+}
+html { background: var(--dc-bg); }
+body {
+  background: radial-gradient(ellipse at 75% -15%, rgba(27, 75, 145, .17), transparent 42%), var(--dc-bg) !important;
+  color: var(--dc-text) !important;
+}
+.sidebar {
+  background: linear-gradient(180deg, #071326 0%, #050c18 100%) !important;
+  border-right: 1px solid var(--dc-border) !important;
+  box-shadow: 8px 0 28px rgba(0,0,0,.12);
+}
+.brand {
+  background: linear-gradient(145deg, #477cff, #3157e8) !important;
+  color: #fff !important;
+  border: 1px solid rgba(132, 171, 255, .3) !important;
+  box-shadow: 0 6px 18px rgba(49, 87, 232, .24);
+}
+.product, .nav-label, .eyebrow { color: #91a8ca !important; }
+.nav { color: #a7b9d4 !important; }
+.nav:hover, .nav.active {
+  color: #f5f8ff !important;
+  background: linear-gradient(100deg, rgba(57,132,255,.24), rgba(57,132,255,.07)) !important;
+  box-shadow: inset 3px 0 #4b7bff;
+}
+.main { background: transparent !important; color: var(--dc-text) !important; }
+.page, .panel, .card, .wizardPanel, .approval, .scoreHero, .analysisBox,
+.pipelineItem, .journeyStep, .topbar, .sectionHead, .cards > * {
+  color: var(--dc-text);
+}
+.panel, .card, .wizardPanel, .approval, .scoreHero, .analysisBox, .pipelineItem {
+  background: linear-gradient(145deg, rgba(10,25,47,.97), rgba(6,16,32,.98)) !important;
+  border-color: var(--dc-border) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12), inset 0 1px rgba(255,255,255,.025);
+}
+h1, h2, h3, h4, strong, b { color: #f0f5ff; }
+p, small, label, th, .eyebrow, .miniResult { color: var(--dc-muted); }
+input, select, textarea {
+  background: #07152a !important;
+  color: #eaf1ff !important;
+  border: 1px solid rgba(104,148,211,.3) !important;
+  border-radius: 9px !important;
+}
+input::placeholder, textarea::placeholder { color: #7086a7 !important; }
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid rgba(57,132,255,.28) !important;
+  border-color: #3984ff !important;
+}
+.btn, button.btn {
+  background: #0c1d36;
+  border: 1px solid var(--dc-border);
+  color: #eaf1ff;
+  border-radius: 9px;
+}
+.btn:hover { border-color: rgba(94,231,255,.55); background: #102747; }
+.btn.primary, .btn.primary:hover {
+  background: linear-gradient(135deg, #438bff, #315ee8) !important;
+  border-color: #438bff !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(49,94,232,.2);
+}
+.badge { background: rgba(57,132,255,.13) !important; color: #a8ceff !important; border: 1px solid rgba(57,132,255,.25); }
+.badge.green, .status.ok, .journeyStep.done {
+  background: rgba(31,174,125,.12) !important;
+  border-color: rgba(31,174,125,.3) !important;
+  color: #70e0b9 !important;
+}
+.status.warn { background: rgba(245,158,11,.12) !important; color: #ffd18a !important; }
+table { color: var(--dc-text); }
+th, td { border-bottom-color: rgba(115,151,205,.14) !important; }
+th { color: #91a8ca !important; }
+.journeyStep { background: #09182e !important; border-color: var(--dc-border) !important; color: #9eb2d0 !important; }
+.journeyStep.current { background: rgba(57,132,255,.15) !important; border-color: #3984ff !important; color: #b8d5ff !important; }
+.journeyStep.current span { background: #3984ff !important; color: #fff !important; }
+.success { background: rgba(31,174,125,.13) !important; color: #70e0b9 !important; border: 1px solid rgba(31,174,125,.25); }
+iframe { border: 0; background: transparent; }
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: #061020; }
+::-webkit-scrollbar-thumb { background: rgba(125,157,202,.3); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(94,231,255,.42); }
+@media (max-width: 760px) {
+  .main { padding: 16px !important; }
+  .fields, .approval, .pipelineGrid { grid-template-columns: minmax(0,1fr) !important; }
+  .cards { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .001ms !important; animation-duration: .001ms !important; }
+}
